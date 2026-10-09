@@ -24,6 +24,15 @@ def functions(platform='win64', options=()):
         subprocess=types.SimpleNamespace(run=lambda *a, **k:
             types.SimpleNamespace(stdout='Python 3.12.10')),
     )
+    # Evaluate the shared recipe fragment without importing prepare.py, which
+    # would execute dependency builds and change the working directory.
+    for node in TREE.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in {
+                        'macBreakpadBuild', 'rustToolchain',
+                        'tlottieRevision', 'walletEngineRevision'}:
+                    namespace[target.id] = ast.literal_eval(node.value)
     names = {'filterByPlatform', 'removeDir', 'setVar', 'dependencyGroup',
              'keyPath', 'checkCacheKey', 'runStages'}
     for node in TREE.body:

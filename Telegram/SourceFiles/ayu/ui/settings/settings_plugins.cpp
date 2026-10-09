@@ -191,7 +191,84 @@ const auto kMeta = BuildHelper({
 	.parentId = AyuMain::Id(),
 	.title = &tr::ayu_JellyPlugins,
 	.icon = &st::menuIconBot,
-}, [](SectionBuilder &) {});
+}, [](SectionBuilder &builder) {
+	const auto controller = builder.controller();
+	if (!controller) {
+		return;
+	}
+	const auto manager = QPointer<GummyPlugins::Manager>(&controller->session().plugins());
+	builder.addSkip();
+	builder.addButton({
+		.id = u"jelly/plugins/install"_q,
+		.title = tr::ayu_JellyInstall(),
+		.icon = { &st::menuIconFile },
+		.onClick = [=] {
+			const auto path = QFileDialog::getOpenFileName(nullptr,
+				tr::ayu_JellyInstall(tr::now), {}, u"GummyGram plugins (*.jellyplugin)"_q);
+			if (path.isEmpty() || !manager) return;
+			auto file = QFile(path);
+			if (!file.open(QIODevice::ReadOnly) || file.size() > GummyPlugins::kPackageLimit) {
+				controller->showToast(tr::ayu_JellyInvalidPackage(tr::now));
+				return;
+			}
+			const auto data = file.read(GummyPlugins::kPackageLimit + 1);
+			auto package = GummyPlugins::Package();
+			auto error = QString();
+			if (!GummyPlugins::ParsePackage(data, package, error)) {
+				controller->showToast(error);
+				return;
+			}
+			controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
+				box->setTitle(tr::ayu_JellyInstall());
+				AddLabel(box, package.name + u" · "_q + package.version + u"\n"_q + package.author);
+				AddLabel(box, package.description);
+				AddLabel(box, tr::ayu_JellyInstallNotice(tr::now));
+				box->addButton(tr::ayu_JellyInstall(), [=] {
+					if (!manager) return;
+					auto installError = QString();
+					if (manager->install(data, installError)) box->closeBox();
+					else controller->showToast(installError);
+				});
+				box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
+			}));
+		},
+	});
+	builder.addButton({
+		.id = u"jelly/plugins/stop"_q,
+		.title = tr::ayu_JellyStopAll(),
+		.icon = { &st::menuIconCancel },
+		.onClick = [=] { if (manager) manager->stopAll(); },
+	});
+	builder.addSkip();
+	builder.addDivider();
+	builder.addSkip();
+	builder.addSubsectionTitle(tr::ayu_JellyPlugins());
+	const auto plugins = manager->plugins();
+	if (plugins.empty()) {
+		builder.add([](const WidgetContext &ctx) -> SectionBuilder::WidgetToAdd {
+			return { .widget = object_ptr<Ui::FlatLabel>(ctx.container,
+				tr::ayu_JellyEmpty(), st::boxLabel) };
+		});
+	}
+	for (const auto &info : plugins) {
+		builder.addButton({
+			.id = u"jelly/plugin/"_q + info.package.id,
+			.title = rpl::single(info.package.name),
+			.icon = { &st::menuIconBot },
+			.label = rpl::single(info.enabled ? tr::ayu_JellyRunning(tr::now) : tr::ayu_JellyDisabled(tr::now)),
+			.onClick = [=] { ShowDetails(controller, info); },
+		});
+		for (auto action = info.actions.begin(); action != info.actions.end(); ++action) {
+			const auto id = action.key();
+			builder.addButton({
+				.id = u"jelly/action/"_q + info.package.id + '/' + id,
+				.title = rpl::single(action.value().toString()),
+				.icon = { &st::menuIconBotCommands },
+				.onClick = [=] { if (manager) manager->runAction(info.package.id, id); },
+			});
+		}
+	}
+});
 
 } // namespace
 
@@ -216,81 +293,7 @@ rpl::producer<QString> AyuPlugins::title() {
 
 void AyuPlugins::refresh() {
 	_content->clear();
-	build(_content, [](SectionBuilder &builder) {
-		const auto controller = builder.controller();
-		const auto manager = QPointer<GummyPlugins::Manager>(&controller->session().plugins());
-		builder.addSkip();
-		builder.addButton({
-			.id = u"jelly/plugins/install"_q,
-			.title = tr::ayu_JellyInstall(),
-			.icon = { &st::menuIconFile },
-			.onClick = [=] {
-				const auto path = QFileDialog::getOpenFileName(nullptr,
-					tr::ayu_JellyInstall(tr::now), {}, u"GummyGram plugins (*.jellyplugin)"_q);
-				if (path.isEmpty() || !manager) return;
-				auto file = QFile(path);
-				if (!file.open(QIODevice::ReadOnly) || file.size() > GummyPlugins::kPackageLimit) {
-					controller->showToast(tr::ayu_JellyInvalidPackage(tr::now));
-					return;
-				}
-				const auto data = file.read(GummyPlugins::kPackageLimit + 1);
-				auto package = GummyPlugins::Package();
-				auto error = QString();
-				if (!GummyPlugins::ParsePackage(data, package, error)) {
-					controller->showToast(error);
-					return;
-				}
-				controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
-					box->setTitle(tr::ayu_JellyInstall());
-					AddLabel(box, package.name + u" · "_q + package.version + u"\n"_q + package.author);
-					AddLabel(box, package.description);
-					AddLabel(box, tr::ayu_JellyInstallNotice(tr::now));
-					box->addButton(tr::ayu_JellyInstall(), [=] {
-						if (!manager) return;
-						auto installError = QString();
-						if (manager->install(data, installError)) box->closeBox();
-						else controller->showToast(installError);
-					});
-					box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
-				}));
-			},
-		});
-		builder.addButton({
-			.id = u"jelly/plugins/stop"_q,
-			.title = tr::ayu_JellyStopAll(),
-			.icon = { &st::menuIconCancel },
-			.onClick = [=] { if (manager) manager->stopAll(); },
-		});
-		builder.addSkip();
-		builder.addDivider();
-		builder.addSkip();
-		builder.addSubsectionTitle(tr::ayu_JellyPlugins());
-		const auto plugins = manager->plugins();
-		if (plugins.empty()) {
-			builder.add([](const WidgetContext &ctx) -> SectionBuilder::WidgetToAdd {
-				return { .widget = object_ptr<Ui::FlatLabel>(ctx.container,
-					tr::ayu_JellyEmpty(), st::boxLabel) };
-			});
-		}
-		for (const auto &info : plugins) {
-			builder.addButton({
-				.id = u"jelly/plugin/"_q + info.package.id,
-				.title = rpl::single(info.package.name),
-				.icon = { &st::menuIconBot },
-				.label = rpl::single(info.enabled ? tr::ayu_JellyRunning(tr::now) : tr::ayu_JellyDisabled(tr::now)),
-				.onClick = [=] { ShowDetails(controller, info); },
-			});
-			for (auto action = info.actions.begin(); action != info.actions.end(); ++action) {
-				const auto id = action.key();
-				builder.addButton({
-					.id = u"jelly/action/"_q + info.package.id + '/' + id,
-					.title = rpl::single(action.value().toString()),
-					.icon = { &st::menuIconBotCommands },
-					.onClick = [=] { if (manager) manager->runAction(info.package.id, id); },
-				});
-			}
-		}
-	});
+	build(_content, kMeta.build);
 }
 
 } // namespace Settings

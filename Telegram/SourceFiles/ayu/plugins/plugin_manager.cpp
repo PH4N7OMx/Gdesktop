@@ -168,7 +168,7 @@ Manager::Manager(not_null<Main::Session*> session) : _session(session) {
 				write(entry, {
 					{ u"type"_q, u"event"_q }, { u"event"_q, u"message.new"_q },
 					{ u"data"_q, QJsonObject{
-						{ u"chatId"_q, chat }, { u"messageId"_q, int(item->id) },
+						{ u"chatId"_q, chat }, { u"messageId"_q, QJsonValue(qint64(item->id.bare)) },
 						{ u"senderId"_q, SerializeChatId(sender) },
 						{ u"text"_q, item->originalText().text.left(16384) },
 						{ u"date"_q, int(item->date()) },

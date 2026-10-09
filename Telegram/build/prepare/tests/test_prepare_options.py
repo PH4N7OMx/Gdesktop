@@ -2,6 +2,7 @@
 import ast
 import contextlib
 import io
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -21,6 +22,8 @@ def functions(platform='win64', options=()):
         win64=platform == 'win64', winarm=platform == 'winarm',
         mac=platform == 'mac', options=options, qt='6.11.1',
         branch='v$QT', rustToolchain='1.90.0', modifiedEnv={},
+        scriptPath=str(SOURCE.parent),
+        computeFileHash=lambda path: hashlib.sha1(Path(path).read_bytes()).hexdigest(),
         subprocess=types.SimpleNamespace(run=lambda *a, **k:
             types.SimpleNamespace(stdout='Python 3.12.10')),
     )
@@ -53,6 +56,38 @@ def stage_commands(platform, options=()):
 
 
 class PrepareOptionsTests(unittest.TestCase):
+    def test_qt5_patch_invalidates_the_preparation_cache(self):
+        recipe = next(node for node in ast.walk(TREE)
+            if isinstance(node, ast.Call) and getattr(node.func, 'id', '') == 'stage'
+            and 'qt5-static-angle.patch' in ast.unparse(node))
+        namespace = functions(options=('skip-debug',))
+        commands = eval(compile(ast.Expression(recipe.args[1]), str(SOURCE), 'eval'),
+            namespace)
+        filtered, _, version = namespace['filterByPlatform'](commands)
+        expected = hashlib.sha1(
+            (SOURCE.parent / 'qt5-static-angle.patch').read_bytes()).hexdigest()
+        self.assertIn(expected, version)
+        self.assertIn('git apply "', filtered)
+        self.assertIn('qt5-static-angle.patch"\nif errorlevel 1 exit /b 1', filtered)
+
+    def test_plugin_engine_dependency_is_prepared(self):
+        telegram = SOURCE.parents[2]
+        self.assertIn('#include <QJSEngine>',
+            (telegram / 'SourceFiles/ayu/plugins/plugin_worker.cpp').read_text())
+        self.assertIn('REQUIRED COMPONENTS Qml',
+            (telegram / 'CMakeLists.txt').read_text())
+        for platform in ('win32', 'win64', 'winarm', 'mac'):
+            qt_recipes = [commands for name, commands in stage_commands(platform)
+                if name.startswith('qt_')]
+            self.assertTrue(qt_recipes)
+            for commands in qt_recipes:
+                with self.subTest(platform=platform):
+                    self.assertRegex(commands,
+                        r'git submodule update[^\n]*\bqtdeclarative\b')
+        dockerfile = (telegram / 'build/docker/centos_env/Dockerfile').read_text()
+        self.assertRegex(dockerfile,
+            r'git submodule update[^\n]*\\\n[^\n]*\bqtdeclarative\b')
+
     def test_release_only_has_no_debug_builds(self):
         debug_command = re.compile(
             r'^.*(?:--(?:build|install).*--config Debug|Configuration=Debug|'

@@ -1664,9 +1664,10 @@ release:
     stage('qt_' + qt, """
     git clone -b v$QT-lts-lgpl https://github.com/qt/qt5.git qt_$QT
     cd qt_$QT
-    git submodule update --init --recursive --progress qtbase qtimageformats qtsvg
+    git submodule update --init --recursive --progress qtbase qtdeclarative qtimageformats qtsvg
 depends:patches/qtbase_""" + qt + """/*.patch
 win:
+version: """ + computeFileHash(os.path.join(scriptPath, 'qt5-static-angle.patch')) + """
     cd qtbase
     setlocal enabledelayedexpansion
     for /r %%i in (..\\..\\patches\\qtbase_%QT%\\*) do (
@@ -1676,6 +1677,8 @@ win:
             exit /b 1
         )
     )
+    git apply """ + '"' + os.path.join(scriptPath, 'qt5-static-angle.patch') + '"' + """
+    if errorlevel 1 exit /b 1
     cd ..
 
     SET CONFIGURATIONS=-debug
@@ -1735,7 +1738,7 @@ else: # qt > '6'
     stage('qt_' + qt, """
     git clone -b """ + branch + """ https://github.com/qt/qt5.git qt_$QT
     cd qt_$QT
-    git submodule update --init --recursive --progress qtbase qtimageformats qtshadertools qtsvg
+    git submodule update --init --recursive --progress qtbase qtdeclarative qtimageformats qtshadertools qtsvg
 depends:patches/qtbase_""" + qt + """/*.patch
 mac:
     if [ -d "../patches/qt6_highsierra" ]; then

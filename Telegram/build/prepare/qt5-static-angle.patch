@@ -1,0 +1,21 @@
+diff --git a/mkspecs/features/win32/opengl.prf b/mkspecs/features/win32/opengl.prf
+--- a/mkspecs/features/win32/opengl.prf
++++ b/mkspecs/features/win32/opengl.prf
+@@ -13,10 +13,12 @@
+ qtConfig(opengles2) {
+     # Depending on the configuration we use libQtANGLE or libEGL and libGLESv2
+-    qtConfig(combined-angle-lib) {
+-        prependOpenGlLib($$LIBQTANGLE_NAME)
+-    } else {
+-        prependOpenGlLib($$LIBGLESV2_NAME)
+-        prependOpenGlLib($$LIBEGL_NAME)
++    qtConfig(angle) {
++        qtConfig(combined-angle-lib) {
++            prependOpenGlLib($$LIBQTANGLE_NAME)
++        } else {
++            prependOpenGlLib($$LIBGLESV2_NAME)
++            prependOpenGlLib($$LIBEGL_NAME)
++        }
+     }
+ #   For Desktop, use the ANGLE library location passed on from configure.
+     INCLUDEPATH += $$QMAKE_INCDIR_OPENGL_ES2

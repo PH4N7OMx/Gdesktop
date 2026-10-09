@@ -161,6 +161,7 @@ jobs:
       TLOTTIE: "92df98dc20"
       WALLET_ENGINE: "e59e0d89d7ee90c388bf36e3334c5b276f396697"
       RUST_TOOLCHAIN: "1.96.1"
+      DESKTOP_PATCHES: "aec474953ff7ee9b6e4cd9b8658288ea86d124f3"
       MANUAL_CACHING: "1"
     steps:
       - name: Checkout repository
@@ -306,7 +307,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.LibrariesPath }}/local/tdesktop_rust
-          key: ${{ runner.os }}-tdesktop-rust-${{ env.TLOTTIE }}-${{ env.WALLET_ENGINE }}-${{ env.RUST_TOOLCHAIN }}-${{ hashFiles('Telegram/build/prepare/patches/wallet-engine.patch') }}-${{ env.CACHE_KEY }}
+          key: ${{ runner.os }}-tdesktop-rust-${{ env.TLOTTIE }}-${{ env.WALLET_ENGINE }}-${{ env.RUST_TOOLCHAIN }}-${{ env.DESKTOP_PATCHES }}-${{ env.CACHE_KEY }}
 
       - name: Build wallet engine and tlottie
         if: steps.cache-rust-libs.outputs.cache-hit != 'true'
@@ -314,9 +315,12 @@ jobs:
           export RUSTUP_TOOLCHAIN="$RUST_TOOLCHAIN"
           rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
           rustup target add aarch64-apple-darwin --toolchain "$RUST_TOOLCHAIN"
-          PATCH_FILE="$GITHUB_WORKSPACE/Telegram/build/prepare/patches/wallet-engine.patch"
           mkdir -p "$LibrariesPath"
           cd "$LibrariesPath"
+          git clone https://github.com/desktop-app/patches.git
+          git -C patches checkout "$DESKTOP_PATCHES"
+          PATCH_FILE="$LibrariesPath/patches/wallet-engine.patch"
+          test -f "$PATCH_FILE"
           git clone https://github.com/dkaraush/tlottie.git
           git -C tlottie checkout "$TLOTTIE"
           git clone https://github.com/i582/wallet-engine.git

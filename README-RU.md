@@ -1,17 +1,20 @@
-# AyuGram Fork
+# GummyGram
 
-![AyuGram Лого](.github/AyuGram.png) ![AyuChan](.github/AyuChan.png)
+<img src=".github/GummyGram.png" alt="GummyGram" width="160">
 
 [ [English](README.md) | Русский ]
 
-**AyuGram Fork** — активно поддерживаемый форк [AyuGram Desktop](https://github.com/AyuGram/AyuGramDesktop) с новыми эксклюзивными возможностями, исправлениями, улучшениями удобства и актуальными переводами.
+**GummyGram** — активно поддерживаемый форк [AyuGram Desktop](https://github.com/AyuGram/AyuGramDesktop) с новыми эксклюзивными возможностями, исправлениями, улучшениями удобства и актуальными переводами.
 
-📢 **Официальный Telegram-канал:** [@ayufork](https://t.me/ayufork)
+📢 **Официальный Telegram-канал:** [@GummyDesktop](https://t.me/GummyDesktop)
+
+💬 **Чат сообщества:** [@GdesktopChat](https://t.me/GdesktopChat)
 
 ---
 
 ## ✨ Возможности и фишки
 
+- 🧩 **Система плагинов (предварительная версия):** SDK TypeScript/JavaScript, разрешения, автоматизация и изоляция Windows. [Документация](docs/GummyGram-documentation/README.md).
 - 👻 **Гибкий режим призрака (Ghost Mode):** Тонкая настройка отправки прочтений, статуса «печатает», онлайн-пакетов и отложенной отправки.
 - 💾 **История сообщений и анти-удаление:** Локальное сохранение удаленных сообщений и истории изменений текста.
 - 💎 **Локальный Telegram Premium:** Разблокировка локальных клиентских фишек Premium.
@@ -25,17 +28,17 @@
 
 ## 📥 Загрузка и установка
 
-Официальные сборки и обновления **AyuGram Fork** доступны исключительно на:
+Официальные сборки и обновления **GummyGram** доступны исключительно на:
 
-- 🚀 **GitHub Releases:** [Страница релизов](https://github.com/PH4N7OMx/AyuGramDesktop/releases)
-- 📢 **Telegram-канал:** [t.me/ayufork](https://t.me/ayufork)
+- 🚀 **GitHub Releases:** [Страница релизов](https://github.com/PH4N7OMx/Gdesktop/releases)
+- 📢 **Telegram-канал:** [t.me/GummyDesktop](https://t.me/GummyDesktop)
 
 > [!NOTE]
-> Внешние пакетные менеджеры (Winget, Homebrew, Scoop, AUR и др.) содержат оригинальный AyuGram от Radolyn, в котором нет новых функций этого форка. Для использования AyuGram Fork скачивайте сборки из нашего канала/релизов или собирайте из исходников.
+> Внешние пакетные менеджеры (Winget, Homebrew, Scoop, AUR и др.) содержат оригинальный AyuGram от Radolyn, в котором нет новых функций этого форка. Для использования GummyGram скачивайте сборки из нашего канала/релизов или собирайте из исходников.
 
 ### Сборка из исходников
 
-- [Инструкция по сборке для Windows x64](docs/building-win-x64.md)
+- [Инструкция по сборке для Windows](docs/building-win.md)
 - [Инструкция по сборке для Linux](docs/building-linux.md)
 - [Инструкция по сборке для macOS](docs/building-mac.md)
 

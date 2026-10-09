@@ -16,6 +16,7 @@
 #include "ayu/ui/settings/settings_filters.h"
 #include "ayu/ui/settings/settings_general.h"
 #include "ayu/ui/settings/settings_other.h"
+#include "ayu/ui/settings/settings_plugins.h"
 #include "core/version.h"
 #include "settings/settings_builder.h"
 #include "settings/settings_common.h"
@@ -70,7 +71,7 @@ void BuildVersionInfo(SectionBuilder &builder) {
 			.widget = object_ptr<Ui::FlatLabel>(
 				ctx.container,
 				rpl::single(
-					QString("AyuGram Desktop v")
+					QString("GummyGram Desktop v")
 					+ QString::fromLatin1(AppVersionStr)),
 				st::boxTitle),
 			.align = style::al_top,
@@ -101,7 +102,7 @@ void BuildCategories(SectionBuilder &builder) {
 	builder.addSubsectionTitle(tr::ayu_CategoriesHeader());
 
 	builder.addSectionButton({
-		.title = rpl::single(QString("AyuGram")),
+		.title = rpl::single(QString("Gummy")),
 		.targetSection = AyuGhost::Id(),
 		.icon = { &st::menuIconGroupReactions },
 	});
@@ -126,9 +127,9 @@ void BuildCategories(SectionBuilder &builder) {
 		.icon = { &st::menuIconChatBubble },
 	});
 	builder.addSectionButton({
-		.title = tr::ayu_CategoryOther(),
-		.targetSection = AyuOther::Id(),
-		.icon = { &st::menuIconFave },
+		.title = tr::ayu_JellyPlugins(),
+		.targetSection = AyuPlugins::Id(),
+		.icon = { &st::menuIconBot },
 	});
 }
 
@@ -145,10 +146,10 @@ void BuildLinks(SectionBuilder &builder) {
 		.id = u"ayu/channel"_q,
 		.title = tr::ayu_LinksChannel(),
 		.icon = { &st::menuIconChannel },
-		.label = rpl::single(QString("@ayugram")),
+		.label = rpl::single(QString("@GummyDesktop")),
 		.onClick = [=] {
 			controller->showPeerByLink(Window::PeerByLinkInfo{
-				.usernameOrId = QString("ayugram"),
+				.usernameOrId = QString("GummyDesktop"),
 			});
 		},
 	});
@@ -156,31 +157,21 @@ void BuildLinks(SectionBuilder &builder) {
 		.id = u"ayu/chat"_q,
 		.title = tr::ayu_LinksChats(),
 		.icon = { &st::menuIconChats },
-		.label = rpl::single(QString("@ayugramchat")),
+		.label = rpl::single(u"@GdesktopChat"_q),
 		.onClick = [=] {
 			controller->showPeerByLink(Window::PeerByLinkInfo{
-				.usernameOrId = QString("ayugramchat"),
+				.usernameOrId = u"GdesktopChat"_q,
 			});
-		},
-	});
-	builder.addButton({
-		.id = u"ayu/crowdin"_q,
-		.title = tr::ayu_LinksTranslate(),
-		.icon = { &st::menuIconTranslate },
-		.label = rpl::single(QString("Crowdin")),
-		.onClick = [=] {
-			QDesktopServices::openUrl(
-				QString("https://translate.ayugram.one"));
 		},
 	});
 	builder.addButton({
 		.id = u"ayu/website"_q,
 		.title = tr::ayu_LinksDocumentation(),
 		.icon = { &st::menuIconIpAddress },
-		.label = rpl::single(QString("docs.ayugram.one")),
+		.label = rpl::single(QString("GummyGram documentation")),
 		.onClick = [=] {
 			QDesktopServices::openUrl(
-				QString("https://docs.ayugram.one"));
+				QString("https://github.com/PH4N7OMx/Gdesktop/tree/HEAD/docs/GummyGram-documentation"));
 		},
 	});
 

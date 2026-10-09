@@ -496,7 +496,10 @@ TabbedSelector::TabbedSelector(
 	if (hasStickersTab()) {
 		session().data().stickers().stickerSetInstalled(
 		) | rpl::on_next([=](uint64 setId) {
-			_tabsSlider->setActiveSection(indexByType(SelectorTab::Stickers));
+			if (_tabsSlider) {
+				_tabsSlider->setActiveSection(
+					indexByType(SelectorTab::Stickers));
+			}
 			stickers()->showStickerSet(setId);
 			if (_currentPeer
 				&& Data::CanSend(
@@ -671,7 +674,7 @@ TabbedSelector::Tab TabbedSelector::createTab(SelectorTab type, int index) {
 				.mode = (_mode == Mode::ChatIntro
 					? StickersMode::ChatIntro
 					: StickersMode::Full),
-				.requireConfirmation = _mode != Mode::MediaEditor,
+				.requireConfirmation = (_mode == Mode::Full),
 				.paused = paused,
 				.st = &_st,
 				.features = _features,
@@ -682,6 +685,7 @@ TabbedSelector::Tab TabbedSelector::createTab(SelectorTab type, int index) {
 			using Descriptor = GifsListDescriptor;
 			return object_ptr<GifsListWidget>(this, Descriptor{
 				.show = _show,
+				.requireConfirmation = (_mode == Mode::Full),
 				.paused = paused,
 				.st = &_st,
 			});
@@ -759,6 +763,14 @@ auto TabbedSelector::inlineResultChosen() const
 
 rpl::producer<> TabbedSelector::photoRequests() const {
 	return hasStickersTab() ? stickers()->photoRequests() : rpl::never<>();
+}
+
+rpl::producer<> TabbedSelector::audioRequests() const {
+	return hasStickersTab() ? stickers()->audioRequests() : rpl::never<>();
+}
+
+rpl::producer<> TabbedSelector::linkRequests() const {
+	return hasStickersTab() ? stickers()->linkRequests() : rpl::never<>();
 }
 
 auto TabbedSelector::choosingStickerUpdated() const

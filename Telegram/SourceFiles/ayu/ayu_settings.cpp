@@ -482,13 +482,13 @@ void AyuSettings::load() {
 		});
 		p["useGlobalGhostMode"] = true;
 
-		LOG(("AyuGramSettings: migrated ghost mode settings to per-account format"));
+		LOG(("GummyGramSettings: migrated ghost mode settings to per-account format"));
 	}
 
 	try {
 		from_json(p, settings);
 	} catch (...) {
-		LOG(("AyuGramSettings: failed to parse settings file"));
+		LOG(("GummyGramSettings: failed to parse settings file"));
 	}
 
 	if (cGhost()) {
@@ -851,8 +851,11 @@ void AyuSettings::setShowPrivateChatReactions(bool val) {
 }
 
 void AyuSettings::setAppIcon(const QString &val) {
-	if (_appIcon.current() == val) return;
-	_appIcon = val;
+	const auto icon = (val == AyuAssets::ALT_ICON)
+		? AyuAssets::ALT_ICON
+		: AyuAssets::DEFAULT_ICON;
+	if (_appIcon.current() == icon) return;
+	_appIcon = icon;
 	save();
 }
 
@@ -1521,6 +1524,10 @@ void from_json(const nlohmann::json &j, AyuSettings &s) {
 	s._showGroupReactions = j.value("showGroupReactions", defaults._showGroupReactions.current());
 	s._showPrivateChatReactions = j.value("showPrivateChatReactions", defaults._showPrivateChatReactions.current());
 	s._appIcon = j.value("appIcon", defaults._appIcon.current());
+	if (s._appIcon.current() != AyuAssets::DEFAULT_ICON
+		&& s._appIcon.current() != AyuAssets::ALT_ICON) {
+		s._appIcon = AyuAssets::DEFAULT_ICON;
+	}
 	s._simpleQuotesAndReplies = j.value("simpleQuotesAndReplies", defaults._simpleQuotesAndReplies.current());
 	s._hideFastShare = j.value("hideFastShare", defaults._hideFastShare.current());
 	s._replaceBottomInfoWithIcons = j.value("replaceBottomInfoWithIcons", defaults._replaceBottomInfoWithIcons.current());

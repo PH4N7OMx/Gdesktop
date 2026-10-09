@@ -1,0 +1,16 @@
+{
+  "apiVersion": 1,
+  "id": "jelly.feed-to-chat",
+  "name": "Лента → Telegram",
+  "author": "GummyGram",
+  "description": "Проверяет RSS-ленту, запоминает новые записи и отправляет их в разрешённый чат. Перед установкой замени сайт и ID чата в manifest.json.",
+  "version": "1.0.0",
+  "permissions": {
+    "httpHosts": ["example.com"],
+    "sendChats": ["-1001234567890"],
+    "storage": true,
+    "timers": true,
+    "ui": true,
+    "maxMessagesPerHour": 20
+  }
+}

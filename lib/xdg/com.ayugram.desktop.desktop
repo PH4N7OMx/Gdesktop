@@ -1,11 +1,11 @@
 [Desktop Entry]
-Name=AyuGram Desktop
-Comment=Desktop version of AyuGram - ToS breaking Telegram client
-TryExec=AyuGram
-Exec=env DESKTOPINTEGRATION=1 AyuGram -- %U
+Name=GummyGram Desktop
+Comment=Desktop Telegram client with customization and privacy controls
+TryExec=GummyGram
+Exec=env DESKTOPINTEGRATION=1 GummyGram -- %U
 Icon=com.ayugram.desktop
 Terminal=false
-StartupWMClass=AyuGram
+StartupWMClass=GummyGram
 Type=Application
 Categories=Chat;Network;InstantMessaging;Qt;
 MimeType=x-scheme-handler/tg;x-scheme-handler/tonsite;
@@ -17,6 +17,6 @@ X-GNOME-UsesNotifications=true
 X-GNOME-SingleWindow=true
 
 [Desktop Action quit]
-Exec=AyuGram -quit
-Name=Quit AyuGram
+Exec=GummyGram -quit
+Name=Quit GummyGram
 Icon=application-exit

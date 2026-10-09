@@ -1,0 +1,9 @@
+{
+  "apiVersion": 1,
+  "id": "jelly.hello",
+  "name": "Первый плагин",
+  "author": "GummyGram",
+  "description": "Добавляет кнопку и сохраняет счётчик запусков. Не читает переписку и не обращается к сайтам.",
+  "version": "1.0.0",
+  "permissions": { "ui": true, "storage": true }
+}

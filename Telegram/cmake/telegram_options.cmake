@@ -4,6 +4,8 @@
 # For license and copyright information please follow this link:
 # https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
+option(TDESKTOP_API_TEST "Use test API credentials." OFF)
+option(TDESKTOP_BUILD_UPDATE_TESTS "Build the focused update verification test." OFF)
 set(TDESKTOP_API_ID "2040" CACHE STRING "Provide 'api_id' for the Telegram API access.")
 set(TDESKTOP_API_HASH "b18441a1ff607e10a989891a5462e627" CACHE STRING "Provide 'api_hash' for the Telegram API access.")
 

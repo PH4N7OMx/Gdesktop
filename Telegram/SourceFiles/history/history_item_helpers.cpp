@@ -33,6 +33,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history.h"
 #include "history/history_item.h"
 #include "history/history_item_components.h"
+#include "iv/iv_rich_page.h"
 #include "main/main_account.h"
 #include "main/main_domain.h"
 #include "main/main_session.h"
@@ -163,6 +164,9 @@ Data::SendError GetErrorForSending(
 			return tr::lng_slowmode_no_many(tr::now);
 		} else if (count > 1) {
 			const auto albumForward = [&] {
+				if (!request.forward || request.forward->empty()) {
+					return false;
+				}
 				const auto first = request.forward->front();
 				if (const auto groupId = first->groupId()) {
 					for (const auto &item : *request.forward) {
@@ -830,6 +834,14 @@ HistoryItem *MessageByGlobalId(GlobalMsgId globalId) {
 	return nullptr;
 }
 
+std::vector<not_null<DocumentData*>> ItemRichPageAudio(
+		not_null<const HistoryItem*> item) {
+	const auto page = item->richPage();
+	return page
+		? Iv::CollectRichPageAudio(*page)
+		: std::vector<not_null<DocumentData*>>();
+}
+
 QDateTime ItemDateTime(not_null<const HistoryItem*> item) {
 	return base::unixtime::parse(item->date());
 }
@@ -1455,9 +1467,9 @@ bool CanHoldItemNotification(not_null<const HistoryItem*> item) {
 }
 
 [[nodiscard]] TextWithEntities UnsupportedMessageText() {
-	const auto siteLink = u"https://t.me/AyuGramReleases"_q;
+	const auto siteLink = u"https://t.me/GummyDesktop"_q;
 	auto result = TextWithEntities{
-		tr::lng_message_unsupported(tr::now, lt_link, siteLink).replace("Telegram", "AyuGram")
+		tr::lng_message_unsupported(tr::now, lt_link, siteLink).replace("Telegram", "GummyGram")
 	};
 	TextUtilities::ParseEntities(result, Ui::ItemTextNoMonoOptions().flags);
 	result.entities.push_front(
@@ -1472,9 +1484,9 @@ HistoryMessageMarkupData UnsupportedMessageMarkup() {
 	auto row = std::vector<Button>();
 	row.emplace_back(
 		Button::Type::Url,
-		tr::lng_update_telegram(tr::now).replace("Telegram", "AyuGram"),
+		tr::lng_update_telegram(tr::now).replace("Telegram", "GummyGram"),
 		Button::Visual(),
-		QByteArray("https://t.me/AyuGramReleases"));
+		QByteArray("https://t.me/GummyDesktop"));
 	markup.rows.push_back(std::move(row));
 	return markup;
 }

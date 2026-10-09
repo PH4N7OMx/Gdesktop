@@ -91,6 +91,7 @@ struct SectionMeta {
 	Type parentId;
 	SectionTitle title;
 	not_null<const style::icon*> icon;
+	bool hidden = false;
 };
 
 class SearchRegistry {

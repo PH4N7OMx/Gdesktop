@@ -27,7 +27,6 @@ jobs:
       - name: Patch codegen and syntax highlighting
         run: |
           python3 Telegram/build/patch_codegen.py
-          python3 Telegram/build/patch_prisma.py
 
       - name: Patch tgcalls CryptoHelper for Xcode 16 / Clang
         run: |
@@ -124,7 +123,7 @@ jobs:
       - name: Package Linux Binary
         run: |
           mkdir -p out/Release
-          BIN_PATH=$(find out/ \( -name "AyuGram" -o -name "Telegram" \) -type f | head -n 1)
+          BIN_PATH=$(find out/ \( -name "GummyGram" -o -name "Telegram" \) -type f | head -n 1)
           if [ -n "$BIN_PATH" ]; then
             BIN_NAME=$(basename "$BIN_PATH")
             BIN_DIR=$(dirname "$BIN_PATH")
@@ -144,7 +143,7 @@ jobs:
       - name: Upload Linux Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AyuGram-Linux
+          name: GummyGram-Linux
           path: out/Release/Linux.tar.gz
           if-no-files-found: error
 
@@ -159,7 +158,9 @@ jobs:
       CMAKE_PREFIX_PATH: "/opt/homebrew:/opt/homebrew/opt/ffmpeg@6:/opt/homebrew/opt/openal-soft:/opt/homebrew/opt/openssl@3"
       PKG_CONFIG_PATH: "/opt/homebrew/opt/ffmpeg@6/lib/pkgconfig:/opt/homebrew/opt/openal-soft/lib/pkgconfig:/opt/homebrew/opt/openssl@3/lib/pkgconfig:/opt/homebrew/opt/opus/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:/opt/homebrew/share/pkgconfig"
       TDE2E: "51743dfd01dff6179e2d8f7095729caa4e2222e9"
-      TLOTTIE: "4b940c7942fbde8ee56f10f39a5224a4153bd91e"
+      TLOTTIE: "92df98dc20"
+      WALLET_ENGINE: "e59e0d89d7ee90c388bf36e3334c5b276f396697"
+      RUST_TOOLCHAIN: "1.96.1"
       MANUAL_CACHING: "1"
     steps:
       - name: Checkout repository
@@ -183,7 +184,7 @@ jobs:
 
       - name: Install dependencies via Homebrew
         run: |
-          libs="ada-url ffmpeg@6 jpeg-xl libavif libheif minizip openal-soft openh264 openssl@3 opus qtbase qtimageformats qtshadertools qtsvg xz"
+          libs="ada-url ffmpeg@6 jpeg-xl libavif libheif minizip openal-soft openh264 openssl@3 opus qtbase qtdeclarative qtimageformats qtshadertools qtsvg xz"
           brew update
           # Runner images may link OpenSSL 1.1 into paths needed by newer dependencies.
           if brew list --versions openssl@1.1 >/dev/null 2>&1; then
@@ -300,41 +301,50 @@ jobs:
           cmake --build build -j$(sysctl -n hw.logicalcpu)
           cmake --install build
 
-      - name: tlottie cache
-        id: cache-tlottie
+      - name: Combined Rust libraries cache
+        id: cache-rust-libs
         uses: actions/cache@v4
         with:
-          path: ${{ env.LibrariesPath }}/local/tlottie
-          key: ${{ runner.os }}-tlottie-${{ env.TLOTTIE }}-${{ env.CACHE_KEY }}
-          restore-keys: |
-            ${{ runner.os }}-tlottie-
+          path: ${{ env.LibrariesPath }}/local/tdesktop_rust
+          key: ${{ runner.os }}-tdesktop-rust-${{ env.TLOTTIE }}-${{ env.WALLET_ENGINE }}-${{ env.RUST_TOOLCHAIN }}-${{ hashFiles('Telegram/build/prepare/patches/wallet-engine.patch') }}-${{ env.CACHE_KEY }}
 
-      - name: Build tlottie
-        if: steps.cache-tlottie.outputs.cache-hit != 'true'
+      - name: Build wallet engine and tlottie
+        if: steps.cache-rust-libs.outputs.cache-hit != 'true'
         run: |
-          mkdir -p "$LibrariesPath/local/tlottie/lib" "$LibrariesPath/local/tlottie/include/tlottie"
+          export RUSTUP_TOOLCHAIN="$RUST_TOOLCHAIN"
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup target add aarch64-apple-darwin --toolchain "$RUST_TOOLCHAIN"
+          PATCH_FILE="$GITHUB_WORKSPACE/Telegram/build/prepare/patches/wallet-engine.patch"
+          mkdir -p "$LibrariesPath"
           cd "$LibrariesPath"
           git clone https://github.com/dkaraush/tlottie.git
-          cd tlottie
-          git checkout "$TLOTTIE"
-          rustup target add aarch64-apple-darwin || true
-          cargo rustc --lib --release --locked --features c-api --crate-type staticlib --target aarch64-apple-darwin
-          if [ -f "target/aarch64-apple-darwin/release/libtlottie.a" ]; then
-            cp target/aarch64-apple-darwin/release/libtlottie.a "$LibrariesPath/local/tlottie/lib/libtlottie.a"
-          elif [ -f "target/release/libtlottie.a" ]; then
-            cp target/release/libtlottie.a "$LibrariesPath/local/tlottie/lib/libtlottie.a"
-          fi
-          cp include/tlottie.h "$LibrariesPath/local/tlottie/include/tlottie/tlottie.h"
-          cp include/tlottie.h "$LibrariesPath/local/tlottie/include/tlottie.h"
-          mkdir -p "$LibrariesPath/local/lib" "$LibrariesPath/local/include/tlottie"
-          cp "$LibrariesPath/local/tlottie/lib/libtlottie.a" "$LibrariesPath/local/lib/libtlottie.a"
-          cp include/tlottie.h "$LibrariesPath/local/include/tlottie/tlottie.h"
-          cp include/tlottie.h "$LibrariesPath/local/include/tlottie.h"
+          git -C tlottie checkout "$TLOTTIE"
+          git clone https://github.com/i582/wallet-engine.git
+          git -C wallet-engine checkout "$WALLET_ENGINE"
+          git -C wallet-engine apply "$PATCH_FILE"
+          cargo new --lib --vcs none tdesktop_rust
+          cd tdesktop_rust
+          printf 'pub use ::tlottie;\npub use ::wallet_engine;\n' > src/lib.rs
+          cargo add --path ../tlottie --features c-api
+          cargo add --path ../wallet-engine
+          cargo rustc --lib --release --crate-type staticlib --crate-type cdylib --target aarch64-apple-darwin \
+            --config "profile.release.opt-level='z'" \
+            --config "profile.release.lto='thin'" \
+            --config "profile.release.codegen-units=1" \
+            --config "profile.release.panic='unwind'" \
+            --config "profile.release.package.tlottie.opt-level=3" \
+            -- --print native-static-libs
+          PREFIX="$LibrariesPath/local/tdesktop_rust"
+          mkdir -p "$PREFIX/lib" "$PREFIX/include/tlottie" "$PREFIX/include/wallet_engine"
+          cp target/aarch64-apple-darwin/release/libtdesktop_rust.a "$PREFIX/lib/"
+          cp ../tlottie/include/tlottie.h "$PREFIX/include/tlottie/"
+          cargo run --manifest-path ../wallet-engine/bindgen/cpp/bindgen/Cargo.toml --locked -- \
+            --library --out-dir "$PREFIX/include/wallet_engine" \
+            target/aarch64-apple-darwin/release/libtdesktop_rust.dylib
 
       - name: Patch codegen and syntax highlighting
         run: |
           python3 Telegram/build/patch_codegen.py
-          python3 Telegram/build/patch_prisma.py
 
       - name: Patch tgcalls CryptoHelper for Xcode 16 / Clang
         run: |
@@ -347,7 +357,7 @@ jobs:
           open(p, 'w').write(c)
           "
 
-      - name: Configure and Build AyuGram
+      - name: Configure and Build GummyGram
         run: |
           LOCAL_PREFIXES=$(find "$LibrariesPath/local" -mindepth 1 -maxdepth 1 -type d -exec printf ':%s' {} +)
           export CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH$LOCAL_PREFIXES"
@@ -383,7 +393,7 @@ jobs:
             /opt/homebrew/opt/qtbase/bin/macdeployqt "$APP_PATH" || macdeployqt "$APP_PATH"
             codesign --remove-signature "$APP_PATH" || true
             mkdir -p out/Release
-            hdiutil create -volname "AyuGram" -srcfolder "$APP_PATH" -ov -format UDZO out/Release/macOS.dmg
+            hdiutil create -volname "GummyGram" -srcfolder "$APP_PATH" -ov -format UDZO out/Release/macOS.dmg
           else
             echo "Error: Application bundle (*.app) not found under build/"
             find build -maxdepth 3 || true
@@ -393,7 +403,7 @@ jobs:
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AyuGram-macOS
+          name: GummyGram-macOS
           path: out/Release/macOS.dmg
           if-no-files-found: error
 
@@ -409,12 +419,12 @@ jobs:
     defaults:
       run:
         shell: pwsh
-        working-directory: TBuild/AyuGram
+        working-directory: TBuild/GummyGram
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          path: TBuild/AyuGram
+          path: TBuild/GummyGram
           fetch-depth: 0
 
       - name: Initialize submodules
@@ -427,7 +437,6 @@ jobs:
       - name: Patch codegen and syntax highlighting
         run: |
           python Telegram/build/patch_codegen.py
-          python Telegram/build/patch_prisma.py
 
       - name: Read build configuration
         id: configuration
@@ -450,9 +459,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.ThirdPartyPath }}
-          key: windows-2022-x64-tools-${{ hashFiles('TBuild/AyuGram/Telegram/build/prepare/**', 'TBuild/AyuGram/Telegram/build/qt_version.py') }}
+          key: windows-2022-x64-tools-${{ hashFiles('TBuild/GummyGram/Telegram/build/prepare/**', 'TBuild/GummyGram/Telegram/build/qt_version.py') }}
           restore-keys: |
-            windows-2022-x64-tools-${{ hashFiles('TBuild/AyuGram/Telegram/build/prepare/**', 'TBuild/AyuGram/Telegram/build/qt_version.py') }}-partial-
+            windows-2022-x64-tools-${{ hashFiles('TBuild/GummyGram/Telegram/build/prepare/**', 'TBuild/GummyGram/Telegram/build/qt_version.py') }}-partial-
             windows-2022-x64-tools-
 
       - name: Restore libraries cache
@@ -465,9 +474,9 @@ jobs:
             !${{ env.LibrariesPath }}\[qQ]t[_-]*
             ${{ env.LibrariesPath }}\cache_keys\*
             !${{ env.LibrariesPath }}\cache_keys\[qQ]t[_-]*
-          key: windows-2022-x64-release-libs-${{ steps.configuration.outputs.sdk }}-${{ hashFiles('TBuild/AyuGram/Telegram/build/prepare/**', 'TBuild/AyuGram/Telegram/build/qt_version.py') }}
+          key: windows-2022-x64-release-libs-${{ steps.configuration.outputs.sdk }}-${{ hashFiles('TBuild/GummyGram/Telegram/build/prepare/**', 'TBuild/GummyGram/Telegram/build/qt_version.py') }}
           restore-keys: |
-            windows-2022-x64-release-libs-${{ steps.configuration.outputs.sdk }}-${{ hashFiles('TBuild/AyuGram/Telegram/build/prepare/**', 'TBuild/AyuGram/Telegram/build/qt_version.py') }}-partial-
+            windows-2022-x64-release-libs-${{ steps.configuration.outputs.sdk }}-${{ hashFiles('TBuild/GummyGram/Telegram/build/prepare/**', 'TBuild/GummyGram/Telegram/build/qt_version.py') }}-partial-
             windows-2022-x64-release-libs-
 
       - name: Restore Qt cache
@@ -477,9 +486,9 @@ jobs:
           path: |
             ${{ env.LibrariesPath }}\[qQ]t[_-]*
             ${{ env.LibrariesPath }}\cache_keys\[qQ]t[_-]*
-          key: windows-2022-x64-release-qt-${{ steps.configuration.outputs.sdk }}-${{ hashFiles('TBuild/AyuGram/Telegram/build/prepare/**', 'TBuild/AyuGram/Telegram/build/qt_version.py') }}
+          key: windows-2022-x64-release-qt-${{ steps.configuration.outputs.sdk }}-${{ hashFiles('TBuild/GummyGram/Telegram/build/prepare/**', 'TBuild/GummyGram/Telegram/build/qt_version.py') }}
           restore-keys: |
-            windows-2022-x64-release-qt-${{ steps.configuration.outputs.sdk }}-${{ hashFiles('TBuild/AyuGram/Telegram/build/prepare/**', 'TBuild/AyuGram/Telegram/build/qt_version.py') }}-partial-
+            windows-2022-x64-release-qt-${{ steps.configuration.outputs.sdk }}-${{ hashFiles('TBuild/GummyGram/Telegram/build/prepare/**', 'TBuild/GummyGram/Telegram/build/qt_version.py') }}-partial-
             windows-2022-x64-release-qt-
 
       - name: Prepare tools
@@ -559,7 +568,7 @@ jobs:
             ${{ env.LibrariesPath }}\cache_keys\[qQ]t[_-]*
           key: ${{ steps.cache-qt.outputs.cache-primary-key }}-partial-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: Configure and build AyuGram
+      - name: Configure and build GummyGram
         shell: cmd
         run: |
           cd Telegram
@@ -578,12 +587,12 @@ jobs:
       - name: Stage Windows binaries
         run: |
           $output = Join-Path $PWD 'out\Release'
-          $binary = @('Telegram.exe', 'AyuGram.exe') |
+          $binary = @('GummyGram.exe') |
             ForEach-Object { Join-Path $output $_ } |
             Where-Object { Test-Path -LiteralPath $_ } |
             Select-Object -First 1
           if (-not $binary) { throw "Application executable was not found in $output." }
-          $package = Join-Path $env:RUNNER_TEMP 'AyuGram-Windows\AyuGram'
+          $package = Join-Path $env:RUNNER_TEMP 'GummyGram-Windows\GummyGram'
           New-Item -ItemType Directory -Path $package -Force | Out-Null
           Copy-Item -LiteralPath $binary -Destination $package
           $modules = Join-Path $output 'modules'
@@ -600,7 +609,7 @@ jobs:
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AyuGram-Windows-x64
-          path: ${{ runner.temp }}/AyuGram-Windows/
+          name: GummyGram-Windows-x64
+          path: ${{ runner.temp }}/GummyGram-Windows/
           if-no-files-found: error
           retention-days: 14

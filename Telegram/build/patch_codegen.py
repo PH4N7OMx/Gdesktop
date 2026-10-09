@@ -17,7 +17,12 @@ def patch_source(source):
         "if ((!isLng && !isAyu)"
     )
     patched, count = re.subn(pattern, lambda _: replacement, source)
-    if count != 1 and not (count == 0 and replacement in source):
+    fork_scanner = (
+        "const auto isKeyPrefix =" in source
+        and "|| (data[i] == 'a'" in source
+        and "if (!isKeyPrefix" in source
+    )
+    if count != 1 and not (count == 0 and (replacement in source or fork_scanner)):
         raise RuntimeError("Unexpected codegen scanner; ayu_ patch was not applied.")
     patched, versions = re.subn(
         r"constexpr auto kCacheVersion = quint32\([12]\);",

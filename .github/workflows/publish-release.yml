@@ -62,7 +62,7 @@ jobs:
       - name: Download Linux package
         uses: actions/download-artifact@v4
         with:
-          name: AyuGram-Linux
+          name: GummyGram-Linux
           path: release-assets
           github-token: ${{ github.token }}
           run-id: ${{ steps.build.outputs.run-id }}
@@ -70,7 +70,7 @@ jobs:
       - name: Download macOS package
         uses: actions/download-artifact@v4
         with:
-          name: AyuGram-macOS
+          name: GummyGram-macOS
           path: release-assets
           github-token: ${{ github.token }}
           run-id: ${{ steps.build.outputs.run-id }}
@@ -78,7 +78,7 @@ jobs:
       - name: Download Windows binaries
         uses: actions/download-artifact@v4
         with:
-          name: AyuGram-Windows-x64
+          name: GummyGram-Windows-x64
           path: windows-package
           github-token: ${{ github.token }}
           run-id: ${{ steps.build.outputs.run-id }}
@@ -86,9 +86,9 @@ jobs:
       - name: Package Windows release asset
         working-directory: windows-package
         run: |
-          test -f AyuGram/Telegram.exe || test -f AyuGram/AyuGram.exe
-          test -f AyuGram/modules/x64/d3d/d3dcompiler_47.dll
-          zip -r ../release-assets/Windows.zip AyuGram
+          test -f GummyGram/GummyGram.exe
+          test -f GummyGram/modules/x64/d3d/d3dcompiler_47.dll
+          zip -r ../release-assets/Windows.zip GummyGram
 
       - name: Upload packages to the published release
         uses: softprops/action-gh-release@v2

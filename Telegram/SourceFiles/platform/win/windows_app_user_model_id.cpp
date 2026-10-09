@@ -213,7 +213,7 @@ void CleanupShortcut() {
 		return;
 	}
 
-	QString path = systemShortcutPath() + u"AyuGram.lnk"_q;
+	QString path = systemShortcutPath() + u"GummyGram.lnk"_q;
 	std::wstring p = QDir::toNativeSeparators(path).toStdWString();
 
 	DWORD attributes = GetFileAttributes(p.c_str());
@@ -347,7 +347,8 @@ bool checkInstalled(QString path = {}) {
 
 	const auto installed = u"AyuGram Desktop/AyuGram.lnk"_q;
 	const auto old = u"AyuGram for Windows/AyuGram.lnk"_q;
-	return validateShortcutAt(path + installed)
+	return validateShortcutAt(path + u"GummyGram Desktop/GummyGram.lnk"_q)
+		|| validateShortcutAt(path + installed)
 		|| validateShortcutAt(path + old);
 }
 
@@ -358,7 +359,7 @@ bool ValidateShortcut() {
 	}
 
 	if (cAlphaVersion()) {
-		path += u"AyuGramAlpha.lnk"_q;
+		path += u"GummyGramAlpha.lnk"_q;
 		if (validateShortcutAt(path)) {
 			return true;
 		}
@@ -367,7 +368,7 @@ bool ValidateShortcut() {
 			return true;
 		}
 
-		path += u"AyuGram.lnk"_q;
+		path += u"GummyGram.lnk"_q;
 		if (validateShortcutAt(path)) {
 			return true;
 		}

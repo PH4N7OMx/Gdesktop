@@ -230,6 +230,7 @@ const auto kMeta = BuildHelper({
 	.parentId = AyuMain::Id(),
 	.title = &tr::ayu_CategoryOther,
 	.icon = &st::menuIconFave,
+	.hidden = true, // Temporarily hidden during the GummyGram rebrand.
 }, [](SectionBuilder &builder) {
 	auto ayu = AyuSectionBuilder(builder);
 

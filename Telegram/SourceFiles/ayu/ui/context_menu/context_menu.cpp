@@ -268,7 +268,7 @@ void AddAyuGramActions(PeerData *peerData,
 	const auto topicId = topic ? topic->rootId().bare : 0;
 
 	addCallback(Window::PeerMenuCallback::Args{
-		.text = u"AyuGram"_q,
+		.text = u"GummyGram"_q,
 		.handler = nullptr,
 		.icon = &st::menuIconGroupReactions,
 		.fillSubmenu = [=](not_null<Ui::PopupMenu*> menu) {
@@ -925,7 +925,6 @@ void AddReadUntilAction(not_null<Ui::PopupMenu*> menu, HistoryItem *item) {
 			const auto media = readItem->media();
 			if (media
 				&& media->ttlSeconds() <= 0
-				&& readItem->unsupportedTTL() <= 0
 				&& !readItem->out()) {
 				const auto ids = MTP_vector<MTPint>(1, MTP_int(readItem->id));
 				if (const auto channel = readItem->history()->peer->asChannel()) {
@@ -951,7 +950,7 @@ void AddReadUntilAction(not_null<Ui::PopupMenu*> menu, HistoryItem *item) {
 }
 
 void AddBurnAction(not_null<Ui::PopupMenu*> menu, HistoryItem *item) {
-	if (!item->media() || (item->media()->ttlSeconds() <= 0 && item->unsupportedTTL() <= 0) || item->out() ||
+	if (!item->media() || item->media()->ttlSeconds() <= 0 || item->out() ||
 		!item->hasUnreadMediaFlag()) {
 		return;
 	}

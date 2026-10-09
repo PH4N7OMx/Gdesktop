@@ -71,7 +71,40 @@ void AyuLanguage::loadCachedLanguage() {
 	auto &language = Lang::GetInstance();
 	language.resetValue("ayu_CreationDateUserConfirmed");
 	language.resetValue("ayu_CreationDateSelfConfirmed");
+	const auto pluginStrings = std::map<QString, QString>{
+		{ u"ayu_JellyPlugins"_q, u"Плагины"_q },
+		{ u"ayu_JellyInstall"_q, u"Установить плагин"_q },
+		{ u"ayu_JellyInstallNotice"_q, u"Пакет будет сохранён без запуска. Замена плагина останавливает его и требует повторного разрешения доступа."_q },
+		{ u"ayu_JellyPermissions"_q, u"Разрешения плагина"_q },
+		{ u"ayu_JellyPermissionNotice"_q, u"Разрешай только нужные возможности. Файлы устройства, ключи аккаунта и системные команды недоступны."_q },
+		{ u"ayu_JellyCombinedRisk"_q, u"Чтение чатов вместе с доступом к сайтам позволяет плагину передавать содержимое сообщений на эти сайты."_q },
+		{ u"ayu_JellyReadChats"_q, u"Читать новые сообщения в этих чатах"_q },
+		{ u"ayu_JellySendChats"_q, u"Отправлять сообщения в эти чаты"_q },
+		{ u"ayu_JellyHttpHosts"_q, u"Обращаться к этим HTTPS-сайтам"_q },
+		{ u"ayu_JellyStorage"_q, u"Сохранять данные плагина локально"_q },
+		{ u"ayu_JellyTimers"_q, u"Работать по расписанию, пока приложение открыто"_q },
+		{ u"ayu_JellyActions"_q, u"Добавлять кнопки на страницу плагинов"_q },
+		{ u"ayu_JellyMessageLimit"_q, u"Максимум сообщений в час: "_q },
+		{ u"ayu_JellyEnable"_q, u"Включить"_q },
+		{ u"ayu_JellyDisable"_q, u"Выключить и отозвать разрешения"_q },
+		{ u"ayu_JellyStopAll"_q, u"Остановить все плагины"_q },
+		{ u"ayu_JellyConfiguration"_q, u"Настройки плагина"_q },
+		{ u"ayu_JellyConfigurationNotice"_q, u"Укажи настройки JSON из инструкции автора. Сохранение останавливает плагин; включи его снова для применения изменений."_q },
+		{ u"ayu_JellyLog"_q, u"Журнал действий"_q },
+		{ u"ayu_JellyEmpty"_q, u"Плагинов пока нет. Для начала установи пакет .jellyplugin."_q },
+		{ u"ayu_JellyInvalidPackage"_q, u"Не удалось прочитать пакет плагина (максимум 1 МиБ)."_q },
+		{ u"ayu_JellyRunning"_q, u"Работает"_q },
+		{ u"ayu_JellyDisabled"_q, u"Выключен"_q },
+		{ u"ayu_JellyRemove"_q, u"Удалить плагин"_q },
+		{ u"ayu_JellyRemoveNotice"_q, u"Удалить плагин, его настройки и сохранённые данные? Это действие нельзя отменить."_q },
+	};
+	for (const auto &[key, value] : pluginStrings) {
+		language.resetValue(key.toUtf8());
+	}
 	if (langPackId == u"ru"_q || langPackBaseId == u"ru"_q) {
+		for (const auto &[key, value] : pluginStrings) {
+			language.applyValue(key.toUtf8(), value.toUtf8());
+		}
 		language.applyValue(
 			"ayu_CreationDateUserConfirmed",
 			u"**{item1}** создал(а) свой аккаунт **{item2}**."_q.toUtf8());
@@ -105,7 +138,7 @@ void AyuLanguage::loadCachedLanguage() {
 		QJsonParseError error{};
 		const auto doc = QJsonDocument::fromJson(data, &error);
 		if (error.error == QJsonParseError::NoError) {
-			LOG(("Loading cached AyuGram language: %1").arg(finalLangPackId));
+			LOG(("Loading cached GummyGram language: %1").arg(finalLangPackId));
 			applyLanguageJson(doc);
 		}
 	}
@@ -120,7 +153,7 @@ void AyuLanguage::saveCachedLanguage(const QByteArray &json, const QString &lang
 	if (file.open(QIODevice::WriteOnly)) {
 		file.write(json);
 		file.close();
-		LOG(("Cached AyuGram language: %1").arg(langId));
+		LOG(("Cached GummyGram language: %1").arg(langId));
 	}
 }
 
@@ -166,7 +199,7 @@ void AyuLanguage::fetchFinished() {
 	auto statusCode = _chkReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 
 	if (statusCode == 404 && !langPackId.isEmpty() && !langPackBaseId.isEmpty() && !needFallback) {
-		LOG(("AyuGram Language not found! Fallback to main language: %1...").arg(langPackBaseId));
+		LOG(("GummyGram Language not found! Fallback to main language: %1...").arg(langPackBaseId));
 		needFallback = true;
 		_chkReply->disconnect();
 		fetchLanguage("", langPackBaseId);
@@ -193,12 +226,12 @@ void AyuLanguage::fetchError(QNetworkReply::NetworkError e) {
 		const auto id = Lang::GetInstance().id();
 
 		if (!id.isEmpty() && !baseId.isEmpty() && !needFallback) {
-			LOG(("AyuGram Language not found! Fallback to main language: %1...").arg(baseId));
+			LOG(("GummyGram Language not found! Fallback to main language: %1...").arg(baseId));
 			needFallback = true;
 			_chkReply->disconnect();
 			fetchLanguage("", baseId);
 		} else {
-			LOG(("AyuGram Language not found!"));
+			LOG(("GummyGram Language not found!"));
 			_chkReply = nullptr;
 		}
 	}
@@ -223,6 +256,19 @@ void AyuLanguage::applyLanguageJson(QJsonDocument doc) {
 
 		if (key.endsWith("_PC")) {
 			key = key.replace("_PC", "");
+		}
+
+		if (key == u"ayu_SettingsWatermark"_q
+			|| key == u"ayu_ExteraChatsAlert"_q
+			|| key == u"ayu_PluginsNotAvailable"_q) {
+			Lang::GetInstance().resetValue(key.toUtf8());
+			continue;
+		}
+		if (key != u"ayu_SupporterPopup"_q
+			&& key != u"ayu_OfficialResourcePopup"_q) {
+			val.replace(u"AyuGram Fork"_q, u"GummyGram"_q);
+			val.replace(u"AyuGram"_q, u"GummyGram"_q);
+			val.replace(u"Ayu"_q, u"Gummy"_q);
 		}
 
 		if (val.contains(qsl("%1$d")) && !val.contains(qsl("%2$d"))) {

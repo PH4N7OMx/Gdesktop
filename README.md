@@ -1,17 +1,20 @@
-# AyuGram Fork
+# GummyGram
 
-![AyuGram Logo](.github/AyuGram.png) ![AyuChan](.github/AyuChan.png)
+<img src=".github/GummyGram.png" alt="GummyGram" width="160">
 
 [ English | [Русский](README-RU.md) ]
 
-**AyuGram Fork** is an actively maintained fork of [AyuGram Desktop](https://github.com/AyuGram/AyuGramDesktop), packed with new features, quality-of-life enhancements, updated translations, and bug fixes.
+**GummyGram** is an actively maintained fork of [AyuGram Desktop](https://github.com/AyuGram/AyuGramDesktop), packed with new features, quality-of-life enhancements, updated translations, and bug fixes.
 
-📢 **Official Telegram Channel:** [@ayufork](https://t.me/ayufork)
+📢 **Official Telegram Channel:** [@GummyDesktop](https://t.me/GummyDesktop)
+
+💬 **Community Chat:** [@GdesktopChat](https://t.me/GdesktopChat)
 
 ---
 
 ## ✨ Features
 
+- 🧩 **Plugin System (preview):** TypeScript/JavaScript SDK, scoped permissions, automation, and a Windows sandbox. [Developer documentation](docs/GummyGram-documentation/README.md).
 - 👻 **Flexible Ghost Mode:** Granular control over read receipts, typing status, online packets, and scheduled messages.
 - 💾 **Message History & Anti-Recall:** Save deleted messages and message edit histories locally.
 - 💎 **Local Telegram Premium:** Unlock local client-side premium features and perks.
@@ -25,17 +28,17 @@
 
 ## 📥 Downloads
 
-Official prebuilt binaries and updates for **AyuGram Fork** are available exclusively through:
+Official prebuilt binaries and updates for **GummyGram** are available exclusively through:
 
-- 🚀 **GitHub Releases:** [Releases Page](https://github.com/PH4N7OMx/AyuGramDesktop/releases)
-- 📢 **Telegram Channel:** [t.me/ayufork](https://t.me/ayufork)
+- 🚀 **GitHub Releases:** [Releases Page](https://github.com/PH4N7OMx/Gdesktop/releases)
+- 📢 **Telegram Channel:** [t.me/GummyDesktop](https://t.me/GummyDesktop)
 
 > [!NOTE]
-> Third-party package managers (such as Winget, Homebrew, Scoop, or distro package repositories) distribute the original upstream AyuGram, which does not contain the exclusive features of this fork. To use AyuGram Fork, download it directly from our releases or build from source.
+> Third-party package managers (such as Winget, Homebrew, Scoop, or distro package repositories) distribute the original upstream AyuGram, which does not contain the exclusive features of this fork. To use GummyGram, download it directly from our releases or build from source.
 
 ### Building from Source
 
-- [Windows x64 Build Guide](docs/building-win-x64.md)
+- [Windows Build Guide](docs/building-win.md)
 - [Linux Build Guide](docs/building-linux.md)
 - [macOS Build Guide](docs/building-mac.md)
 

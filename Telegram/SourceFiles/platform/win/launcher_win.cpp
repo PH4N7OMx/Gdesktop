@@ -128,7 +128,7 @@ LONG WINAPI AyuUnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo) {
 	char buf[4096] = { 0 };
 	int len = _snprintf_s(buf, sizeof(buf), _TRUNCATE,
 		"==================================================\n"
-		"AYUGRAM UNHANDLED CRASH DETECTED\n"
+		"GUMMYGRAM UNHANDLED CRASH DETECTED\n"
 		"==================================================\n"
 		"Exception Code: 0x%08X\n"
 		"Exception Address: 0x%p\n"
@@ -184,7 +184,7 @@ void InstallAyuCrashHandler() {
 	_set_purecall_handler([] {
 		FILE *f = nullptr;
 		if (fopen_s(&f, "crash_log.txt", "w") == 0 && f) {
-			fputs("AYUGRAM CRASH: Pure virtual function call\n", f);
+			fputs("GUMMYGRAM CRASH: Pure virtual function call\n", f);
 			fflush(f);
 			fclose(f);
 		}
@@ -193,7 +193,7 @@ void InstallAyuCrashHandler() {
 		FILE *f = nullptr;
 		if (fopen_s(&f, "crash_log.txt", "w") == 0 && f) {
 			char buf[512] = { 0 };
-			_snprintf_s(buf, sizeof(buf) - 1, "AYUGRAM CRASH: CRT Invalid Parameter (%ls)\n", expr ? expr : L"unknown");
+			_snprintf_s(buf, sizeof(buf) - 1, "GUMMYGRAM CRASH: CRT Invalid Parameter (%ls)\n", expr ? expr : L"unknown");
 			fputs(buf, f);
 			fflush(f);
 			fclose(f);
@@ -277,6 +277,23 @@ bool Launcher::launchUpdater(UpdaterLaunch action) {
 		}
 	} else {
 		pushArgument(u"-update"_q);
+		auto created = FILETIME();
+		auto exited = FILETIME();
+		auto kernel = FILETIME();
+		auto user = FILETIME();
+		if (GetProcessTimes(GetCurrentProcess(), &created, &exited, &kernel, &user)) {
+			// WHY: Application and storage destruction precede this call, so
+			// the updater can terminate us if remaining process teardown hangs.
+			const auto creationTime = (quint64(created.dwHighDateTime) << 32)
+				| created.dwLowDateTime;
+			pushArgument(u"-finishprocess"_q);
+			pushArgument(QString::number(GetCurrentProcessId()));
+			pushArgument(QString::number(creationTime));
+		} else {
+			const auto error = GetLastError();
+			LOG(("Update Error: could not query process creation time: %1"
+				).arg(error));
+		}
 		pushArgument(u"-exename"_q);
 		pushArgument('"' + cExeName() + '"');
 		if (cWriteProtected()) {

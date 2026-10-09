@@ -15,7 +15,7 @@ public:
 	IconPicker(QWidget *parent);
 	~IconPicker() = default;
 
-	static constexpr int kColumns = 4;
+	static constexpr int kColumns = 2;
 
 protected:
 	void paintEvent(QPaintEvent *e) override;

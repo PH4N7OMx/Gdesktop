@@ -107,6 +107,9 @@ SearchRegistry &SearchRegistry::Instance() {
 void SearchRegistry::add(
 		not_null<const SectionMeta*> meta,
 		SearchEntriesIndexer indexer) {
+	if (meta->hidden) {
+		return;
+	}
 	_sections[meta->id] = meta;
 	_indexers.push_back({ meta->id, std::move(indexer) });
 }

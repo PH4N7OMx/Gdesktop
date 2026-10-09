@@ -22,6 +22,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/random.h"
 #include "base/parse_helper.h"
 #include "base/zlib_help.h"
+// Prefixed zlib defines crc32 as z_crc32; base::crc32 is a separate function.
+#ifdef crc32
+#undef crc32
+#endif
 #include "base/unixtime.h"
 #include "base/crc32hash.h"
 #include "base/never_freed_pointer.h"

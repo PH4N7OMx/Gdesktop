@@ -91,7 +91,7 @@ QString getPeerDC(not_null<PeerData*> peer);
 
 int getScheduleTime(int64 sumSize);
 
-bool isMessageSavable(not_null<HistoryItem *> item);
+bool isMessageSavable(not_null<const HistoryItem *> item);
 void processMessageDelete(not_null<HistoryItem *> item);
 
 void searchUserById(ID userId, Main::Session *session, const UsernameResolverCallback &callback);

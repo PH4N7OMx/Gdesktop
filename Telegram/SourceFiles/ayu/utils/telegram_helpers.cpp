@@ -714,7 +714,7 @@ int getScheduleTime(int64 sumSize) {
 	return time;
 }
 
-bool isMessageSavable(const not_null<HistoryItem*> item) {
+bool isMessageSavable(not_null<const HistoryItem*> item) {
 	const auto &settings = AyuSettings::getInstance();
 
 	if (!settings.saveDeletedMessages()) {

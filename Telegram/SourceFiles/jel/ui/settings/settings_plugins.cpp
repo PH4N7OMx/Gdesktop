@@ -3,7 +3,6 @@
 #include "jel/plugins/plugin_manager.h"
 #include "jel/ui/settings/settings_main.h"
 #include "lang/lang_text_entity.h"
-#include "lang/lang_instance.h"
 #include "main/main_session.h"
 #include "settings/settings_builder.h"
 #include "ui/boxes/confirm_box.h"
@@ -396,10 +395,7 @@ const auto kMeta = BuildHelper({
 		.title = tr::jel_JellyDocumentation(),
 		.icon = { &st::menuIconInfo },
 		.onClick = [=] {
-			const auto &language = Lang::GetInstance();
-			const auto russian = language.id() == u"ru"_q || language.baseId() == u"ru"_q;
-			UrlClickHandler::Open(u"https://github.com/PH4N7OMx/Gdesktop/tree/dev/docs/JellyPlugins-documentation/"_q
-				+ (russian ? u"ru"_q : u"en"_q));
+			UrlClickHandler::Open(u"https://jellygram.gitbook.io/jelly-plugins/"_q);
 		},
 	});
 	builder.addSkip();

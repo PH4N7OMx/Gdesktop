@@ -1,6 +1,6 @@
 # JellyPlugins SDK
 
-API 1 для TypeScript/JavaScript-плагинов. Документация: `../docs/JellyPlugins-documentation`.
+API 1 для TypeScript/JavaScript-плагинов. [Документация](https://jellygram.gitbook.io/jelly-plugins/).
 
 ```powershell
 npm ci --ignore-scripts

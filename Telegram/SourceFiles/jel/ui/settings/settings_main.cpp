@@ -171,7 +171,7 @@ void BuildLinks(SectionBuilder &builder) {
 		.label = rpl::single(QString("JellyPlugins documentation")),
 		.onClick = [=] {
 			QDesktopServices::openUrl(
-				QString("https://github.com/PH4N7OMx/Gdesktop/tree/HEAD/docs/JellyPlugins-documentation"));
+				QString("https://jellygram.gitbook.io/jelly-plugins/"));
 		},
 	});
 

@@ -46,6 +46,8 @@ Worker запускается специальным аргументом до �
 
 Название документации: **JellyPlugins-documentation**.
 
+Публичная документация: [jellygram.gitbook.io/jelly-plugins](https://jellygram.gitbook.io/jelly-plugins/).
+
 ## Импорт архива
 
 1. Войди в GitBook и создай пространство документации с названием `JellyPlugins-documentation`.

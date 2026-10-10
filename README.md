@@ -14,7 +14,7 @@
 
 ## ✨ Features
 
-- 🧩 **JellyPlugins:** TypeScript/JavaScript SDK, scoped permissions, automation, and a Windows sandbox. [Developer documentation](docs/JellyPlugins-documentation/README.md).
+- 🧩 **JellyPlugins:** TypeScript/JavaScript SDK, scoped permissions, automation, and a Windows sandbox. [Developer documentation](https://jellygram.gitbook.io/jelly-plugins/).
 - 👻 **Flexible Ghost Mode:** Granular control over read receipts, typing status, online packets, and scheduled messages.
 - 💾 **Message History & Anti-Recall:** Save deleted messages and message edit histories locally.
 - 💎 **Local Telegram Premium:** Unlock local client-side premium features and perks.

@@ -14,7 +14,7 @@
 
 ## ✨ Возможности и фишки
 
-- 🧩 **JellyPlugins:** SDK TypeScript/JavaScript, разрешения, автоматизация и изоляция Windows. [Документация](docs/JellyPlugins-documentation/README.md).
+- 🧩 **JellyPlugins:** SDK TypeScript/JavaScript, разрешения, автоматизация и изоляция Windows. [Документация](https://jellygram.gitbook.io/jelly-plugins/).
 - 👻 **Гибкий режим призрака (Ghost Mode):** Тонкая настройка отправки прочтений, статуса «печатает», онлайн-пакетов и отложенной отправки.
 - 💾 **История сообщений и анти-удаление:** Локальное сохранение удаленных сообщений и истории изменений текста.
 - 💎 **Локальный Telegram Premium:** Разблокировка локальных клиентских фишек Premium.

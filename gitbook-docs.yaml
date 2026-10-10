@@ -6,12 +6,12 @@ site:
       key: gummygram-documentation
       title: Русский
       path: documentation
-      default: true
       content:
         directory: ./docs/JellyPlugins-documentation/ru
     - type: space
       key: jellyplugins-en
       title: English
       path: en
+      default: true
       content:
         directory: ./docs/JellyPlugins-documentation/en

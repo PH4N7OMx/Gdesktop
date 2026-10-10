@@ -108,11 +108,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "storage/file_upload.h"
 #include "storage/storage_account.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/ayu_worker.h"
-#include "ayu/utils/telegram_helpers.h"
-#include "ayu/features/forward/ayu_forward.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/jel_worker.h"
+#include "jel/utils/telegram_helpers.h"
+#include "jel/features/forward/jel_forward.h"
 
 
 namespace {
@@ -505,7 +505,7 @@ void ApiWrap::toggleHistoryArchived(
 		if (archived) {
 			history->setFolder(_session->data().folder(archiveId));
 		} else {
-			const auto &settings = AyuSettings::getInstance();
+			const auto &settings = JelSettings::getInstance();
 			if (settings.hideAllChatsFolder()) {
 				if (const auto window = Core::App().activeWindow()) {
 					if (const auto controller = window->sessionController()) {
@@ -1454,7 +1454,7 @@ void ApiWrap::migrateFail(not_null<PeerData*> peer, const QString &error) {
 
 void ApiWrap::markContentsRead(
 		const base::flat_set<not_null<HistoryItem*>> &items) {
-	const auto &ghost = AyuSettings::ghost(&session());
+	const auto &ghost = JelSettings::ghost(&session());
 
 	auto markedIds = QVector<MTPint>();
 	auto channelMarkedIds = base::flat_map<
@@ -1514,7 +1514,7 @@ void ApiWrap::markContentsRead(not_null<HistoryItem*> item) {
 		return;
 	}
 
-	const auto &ghost = AyuSettings::ghost(&session());
+	const auto &ghost = JelSettings::ghost(&session());
 	if (!ghost.sendReadMessages() && !passthrough) {
 		return;
 	}
@@ -1994,7 +1994,7 @@ void ApiWrap::joinChannel(not_null<ChannelData*> channel) {
 		using Flag = ChannelDataFlag;
 		chatParticipants().loadSimilarPeers(channel);
 
-		const auto &settings = AyuSettings::getInstance();
+		const auto &settings = JelSettings::getInstance();
 		if (!settings.collapseSimilarChannels()) {
 			channel->setFlags(channel->flags() | Flag::SimilarExpanded);
 		}
@@ -3952,18 +3952,18 @@ void ApiWrap::forwardMessages(
 		FnMut<void()> &&successCallback) {
 	Expects(!draft.items.empty());
 
-	const auto fullAyuForward = AyuForward::isFullAyuForwardNeeded(draft.items.front());
-	if (fullAyuForward) {
+	const auto fullJelForward = JelForward::isFullJelForwardNeeded(draft.items.front());
+	if (fullJelForward) {
 		crl::async([=] {
-			AyuForward::forwardMessages(_session, action, false, draft);
+			JelForward::forwardMessages(_session, action, false, draft);
 		});
 		return;
 	}
 
-	const auto ayuIntelligentForwardNeeded = AyuForward::isAyuForwardNeeded(draft.items);
-	if (ayuIntelligentForwardNeeded) {
+	const auto jelIntelligentForwardNeeded = JelForward::isJelForwardNeeded(draft.items);
+	if (jelIntelligentForwardNeeded) {
 		crl::async([=] {
-			AyuForward::intelligentForward(_session, action, draft);
+			JelForward::intelligentForward(_session, action, draft);
 		});
 		return;
 	}
@@ -4875,7 +4875,7 @@ void ApiWrap::sendMessage(
 	const auto ephemeral = _session->ephemeralMessages().wouldSend(message);
 	if (!ephemeral
 		&& !canSendTexts
-		&& !AyuForward::isForwarding(peer->id)) {
+		&& !JelForward::isForwarding(peer->id)) {
 		return;
 	} else if (_session->ephemeralMessages().trySend(message)) {
 		if (clearCloudDraft) {
@@ -5200,7 +5200,7 @@ void ApiWrap::sendBotStart(
 	)).done([=](const MTPUpdates &result) {
 		applyUpdates(result);
 
-		AyuWorker::markAsOnline(_session);
+		JelWorker::markAsOnline(_session);
 	}).fail([=](const MTP::Error &error) {
 		if (chat) {
 			const auto type = error.type();

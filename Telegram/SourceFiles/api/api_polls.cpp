@@ -30,9 +30,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/toast/toast.h"
 #include "window/window_session_controller.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/utils/telegram_helpers.h"
 
 
 namespace {
@@ -387,7 +387,7 @@ void Polls::sendVotes(
 			}
 		}
 		_session->updates().applyUpdates(result);
-		const auto &ghost = AyuSettings::ghost(_session);
+		const auto &ghost = JelSettings::ghost(_session);
 		if (!ghost.sendReadMessages()
 			&& ghost.markReadAfterAction()
 			&& item) {

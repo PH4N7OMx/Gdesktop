@@ -59,9 +59,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <algorithm>
 #include <memory>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "styles/style_ayu_styles.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "styles/style_jel_styles.h"
 
 namespace Ui::BotWebView {
 
@@ -402,7 +402,7 @@ void LogNativeMessageRejected(
 }
 
 [[nodiscard]] QSize PanelInnerSize() {
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	auto size = QSize(st::botWebViewPanelSize);
 	if (settings.increaseWebviewHeight()) {
 		size.setHeight(st::botWebViewPanelHeightIncreased);

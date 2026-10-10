@@ -17,7 +17,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/random.h"
 #include "styles/style_chat.h"
 
-// AyuGram includes
+// GummyGram includes
 #include "base/platform/base_platform_haptic.h"
 
 

@@ -102,10 +102,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QMimeData>
 #include <unordered_map>
 
-// AyuGram includes
-#include "ayu/ui/ayu_userpic.h"
-#include "ayu/utils/telegram_helpers.h"
-#include "styles/style_ayu_icons.h"
+// GummyGram includes
+#include "jel/ui/jel_userpic.h"
+#include "jel/utils/telegram_helpers.h"
+#include "styles/style_jel_icons.h"
 
 
 namespace Dialogs {
@@ -1513,7 +1513,7 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
 			p.fillRect(0, 0, fullWidth, st::searchedBarHeight, st::searchedBarBg);
 			p.setFont(st::searchedBarFont);
 			p.setPen(st::searchedBarFg);
-			p.drawTextLeft(st::searchedBarPosition.x(), st::searchedBarPosition.y(), width(), tr::ayu_SearchByIDResults(tr::now));
+			p.drawTextLeft(st::searchedBarPosition.x(), st::searchedBarPosition.y(), width(), tr::jel_SearchByIDResults(tr::now));
 			p.translate(0, st::searchedBarHeight);
 
 			auto skip = idSearchOffset();
@@ -6314,7 +6314,7 @@ void InnerWidget::repaintDialogRowCornerStatus(not_null<History*> history) {
 		? st::dialogsOnlineBadgeSize
 		: st::dialogsCallBadgeSize;
 	const auto stroke = st::dialogsOnlineBadgeStroke;
-	const auto updateRect = AyuUserpic::OnlineBadgeRect(
+	const auto updateRect = JelUserpic::OnlineBadgeRect(
 		_st->photoSize,
 		size,
 		stroke

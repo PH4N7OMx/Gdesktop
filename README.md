@@ -4,7 +4,7 @@
 
 [ English | [Русский](README-RU.md) ]
 
-**GummyGram** is an actively maintained fork of [AyuGram Desktop](https://github.com/AyuGram/AyuGramDesktop), packed with new features, quality-of-life enhancements, updated translations, and bug fixes.
+**GummyGram** is an actively maintained fork of [GummyGram Desktop](https://github.com/AyuGram/AyuGramDesktop), packed with new features, quality-of-life enhancements, updated translations, and bug fixes.
 
 📢 **Official Telegram Channel:** [@GummyDesktop](https://t.me/GummyDesktop)
 
@@ -46,7 +46,7 @@ Official prebuilt binaries and updates for **GummyGram** are available exclusive
 
 ## 🤝 Credits & Acknowledgements
 
-- **Original Base:** [AyuGram](https://github.com/AyuGram/AyuGramDesktop) by [@Radolyn](https://github.com/Radolyn)
+- **Original Base:** [GummyGram](https://github.com/AyuGram/AyuGramDesktop) by [@Radolyn](https://github.com/Radolyn)
 - **Telegram Clients:**
   - [Telegram Desktop](https://github.com/telegramdesktop/tdesktop)
   - [Kotatogram](https://github.com/kotatogram/kotatogram-desktop)

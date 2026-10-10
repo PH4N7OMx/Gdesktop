@@ -7,7 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/history.h"
 
-#include "ayu/features/filters/filters_controller.h"
+#include "jel/features/filters/filters_controller.h"
 
 #include "history/view/history_view_element.h"
 #include "history/view/history_view_item_preview.h"
@@ -86,9 +86,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/qt/qt_common_adapters.h"
 #include "styles/style_dialogs.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/ayu_state.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/jel_state.h"
 
 
 namespace {
@@ -723,7 +723,7 @@ not_null<HistoryItem*> History::insertItem(
 void History::destroyMessage(not_null<HistoryItem*> item) {
 	// Expects(item->isHistoryEntry() || !item->mainView());
 	if (!(item->isHistoryEntry() || !item->mainView())) {
-		return; // AyuGram: fix crash when using `saveDeletedMessages`
+		return; // GummyGram: fix crash when using `saveDeletedMessages`
 	}
 
 	if (item->isHistoryEntry()) {
@@ -2622,7 +2622,7 @@ int History::chatListNameVersion() const {
 }
 
 void History::hasUnreadMentionChanged(bool has) {
-	if (AyuSettings::getInstance().mentionsDisabled(peer->id.value)) {
+	if (JelSettings::getInstance().mentionsDisabled(peer->id.value)) {
 		return;
 	}
 	if (isForum()) {
@@ -2907,7 +2907,7 @@ Dialogs::UnreadState History::computeUnreadState() const {
 	result.chats = count ? 1 : 0;
 	result.marks = mark ? 1 : 0;
 	const auto peer = this->peer.get();
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	const auto hideMentions = settings.mentionsDisabled(peer->id.value);
 	result.mentions = hideMentions ? 0 : (unreadMentions().has() ? 1 : 0);
 	const auto hideReactions = (peer->isChannel() && !peer->isMegagroup() && !settings.showChannelReactions())
@@ -3508,7 +3508,7 @@ bool History::shouldBeInChatList() const {
 		return true;
 	} else if (const auto channel = peer->asChannel()) {
 		if (!channel->amIn()) {
-			if (AyuSettings::getInstance().keepForbiddenChats()
+			if (JelSettings::getInstance().keepForbiddenChats()
 				&& channel->wasRemoved()
 				&& (lastMessageKnown() && lastMessage() != nullptr)) {
 				return true;
@@ -3517,7 +3517,7 @@ bool History::shouldBeInChatList() const {
 		}
 	} else if (const auto chat = peer->asChat()) {
 		if (!chat->amIn()) {
-			if (AyuSettings::getInstance().keepForbiddenChats()
+			if (JelSettings::getInstance().keepForbiddenChats()
 				&& chat->wasRemoved()
 				&& (lastMessageKnown() && lastMessage() != nullptr)) {
 				return true;

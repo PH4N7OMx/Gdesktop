@@ -21,11 +21,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/wrap/vertical_layout.h"
 #include "ui/vertical_list.h"
 
-// AyuGram includes
+// GummyGram includes
 #include "lang_auto.h"
-#include "ayu/ayu_settings.h"
-#include "ayu/ui/components/saved_music.h"
-#include "ayu/utils/telegram_helpers.h"
+#include "jel/jel_settings.h"
+#include "jel/ui/components/saved_music.h"
+#include "jel/utils/telegram_helpers.h"
 #include "data/data_document.h"
 #include "styles/style_menu_icons.h"
 #include "ui/widgets/popup_menu.h"
@@ -87,9 +87,9 @@ rpl::producer<bool> SetupSavedMusic(
 			if (const auto document = item->media()
 					? item->media()->document()
 					: nullptr) {
-				auto musicButton = divider->entity()->add(object_ptr<Ui::SlideWrap<Profile::AyuMusicButton>>(
+				auto musicButton = divider->entity()->add(object_ptr<Ui::SlideWrap<Profile::JelMusicButton>>(
 					divider->entity(),
-					object_ptr<Profile::AyuMusicButton>(
+					object_ptr<Profile::JelMusicButton>(
 						divider->entity(),
 						DocumentMusicButtonData(document, item),
 						color,
@@ -105,7 +105,7 @@ rpl::producer<bool> SetupSavedMusic(
 					return mouseButton == Qt::RightButton;
 				}) | rpl::on_next([=]
 										  {
-											  const auto &settings = AyuSettings::getInstance();
+											  const auto &settings = JelSettings::getInstance();
 
 											  const auto contextMenu = new Ui::PopupMenu(
 												  nullptr,
@@ -114,11 +114,11 @@ rpl::producer<bool> SetupSavedMusic(
 
 											  contextMenu->addAction(
 												  settings.adaptiveCoverColor()
-													  ? tr::ayu_DisableColorfulCover(tr::now)
-													  : tr::ayu_EnableColorfulCover(tr::now),
+													  ? tr::jel_DisableColorfulCover(tr::now)
+													  : tr::jel_EnableColorfulCover(tr::now),
 												  [=]
 												  {
-													  AyuSettings::getInstance().setAdaptiveCoverColor(!AyuSettings::getInstance().adaptiveCoverColor());
+													  JelSettings::getInstance().setAdaptiveCoverColor(!JelSettings::getInstance().adaptiveCoverColor());
 
 													  const auto mediaRefreshed = item ? item->media() : nullptr;
 													  const auto documentRefreshed = mediaRefreshed

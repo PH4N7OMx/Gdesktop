@@ -340,7 +340,7 @@ void Launcher::init() {
 	prepareSettings();
 	initQtMessageLogging();
 
-	QApplication::setApplicationName(u"AyuGramDesktop"_q);
+	QApplication::setApplicationName(u"GummyGramDesktop"_q);
 	QApplication::setApplicationDisplayName(u"GummyGram Desktop"_q);
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)

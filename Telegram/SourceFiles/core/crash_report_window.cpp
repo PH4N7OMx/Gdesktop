@@ -28,8 +28,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QStandardPaths>
 #include <QtCore/QTimer>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace {
@@ -322,7 +322,7 @@ LastCrashedWindow::LastCrashedWindow(
 	excludeReportUsername();
 
 #ifndef TDESKTOP_DISABLE_AUTOUPDATE
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (!settings.crashReporting()) {
 #else
 	if (true) {

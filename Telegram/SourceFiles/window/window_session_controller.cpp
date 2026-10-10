@@ -133,8 +133,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/widgets/labels.h"
 #include "ui/basic_click_handlers.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace Window {
@@ -1880,22 +1880,22 @@ void SessionController::suggestArchiveAndMute() {
 }
 
 void SessionController::checkChannelPromo() {
-	if (AyuSettings::getInstance().channelPromoShown()) {
+	if (JelSettings::getInstance().channelPromoShown()) {
 		return;
 	}
-	AyuSettings::getInstance().setChannelPromoShown(true);
+	JelSettings::getInstance().setChannelPromoShown(true);
 
 	_window->show(Box([=](not_null<Ui::GenericBox*> box) {
-		box->setTitle(tr::ayu_ChannelPromoTitle());
+		box->setTitle(tr::jel_ChannelPromoTitle());
 		box->addRow(object_ptr<Ui::FlatLabel>(
 			box,
-			tr::ayu_ChannelPromoText(),
+			tr::jel_ChannelPromoText(),
 			st::boxLabel));
-		box->addButton(tr::ayu_ChannelPromoSubscribe(), [=] {
+		box->addButton(tr::jel_ChannelPromoSubscribe(), [=] {
 			UrlClickHandler::Open(u"https://t.me/GummyDesktop"_q);
 			box->closeBox();
 		});
-		box->addButton(tr::ayu_ChannelPromoLater(), [=] {
+		box->addButton(tr::jel_ChannelPromoLater(), [=] {
 			box->closeBox();
 		});
 		box->setCloseByOutsideClick(true);
@@ -2096,7 +2096,7 @@ void SessionController::activateFirstChatsFilter() {
 	}
 	_filtersActivated = true;
 
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (!settings.hideAllChatsFolder()) {
 		setActiveChatsFilter(session().data().chatsFilters().defaultId());
 	}

@@ -39,10 +39,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QDateTime>
 #include <QtCore/QLocale>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/ayu_url_handlers.h"
-#include "ayu/features/streamer_mode/streamer_mode.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/jel_url_handlers.h"
+#include "jel/features/streamer_mode/streamer_mode.h"
 
 
 namespace Core {
@@ -452,12 +452,12 @@ bool UiIntegration::handleUrlClick(
 		}
 	}
 
-	if (AyuUrlHandlers::IsUnsafeExternalUrl(url)) {
+	if (JelUrlHandlers::IsUnsafeExternalUrl(url)) {
 		LOG(("GummyGram: Blocked opening unsafe url: %1").arg(url));
 		return true;
 	}
 
-	if (AyuUrlHandlers::TryHandleSpotify(url)) {
+	if (JelUrlHandlers::TryHandleSpotify(url)) {
 		return true;
 	}
 
@@ -494,8 +494,8 @@ rpl::producer<> UiIntegration::forcePopupMenuHideRequests() {
 }
 
 void UiIntegration::preparePopupMenu(not_null<QWidget*> widget) {
-	if (AyuSettings::getInstance().streamerMode()) {
-		AyuFeatures::StreamerMode::hideWidgetWindow(widget);
+	if (JelSettings::getInstance().streamerMode()) {
+		JelFeatures::StreamerMode::hideWidgetWindow(widget);
 	}
 }
 

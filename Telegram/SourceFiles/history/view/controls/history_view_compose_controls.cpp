@@ -142,9 +142,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_layers.h"
 #include "styles/style_menu_icons.h"
 
-// AyuGram includes
+// GummyGram includes
 #include "data/data_ai_compose_tones.h"
-#include "ayu/ayu_settings.h"
+#include "jel/jel_settings.h"
 #include "history/history_item_components.h"
 
 
@@ -3065,17 +3065,17 @@ void ComposeControls::init() {
 	}, _wrap->lifetime());
 
 	rpl::merge(
-		AyuSettings::getInstance().showAttachButtonInMessageFieldChanges() | rpl::to_empty,
-		AyuSettings::getInstance().showCommandsButtonInMessageFieldChanges() | rpl::to_empty,
-		AyuSettings::getInstance().showEmojiButtonInMessageFieldChanges() | rpl::to_empty,
-		AyuSettings::getInstance().showMicrophoneButtonInMessageFieldChanges() | rpl::to_empty,
-		AyuSettings::getInstance().showAutoDeleteButtonInMessageFieldChanges() | rpl::to_empty,
+		JelSettings::getInstance().showAttachButtonInMessageFieldChanges() | rpl::to_empty,
+		JelSettings::getInstance().showCommandsButtonInMessageFieldChanges() | rpl::to_empty,
+		JelSettings::getInstance().showEmojiButtonInMessageFieldChanges() | rpl::to_empty,
+		JelSettings::getInstance().showMicrophoneButtonInMessageFieldChanges() | rpl::to_empty,
+		JelSettings::getInstance().showAutoDeleteButtonInMessageFieldChanges() | rpl::to_empty,
 		session().data().aiComposeTones().updated() | rpl::to_empty,
-		AyuSettings::getInstance().showAiEditorButtonInMessageFieldChanges() | rpl::to_empty,
-		AyuSettings::getInstance().showAttachPopupChanges() | rpl::to_empty,
-		AyuSettings::getInstance().showEmojiPopupChanges() | rpl::to_empty,
-		AyuSettings::getInstance().channelBottomButtonChanges() | rpl::to_empty,
-		AyuSettings::getInstance().removeMessageTailChanges() | rpl::to_empty
+		JelSettings::getInstance().showAiEditorButtonInMessageFieldChanges() | rpl::to_empty,
+		JelSettings::getInstance().showAttachPopupChanges() | rpl::to_empty,
+		JelSettings::getInstance().showEmojiPopupChanges() | rpl::to_empty,
+		JelSettings::getInstance().channelBottomButtonChanges() | rpl::to_empty,
+		JelSettings::getInstance().removeMessageTailChanges() | rpl::to_empty
 	) | rpl::on_next([=] {
 		updateSendButtonType();
 		updateControlsVisibility();
@@ -3083,7 +3083,7 @@ void ComposeControls::init() {
 		orderControls();
 	}, _wrap->lifetime());
 
-	AyuSettings::getInstance().translationProviderChanges(
+	JelSettings::getInstance().translationProviderChanges(
 	) | rpl::on_next([=](TranslationProvider) {
 		if (_history) {
 			for (const auto &block : _history->blocks) {
@@ -3107,7 +3107,7 @@ void ComposeControls::orderControls() {
 }
 
 bool ComposeControls::showRecordButton() const {
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (!settings.showMicrophoneButtonInMessageField()) {
 		return false;
 	}
@@ -3544,7 +3544,7 @@ void ComposeControls::fieldChanged() {
 	const auto hideExtra = hideExtraButtons()
 		|| isEditingMessage()
 		|| textExceedsMaxSize();
-	const auto ttlAllowed = AyuSettings::getInstance()
+	const auto ttlAllowed = JelSettings::getInstance()
 		.showAutoDeleteButtonInMessageField();
 	const auto refreshControls = commandShown
 		|| menuRefreshed
@@ -5084,7 +5084,7 @@ void ComposeControls::updateControlsGeometry(QSize size) {
 	// (_commentsShown) (_attachToggle|_replaceMedia) (_sendAs) -- _inlineResults ------ _tabbedPanel -- _fieldBarCancel (_starsReaction)
 	// (_attachDocument|_attachPhoto) _field (_ttlInfo) (_scheduled) (_silent|_botCommandStart) _tabbedSelectorToggle _send
 
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 
 	const auto oldComposeHeight = composeFieldHeight();
 	const auto commentsShown = _commentsShown
@@ -5263,7 +5263,7 @@ void ComposeControls::updateControlsGeometry(QSize size) {
 }
 
 void ComposeControls::updateControlsVisibility() {
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 
 	const auto hide = hideExtraButtons()
 		|| isEditingMessage()

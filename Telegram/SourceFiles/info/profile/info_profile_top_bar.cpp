@@ -110,9 +110,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QClipboard>
 #include <QtGui/QGuiApplication>
 
-// AyuGram includes
-#include "ayu/ui/ayu_userpic.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/ui/jel_userpic.h"
+#include "jel/utils/telegram_helpers.h"
 
 
 namespace Info::Profile {
@@ -2838,31 +2838,31 @@ void TopBar::paintUserpic(QPainter &p, const QRect &geometry) {
 		}
 	}
 	const auto key = _peer->userpicUniqueKey(_userpicView);
-	const auto ayuState = AyuUserpic::PackedState();
+	const auto jelState = JelUserpic::PackedState();
 	const auto overlayActive = _uploadOverlay && _uploadOverlay->shown();
 	const auto awaitingCloud = _waitingUserpicCloudLoad
 		&& !_peer->userpicCloudImage(_userpicView);
 	if (!overlayActive
 		&& !awaitingCloud
-		&& (_userpicUniqueKey != key || _userpicAyuState != ayuState)) {
+		&& (_userpicUniqueKey != key || _userpicJelState != jelState)) {
 		_waitingUserpicCloudLoad = false;
 		_userpicUniqueKey = key;
-		_userpicAyuState = ayuState;
+		_userpicJelState = jelState;
 		const auto fullSize = st::infoProfileTopBarPhotoSize;
 		const auto scaled = fullSize * style::DevicePixelRatio();
 		auto image = QImage();
 		if (const auto broadcast = _peer->monoforumBroadcast()) {
-			const auto ayuOverride = AyuUserpic::ShouldOverrideShape(
+			const auto jelOverride = JelUserpic::ShouldOverrideShape(
 				Ui::PeerUserpicShape::Monoforum);
 			image = PeerData::GenerateUserpicImage(
 				broadcast,
 				_userpicView,
 				scaled,
-				ayuOverride
+				jelOverride
 					? std::optional<int>(
-						AyuUserpic::ComputeRadius(scaled))
+						JelUserpic::ComputeRadius(scaled))
 					: std::optional<int>(0));
-			if (!ayuOverride) {
+			if (!jelOverride) {
 				if (_monoforumMask.isNull()) {
 					_monoforumMask = Ui::MonoforumShapeMask(Size(scaled));
 				}
@@ -2881,9 +2881,9 @@ void TopBar::paintUserpic(QPainter &p, const QRect &geometry) {
 		} else {
 			const auto radius = (_source == Source::Community)
 				? std::optional<int>(
-					AyuUserpic::ShouldOverrideShape(
+					JelUserpic::ShouldOverrideShape(
 						Ui::PeerUserpicShape::Forum)
-						? AyuUserpic::ComputeRadius(scaled)
+						? JelUserpic::ComputeRadius(scaled)
 						: int(
 							scaled
 							* Ui::ForumUserpicRadiusMultiplier()))

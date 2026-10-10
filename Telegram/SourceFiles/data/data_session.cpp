@@ -95,11 +95,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/random.h"
 #include "spellcheck/spellcheck_highlight_syntax.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/data/messages_storage.h"
-#include "ayu/features/filters/filters_controller.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/data/messages_storage.h"
+#include "jel/features/filters/filters_controller.h"
+#include "jel/utils/telegram_helpers.h"
 
 
 namespace Data {
@@ -428,8 +428,8 @@ Session::Session(not_null<Main::Session*> session)
 			}
 		}, _lifetime);
 
-		// AyuGram disableStories
-		const auto &settings = AyuSettings::getInstance();
+		// GummyGram disableStories
+		const auto &settings = JelSettings::getInstance();
 		if (!settings.disableStories()) {
 			_stories->loadMore(Data::StorySourcesList::NotHidden);
 		}
@@ -1011,7 +1011,7 @@ not_null<PeerData*> Session::processChat(const MTPChat &data) {
 			| Flag::CallActive
 			| Flag::CallNotEmpty
 			| Flag::NoForwards
-			| Flag::AyuNoForwards;
+			| Flag::JelNoForwards;
 		const auto flagsSet = (data.is_left() ? Flag::Left : Flag())
 			| (data.is_creator() ? Flag::Creator : Flag())
 			| (data.is_deactivated() ? Flag::Deactivated : Flag())
@@ -1022,7 +1022,7 @@ not_null<PeerData*> Session::processChat(const MTPChat &data) {
 				? Flag::CallNotEmpty
 				: Flag())
 			| (data.is_noforwards() ? Flag::NoForwards : Flag())
-			| (data.is_ayuNoforwards() ? Flag::AyuNoForwards : Flag());
+			| (data.is_jelNoforwards() ? Flag::JelNoForwards : Flag());
 		chat->setFlags((chat->flags() & ~flagsMask) | flagsSet);
 		if (chat->amIn()) {
 			chat->setWasIn();
@@ -1138,7 +1138,7 @@ not_null<PeerData*> Session::processChat(const MTPChat &data) {
 				? (Flag::Left | Flag::Creator)
 				: Flag())
 			| Flag::NoForwards
-			| Flag::AyuNoForwards
+			| Flag::JelNoForwards
 			| Flag::JoinToWrite
 			| Flag::RequestToJoin
 			| Flag::Forum
@@ -1189,7 +1189,7 @@ not_null<PeerData*> Session::processChat(const MTPChat &data) {
 					| (data.is_creator() ? Flag::Creator : Flag()))
 				: Flag())
 			| (data.is_noforwards() ? Flag::NoForwards : Flag())
-			| (data.is_ayuNoforwards() ? Flag::AyuNoForwards : Flag())
+			| (data.is_jelNoforwards() ? Flag::JelNoForwards : Flag())
 			| (data.is_join_to_send() ? Flag::JoinToWrite : Flag())
 			| (data.is_join_request() ? Flag::RequestToJoin : Flag())
 			| ((data.is_forum() && data.is_megagroup())
@@ -3102,8 +3102,8 @@ void Session::updateEditedMessage(const MTPMessage &data) {
 		return;
 	}
 
-	// AyuGram saveMessagesHistory
-	const auto &settings = AyuSettings::getInstance();
+	// GummyGram saveMessagesHistory
+	const auto &settings = JelSettings::getInstance();
 	HistoryMessageEdition edit;
 
 	if (data.type() != mtpc_message) {
@@ -3119,7 +3119,7 @@ void Session::updateEditedMessage(const MTPMessage &data) {
 			goto proceed;
 		}
 
-		AyuMessages::addEditedMessage(existing);
+		JelMessages::addEditedMessage(existing);
 	}
 
 	FiltersController::invalidate(existing);
@@ -5660,7 +5660,7 @@ void Session::registerItemView(not_null<ViewElement*> view) {
 void Session::unregisterItemView(not_null<ViewElement*> view) {
 	// Expects(!_heavyViewParts.contains(view));
 	if (_heavyViewParts.contains(view)) {
-		view->unloadHeavyPart(); // AyuGram: fix crash when using `saveDeletedMessages`
+		view->unloadHeavyPart(); // GummyGram: fix crash when using `saveDeletedMessages`
 	}
 
 	_shownSpoilers.remove(view);

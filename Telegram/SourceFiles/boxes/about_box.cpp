@@ -33,7 +33,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QGuiApplication>
 #include <QtGui/QClipboard>
 
-// AyuGram includes
+// GummyGram includes
 #include "window/window_session_controller.h"
 #include "window/window_session_controller_link_info.h"
 

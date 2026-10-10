@@ -30,10 +30,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QSvgRenderer>
 #include <QBuffer>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/ui/ayu_logo.h"
-#include "styles/style_ayu_icons.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/ui/jel_logo.h"
+#include "styles/style_jel_icons.h"
 
 
 namespace Platform {
@@ -117,17 +117,17 @@ bool DarkTasbarValueValid/* = false*/;
 	static auto ScaledLogoDark = base::flat_map<int, QImage>();
 	static auto ScaledLogoLight = base::flat_map<int, QImage>();
 
-	static auto lastUsedIcon = AyuAssets::currentAppLogoName();
+	static auto lastUsedIcon = JelAssets::currentAppLogoName();
 
-	if (lastUsedIcon != AyuAssets::currentAppLogoName()) {
-		lastUsedIcon = AyuAssets::currentAppLogoName();
+	if (lastUsedIcon != JelAssets::currentAppLogoName()) {
+		lastUsedIcon = JelAssets::currentAppLogoName();
 		ScaledLogo = base::flat_map<int, QImage>();
 		ScaledLogoNoMargin = base::flat_map<int, QImage>();
 		ScaledLogoDark = base::flat_map<int, QImage>();
 		ScaledLogoLight = base::flat_map<int, QImage>();
 	}
 
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (settings.hideNotificationBadge()) {
 		args.count = 0;
 	}
@@ -167,7 +167,7 @@ bool DarkTasbarValueValid/* = false*/;
 		return Window::WithSmallCounter(std::move(result), std::move(args));
 	}
 	QPainter p(&result);
-	PainterHighQualityEnabler hq(p); // AyuGram: fix for lq icons
+	PainterHighQualityEnabler hq(p); // GummyGram: fix for lq icons
 	const auto half = args.size / 2;
 	args.size = half;
 	p.drawPixmap(

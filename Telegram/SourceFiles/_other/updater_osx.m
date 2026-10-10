@@ -163,7 +163,7 @@ int main(int argc, const char * argv[]) {
 
 		writeLog([@"Starting update files iteration, path: " stringByAppendingString: srcEnum]);
 
-		// Take the Updater (this currently running binary) from the place where it was placed by AyuGram
+		// Take the Updater (this currently running binary) from the place where it was placed by GummyGram
 		// and copy it to the folder with the new version of the app (ready),
 		// so it won't be deleted when we will clear the "GummyGram.app/Contents" folder.
 		NSString *oldVersionUpdaterPath = [appDirFull stringByAppendingString: @"/Contents/Frameworks/Updater" ];

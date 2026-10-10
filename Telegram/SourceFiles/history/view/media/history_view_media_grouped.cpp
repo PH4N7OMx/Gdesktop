@@ -28,9 +28,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "layout/layout_selection.h"
 #include "styles/style_chat.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/message_shot/message_shot.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/message_shot/message_shot.h"
 
 
 namespace HistoryView {
@@ -451,7 +451,7 @@ void GroupedMedia::draw(Painter &p, const PaintContext &context) const {
 	const auto subpartHighlight = IsSubGroupSelection(highlight);
 
 	auto anyDeleted = false;
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	const auto perItemOpacityEnabled = settings.semiTransparentDeletedMessages();
 	if (!perItemOpacityEnabled) {
 		for (const auto &part : _parts) {
@@ -502,7 +502,7 @@ void GroupedMedia::draw(Painter &p, const PaintContext &context) const {
 				&& !part.deletedAnimation.animating()) {
 				part.deletedAnimation.start(
 					[parent = _parent] {
-						if (!AyuSettings::getInstance().semiTransparentDeletedMessages()) {
+						if (!JelSettings::getInstance().semiTransparentDeletedMessages()) {
 							return false;
 						}
 						parent->repaint();
@@ -564,7 +564,7 @@ void GroupedMedia::draw(Painter &p, const PaintContext &context) const {
 	if (_parent->media() == this && (!_parent->hasBubble() || isBubbleBottom())) {
 		auto fullRight = width();
 		auto fullBottom = height();
-		if (needInfoDisplay() && !AyuFeatures::MessageShot::ignoreRender(AyuFeatures::MessageShot::RenderPart::Date)) {
+		if (needInfoDisplay() && !JelFeatures::MessageShot::ignoreRender(JelFeatures::MessageShot::RenderPart::Date)) {
 			_parent->drawInfo(
 				p,
 				context,
@@ -853,7 +853,7 @@ bool GroupedMedia::applyGroup(const DataMediaRange &medias) {
 	auto modeChosen = false;
 	for (const auto media : medias) {
 		if (!media) {
-			continue; // AyuGram: fix ebe44780-7c8b-4964-ba31-b747c947254f
+			continue; // GummyGram: fix ebe44780-7c8b-4964-ba31-b747c947254f
 		}
 
 		const auto mediaMode = DetectMode(media);
@@ -1030,7 +1030,7 @@ bool GroupedMedia::computeNeedBubble() const {
 }
 
 bool GroupedMedia::needInfoDisplay() const {
-	if (AyuFeatures::MessageShot::isTakingShot()) {
+	if (JelFeatures::MessageShot::isTakingShot()) {
 		return (_mode != Mode::Column);
 	}
 	const auto item = _parent->data();

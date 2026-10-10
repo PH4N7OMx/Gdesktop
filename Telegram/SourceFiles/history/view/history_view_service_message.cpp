@@ -32,10 +32,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat.h"
 #include "styles/style_info.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/utils/telegram_helpers.h"
-#include "styles/style_ayu_styles.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/utils/telegram_helpers.h"
+#include "styles/style_jel_styles.h"
 
 
 namespace HistoryView {
@@ -217,14 +217,14 @@ struct ServiceTimeMetrics {
 	if (text.isEmpty()) {
 		return result;
 	}
-	const auto &font = st::ayuServiceTimeBadgeFont;
+	const auto &font = st::jelServiceTimeBadgeFont;
 	result.width = font->width(text)
-		+ 2 * st::ayuServiceTimeBadgeHorizontalPadding;
-	result.height = font->height + 2 * st::ayuServiceTimeBadgeVerticalPadding;
+		+ 2 * st::jelServiceTimeBadgeHorizontalPadding;
+	result.height = font->height + 2 * st::jelServiceTimeBadgeVerticalPadding;
 	result.additionalWidth = std::max(
-		st::ayuServiceTimeBadgeGap
+		st::jelServiceTimeBadgeGap
 			+ result.width
-			+ st::ayuServiceTimeBadgeTrailingInset
+			+ st::jelServiceTimeBadgeTrailingInset
 			- st::msgServicePadding.right(),
 			0);
 	return result;
@@ -255,12 +255,12 @@ void PaintServiceTime(
 		radius,
 		radius);
 	p.setPen(st->msgServiceFg());
-	p.setFont(st::ayuServiceTimeBadgeFont);
+	p.setFont(st::jelServiceTimeBadgeFont);
 	p.drawText(
-		rect.x() + st::ayuServiceTimeBadgeHorizontalPadding,
+		rect.x() + st::jelServiceTimeBadgeHorizontalPadding,
 		rect.y()
-			+ st::ayuServiceTimeBadgeVerticalPadding
-			+ st::ayuServiceTimeBadgeFont->ascent,
+			+ st::jelServiceTimeBadgeVerticalPadding
+			+ st::jelServiceTimeBadgeFont->ascent,
 		text);
 }
 
@@ -805,7 +805,7 @@ void Service::draw(Painter &p, const PaintContext &context) const {
 		const auto lastLineWidthAdd = (lineWidths.size() > 1
 			&& lineWidths.back() > timeMetrics.additionalWidth
 			&& lineWidths.back() < lineWidths[lineWidths.size() - 2])
-			? st::ayuServiceTimeBadgeLastLineWidthAdd
+			? st::jelServiceTimeBadgeLastLineWidthAdd
 			: 0;
 
 		p.translate(0, g.top() - st::msgServiceMargin.top());
@@ -848,7 +848,7 @@ void Service::draw(Painter &p, const PaintContext &context) const {
 			const auto lastTextWidth = qMax(
 				lastLineWidth - timeMetrics.additionalWidth,
 				0);
-			const auto gap = lastTextWidth ? st::ayuServiceTimeBadgeGap : 0;
+			const auto gap = lastTextWidth ? st::jelServiceTimeBadgeGap : 0;
 			const auto lastLineTop = trect.y()
 				+ (int(lineWidths.size()) - 1) * st::msgServiceFont->height;
 			PaintServiceTime(
@@ -1144,7 +1144,7 @@ EmptyPainter::EmptyPainter(not_null<History*> history)
 	if (NeedAboutGroup(_history)) {
 		fillAboutGroup();
 	} else if (_history->peer->isUser()
-		&& AyuSettings::getInstance().disableGreetingSticker()) {
+		&& JelSettings::getInstance().disableGreetingSticker()) {
 		SetText(_header, tr::lng_chat_intro_default_title(tr::now));
 	}
 }

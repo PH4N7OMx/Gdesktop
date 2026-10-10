@@ -73,7 +73,7 @@ class PrepareOptionsTests(unittest.TestCase):
     def test_plugin_engine_dependency_is_prepared(self):
         telegram = SOURCE.parents[2]
         self.assertIn('#include <QJSEngine>',
-            (telegram / 'SourceFiles/ayu/plugins/plugin_worker.cpp').read_text())
+            (telegram / 'SourceFiles/jel/plugins/plugin_worker.cpp').read_text())
         self.assertIn('REQUIRED COMPONENTS Qml',
             (telegram / 'CMakeLists.txt').read_text())
         for platform in ('win32', 'win64', 'winarm', 'mac'):

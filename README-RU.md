@@ -4,7 +4,7 @@
 
 [ [English](README.md) | Русский ]
 
-**GummyGram** — активно поддерживаемый форк [AyuGram Desktop](https://github.com/AyuGram/AyuGramDesktop) с новыми эксклюзивными возможностями, исправлениями, улучшениями удобства и актуальными переводами.
+**GummyGram** — активно поддерживаемый форк [GummyGram Desktop](https://github.com/AyuGram/AyuGramDesktop) с новыми эксклюзивными возможностями, исправлениями, улучшениями удобства и актуальными переводами.
 
 📢 **Официальный Telegram-канал:** [@GummyDesktop](https://t.me/GummyDesktop)
 
@@ -34,7 +34,7 @@
 - 📢 **Telegram-канал:** [t.me/GummyDesktop](https://t.me/GummyDesktop)
 
 > [!NOTE]
-> Внешние пакетные менеджеры (Winget, Homebrew, Scoop, AUR и др.) содержат оригинальный AyuGram от Radolyn, в котором нет новых функций этого форка. Для использования GummyGram скачивайте сборки из нашего канала/релизов или собирайте из исходников.
+> Внешние пакетные менеджеры (Winget, Homebrew, Scoop, AUR и др.) содержат оригинальный GummyGram от Radolyn, в котором нет новых функций этого форка. Для использования GummyGram скачивайте сборки из нашего канала/релизов или собирайте из исходников.
 
 ### Сборка из исходников
 
@@ -46,7 +46,7 @@
 
 ## 🤝 Благодарности
 
-- **Оригинальный проект:** [AyuGram](https://github.com/AyuGram/AyuGramDesktop) от [@Radolyn](https://github.com/Radolyn)
+- **Оригинальный проект:** [GummyGram](https://github.com/AyuGram/AyuGramDesktop) от [@Radolyn](https://github.com/Radolyn)
 - **Клиенты Telegram:**
   - [Telegram Desktop](https://github.com/telegramdesktop/tdesktop)
   - [Kotatogram](https://github.com/kotatogram/kotatogram-desktop)

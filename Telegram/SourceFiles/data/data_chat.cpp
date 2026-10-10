@@ -20,9 +20,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "apiwrap.h"
 #include "api/api_invite_links.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/utils/telegram_helpers.h"
 
 
 namespace {
@@ -69,8 +69,8 @@ ChatAdminRightsInfo ChatData::defaultAdminRights(not_null<UserData*> user) {
 		| (isCreator ? Flag::AddAdmins : Flag(0)));
 }
 
-bool ChatData::isAyuNoForwards() const {
-	return flags() & Flag::AyuNoForwards;
+bool ChatData::isJelNoForwards() const {
+	return flags() & Flag::JelNoForwards;
 }
 
 bool ChatData::allowsForwarding() const {
@@ -119,7 +119,7 @@ bool ChatData::anyoneCanAddMembers() const {
 
 void ChatData::setName(const QString &newName) {
 	auto filteredName = newName;
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (settings.filterZalgo()) {
 		filteredName = filterZalgo(filteredName);
 	}
@@ -155,10 +155,10 @@ void ChatData::setFlags(ChatDataFlags which) {
 		_leftVoluntarily = false;
 	}
 	if (wasIn && !amIn()) {
-		if (!AyuSettings::getInstance().keepForbiddenChats() || !wasRemoved()) {
+		if (!JelSettings::getInstance().keepForbiddenChats() || !wasRemoved()) {
 			crl::on_main(&session(), [=] {
 				if (!amIn()
-					&& (!AyuSettings::getInstance().keepForbiddenChats()
+					&& (!JelSettings::getInstance().keepForbiddenChats()
 						|| !wasRemoved())) {
 					Core::App().closeChatFromWindows(this);
 				}

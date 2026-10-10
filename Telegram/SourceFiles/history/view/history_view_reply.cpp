@@ -39,8 +39,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_dialogs.h"
 #include "styles/style_polls.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace HistoryView {
@@ -877,7 +877,7 @@ void Reply::paint(
 	}
 	Ui::Text::ValidateQuotePaintCache(*cache, quoteSt);
 	Ui::Text::FillQuotePaint(p, rect, *cache, quoteSt);
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (!settings.simpleQuotesAndReplies() && backgroundEmojiData) {
 		ValidateBackgroundEmoji(
 			backgroundEmojiId,

@@ -135,9 +135,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <limits>
 #include <QtCore/QMimeData>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/message_shot/message_shot.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/message_shot/message_shot.h"
 #include "base/unixtime.h"
 
 
@@ -542,7 +542,7 @@ ChatWidget::ChatWidget(
 	}, _topBar->lifetime());
 	_topBar->messageShotSelectionRequest(
 	) | rpl::on_next([=] {
-		AyuFeatures::MessageShot::Wrapper(_inner, [=] { clearSelected(); });
+		JelFeatures::MessageShot::Wrapper(_inner, [=] { clearSelected(); });
 	}, _topBar->lifetime());
 	_topBar->forwardSelectionRequest(
 	) | rpl::on_next([=] {
@@ -807,7 +807,7 @@ ChatWidget::ChatWidget(
 				}
 			}
 			if (action.options.scheduled) {
-				const auto &ghost = AyuSettings::ghost(&session());
+				const auto &ghost = JelSettings::ghost(&session());
 				if (!ghost.isUseScheduledMessages()) {
 					if (_topic) {
 						crl::on_main(this, [=, t = _topic] {

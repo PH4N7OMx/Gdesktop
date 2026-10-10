@@ -47,10 +47,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/streamer_mode/streamer_mode.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/streamer_mode/streamer_mode.h"
+#include "jel/utils/telegram_helpers.h"
 
 
 namespace Window {
@@ -747,8 +747,8 @@ Notification::Notification(
 
 	show();
 
-	if (AyuSettings::getInstance().streamerMode()) {
-		AyuFeatures::StreamerMode::hideWidgetWindow(this);
+	if (JelSettings::getInstance().streamerMode()) {
+		JelFeatures::StreamerMode::hideWidgetWindow(this);
 	}
 }
 
@@ -1330,8 +1330,8 @@ HideAllButton::HideAllButton(
 
 	show();
 
-	if (AyuSettings::getInstance().streamerMode()) {
-		AyuFeatures::StreamerMode::hideWidgetWindow(this);
+	if (JelSettings::getInstance().streamerMode()) {
+		JelFeatures::StreamerMode::hideWidgetWindow(this);
 	}
 }
 

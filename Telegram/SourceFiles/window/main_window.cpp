@@ -61,8 +61,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <kurlmimedata.h>
 
-// AyuGram includes
-#include "ayu/ui/ayu_logo.h"
+// GummyGram includes
+#include "jel/ui/jel_logo.h"
 
 
 namespace Window {
@@ -144,11 +144,11 @@ const char kOptionNewWindowsSizeAsFirst[] = "new-windows-size-as-first";
 const char kOptionDisableTouchbar[] = "touchbar-disabled";
 
 QImage Logo() {
-	return AyuAssets::currentAppLogo();
+	return JelAssets::currentAppLogo();
 }
 
 QImage LogoNoMargin() {
-	return AyuAssets::currentAppLogo();
+	return JelAssets::currentAppLogo();
 }
 
 const QImage &LogoTelegramDefault() {

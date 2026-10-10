@@ -12,21 +12,21 @@ def patch_source(source):
     replacement = (
         "const auto isLng = (data[i] == 'l' && data[i + 1] == 'n'"
         " && data[i + 2] == 'g' && data[i + 3] == '_');\n\t\t"
-        "const auto isAyu = (data[i] == 'a' && data[i + 1] == 'y'"
-        " && data[i + 2] == 'u' && data[i + 3] == '_');\n\t\t"
-        "if ((!isLng && !isAyu)"
+        "const auto isJel = (data[i] == 'j' && data[i + 1] == 'e'"
+        " && data[i + 2] == 'l' && data[i + 3] == '_');\n\t\t"
+        "if ((!isLng && !isJel)"
     )
     patched, count = re.subn(pattern, lambda _: replacement, source)
     fork_scanner = (
         "const auto isKeyPrefix =" in source
-        and "|| (data[i] == 'a'" in source
+        and "|| (data[i] == 'j'" in source
         and "if (!isKeyPrefix" in source
     )
     if count != 1 and not (count == 0 and (replacement in source or fork_scanner)):
-        raise RuntimeError("Unexpected codegen scanner; ayu_ patch was not applied.")
+        raise RuntimeError("Unexpected codegen scanner; jel_ patch was not applied.")
     patched, versions = re.subn(
-        r"constexpr auto kCacheVersion = quint32\([12]\);",
-        "constexpr auto kCacheVersion = quint32(2);", patched,
+        r"constexpr auto kCacheVersion = quint32\([123]\);",
+        "constexpr auto kCacheVersion = quint32(3);", patched,
     )
     if versions != 1:
         raise RuntimeError("Unexpected codegen cache version.")
@@ -39,7 +39,7 @@ def main():
     patched = patch_source(source)
     if patched != source:
         path.write_bytes(patched.replace("\n", "\r\n").encode("utf-8"))
-    print("Codegen scanner supports lng_ and ayu_; cache version 2.")
+    print("Codegen scanner supports lng_ and jel_; cache version 3.")
 
 
 if __name__ == "__main__":

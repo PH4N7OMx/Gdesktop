@@ -7,7 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/view/history_view_bottom_info.h"
 
-#include "ayu/features/filters/filters_controller.h"
+#include "jel/features/filters/filters_controller.h"
 #include "ui/chat/message_bubble.h"
 #include "ui/chat/chat_style.h"
 #include "ui/effects/reaction_fly_animation.h"
@@ -37,11 +37,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat.h"
 #include "styles/style_credits.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/message_shot/message_shot.h"
-#include "ayu/utils/telegram_helpers.h"
-#include "styles/style_ayu_icons.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/message_shot/message_shot.h"
+#include "jel/utils/telegram_helpers.h"
+#include "styles/style_jel_icons.h"
 
 
 namespace HistoryView {
@@ -179,7 +179,7 @@ TextState BottomInfo::textState(
 	}
 	const auto textWidth = _authorEditedDate.maxWidth();
 	auto withTicksWidth = textWidth;
-	if (!AyuFeatures::MessageShot::isTakingShot() && (_data.flags & (Data::Flag::OutLayout | Data::Flag::Sending))) {
+	if (!JelFeatures::MessageShot::isTakingShot() && (_data.flags & (Data::Flag::OutLayout | Data::Flag::Sending))) {
 		withTicksWidth += st::historySendStateSpace;
 	}
 	if (!_views.isEmpty()) {
@@ -282,7 +282,7 @@ void BottomInfo::paint(
 
 	auto right = position.x() + width();
 	const auto firstLineBottom = position.y() + st::msgDateFont->height;
-	if (!AyuFeatures::MessageShot::isTakingShot() && (_data.flags & Data::Flag::OutLayout)) {
+	if (!JelFeatures::MessageShot::isTakingShot() && (_data.flags & Data::Flag::OutLayout)) {
 		const auto &icon = (_data.flags & Data::Flag::Sending)
 			? (inverted
 				? st->historySendingInvertedIcon()
@@ -374,7 +374,7 @@ void BottomInfo::paint(
 			firstLineBottom + st::historyViewsTop,
 			outerWidth);
 	}
-	if (!AyuFeatures::MessageShot::isTakingShot() && (_data.flags & Data::Flag::Sending)
+	if (!JelFeatures::MessageShot::isTakingShot() && (_data.flags & Data::Flag::Sending)
 		&& !(_data.flags & Data::Flag::OutLayout)) {
 		right -= st::historySendStateSpace;
 		const auto &icon = inverted
@@ -491,7 +491,7 @@ void BottomInfo::layout() {
 }
 
 void BottomInfo::layoutDateText() {
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 
 	if (!settings.replaceBottomInfoWithIcons()) {
 		const auto updated = (_data.flags & Data::Flag::Updated);
@@ -499,7 +499,7 @@ void BottomInfo::layoutDateText() {
 			&& (_data.flags & Data::Flag::EditedPrimary)
 			&& !(_data.flags & Data::Flag::ForwardedDate);
 
-		const auto deleted = (_data.flags & Data::Flag::AyuDeleted)
+		const auto deleted = (_data.flags & Data::Flag::JelDeleted)
 			? (settings.deletedMark() + ' ')
 			: QString();
 
@@ -559,7 +559,7 @@ void BottomInfo::layoutDateText() {
 				.textColor = false,
 			})).append("  ");
 		}
-		if (_data.flags & Data::Flag::AyuBurnt) {
+		if (_data.flags & Data::Flag::JelBurnt) {
 			marked.append(Ui::Text::IconEmoji(&st::burntIcon));
 			marked.append(' ');
 		}
@@ -591,15 +591,15 @@ void BottomInfo::layoutDateText() {
 		}
 
 		TextWithEntities burnt;
-		if (_data.flags & Data::Flag::AyuBurnt) {
+		if (_data.flags & Data::Flag::JelBurnt) {
 			burnt = Ui::Text::IconEmoji(&st::burntIcon);
-			if (!(_data.flags & Data::Flag::AyuDeleted) && edited.empty()) {
+			if (!(_data.flags & Data::Flag::JelDeleted) && edited.empty()) {
 				burnt.append(' ');
 			}
 		}
 
 		TextWithEntities deleted;
-		if (_data.flags & Data::Flag::AyuDeleted) {
+		if (_data.flags & Data::Flag::JelDeleted) {
 			deleted = Ui::Text::IconEmoji(&st::deletedIcon);
 			if (edited.empty()) {
 				deleted.append(' ');
@@ -714,7 +714,7 @@ QSize BottomInfo::countOptimalSize() {
 		return { st::historyShortcutStateSpace, st::msgDateFont->height };
 	}
 	auto width = 0;
-	if (!AyuFeatures::MessageShot::isTakingShot() && (_data.flags & (Data::Flag::OutLayout | Data::Flag::Sending))) {
+	if (!JelFeatures::MessageShot::isTakingShot() && (_data.flags & (Data::Flag::OutLayout | Data::Flag::Sending))) {
 		width += st::historySendStateSpace;
 	}
 	width += _authorEditedDate.maxWidth();
@@ -876,10 +876,10 @@ struct BottomInfo::Data BottomInfoDataFromMessage(not_null<Message*> message) {
 		}
 	}
 	if (item->isDeleted()) {
-		result.flags |= Flag::AyuDeleted;
+		result.flags |= Flag::JelDeleted;
 	}
 	if (item->isBurnt()) {
-		result.flags |= Flag::AyuBurnt;
+		result.flags |= Flag::JelBurnt;
 	}
 	if (!forwarded) {
 		return result;

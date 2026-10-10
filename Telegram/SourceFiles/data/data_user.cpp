@@ -40,10 +40,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "window/notifications_manager.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/avatars/ayu_avatar_resolver.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/avatars/jel_avatar_resolver.h"
+#include "jel/utils/telegram_helpers.h"
 
 namespace {
 
@@ -186,7 +186,7 @@ bool UserData::updateLastseen(Data::LastseenStatus value) {
 	_lastseen = value;
 	owner().maybeStopWatchForOffline(this);
 	if (_lastseen.isLongAgo() && !hasUserpic() && !username().isEmpty()) {
-		Ayu::AyuAvatarResolver::Instance().resolve(this);
+		Jel::JelAvatarResolver::Instance().resolve(this);
 	}
 	return true;
 }
@@ -207,7 +207,7 @@ void UserData::setPhoto(const MTPUserProfilePhoto &photo) {
 		removeFlags(UserDataFlag::PersonalPhoto);
 		clearUserpic();
 		if (!username().isEmpty()) {
-			Ayu::AyuAvatarResolver::Instance().resolve(this);
+			Jel::JelAvatarResolver::Instance().resolve(this);
 		}
 	});
 }
@@ -403,7 +403,7 @@ void UserData::setName(
 		const QString &newUsername) {
 	auto filteredFirstName = newFirstName;
 	auto filteredLastName = newLastName;
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (settings.filterZalgo()) {
 		filteredFirstName = filterZalgo(filteredFirstName);
 		filteredLastName = filterZalgo(filteredLastName);
@@ -440,7 +440,7 @@ void UserData::setUsernames(const Data::Usernames &newUsernames) {
 			? UpdateFlag::Usernames
 			: UpdateFlag()));
 	if (!hasUserpic() && !nowUsername.isEmpty()) {
-		Ayu::AyuAvatarResolver::Instance().resolve(this);
+		Jel::JelAvatarResolver::Instance().resolve(this);
 	}
 }
 
@@ -1169,6 +1169,6 @@ Ui::BotVerifyDetails ParseBotVerifyDetails(const MTPBotVerification *info) {
 
 } // namespace Data
 
-bool UserData::isAyuNoForwards() const {
+bool UserData::isJelNoForwards() const {
 	return false;
 }

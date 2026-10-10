@@ -136,12 +136,12 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QCoreApplication>
 #include <QtCore/QMimeData>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/filters/filters_cache_controller.h"
-#include "ayu/ui/context_menu/context_menu.h"
-#include "ayu/ui/settings/filters/edit_filter.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/filters/filters_cache_controller.h"
+#include "jel/ui/context_menu/context_menu.h"
+#include "jel/ui/settings/filters/edit_filter.h"
+#include "jel/utils/telegram_helpers.h"
 #include "data/data_document_media.h"
 
 
@@ -1589,7 +1589,7 @@ void HistoryInner::paintEvent(QPaintEvent *e) {
 			}
 			if (markingAsViewed && item->hasUnwatchedEffect()) {
 				const auto peer = item->history()->peer;
-				const auto &settings = AyuSettings::getInstance();
+				const auto &settings = JelSettings::getInstance();
 				const auto hide = (!settings.showChannelReactions() && peer->isChannel() && !peer->isMegagroup()) ||
 					(!settings.showGroupReactions() && peer->isMegagroup()) ||
 					(!settings.showPrivateChatReactions() && peer->isUser());
@@ -3138,11 +3138,11 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 				&st::menuIconStats);
 		}
 
-		AyuUi::AddHistoryAction(_menu, item);
-		AyuUi::AddHideMessageAction(_menu, item);
-		AyuUi::AddUserMessagesAction(_menu, item);
-		AyuUi::AddRepeatMessageAction(_menu, item, HistoryView::Context::History);
-		AyuUi::AddMessageDetailsAction(_menu, item);
+		JelUi::AddHistoryAction(_menu, item);
+		JelUi::AddHideMessageAction(_menu, item);
+		JelUi::AddUserMessagesAction(_menu, item);
+		JelUi::AddRepeatMessageAction(_menu, item, HistoryView::Context::History);
+		JelUi::AddMessageDetailsAction(_menu, item);
 	};
 	const auto addPhotoActions = [&](not_null<PhotoData*> photo, HistoryItem *item) {
 		const auto media = photo->activeMediaView();
@@ -3362,8 +3362,8 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 			}();
 		}
 
-		AyuUi::AddReadUntilAction(_menu, item);
-		AyuUi::AddBurnAction(_menu, item);
+		JelUi::AddReadUntilAction(_menu, item);
+		JelUi::AddBurnAction(_menu, item);
 	};
 
 	const auto addReplyAction = [&](HistoryItem *item) {
@@ -3646,7 +3646,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 						hasCopyRestrictionForSelected()));
 				}, &st::menuIconTranslate);
 			}
-			AyuUi::AddCreateFilterAction(_menu, _controller, item, selectedText.rich.text);
+			JelUi::AddCreateFilterAction(_menu, _controller, item, selectedText.rich.text);
 			const auto editItem = [&]() -> HistoryItem* {
 				const auto view = (item && item->groupId())
 					? viewByItem(item)

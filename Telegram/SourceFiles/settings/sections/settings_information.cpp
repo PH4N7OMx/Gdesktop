@@ -75,9 +75,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QGuiApplication>
 #include <QtCore/QBuffer>
 
-// AyuGram includes
-#include "ayu/ui/ayu_userpic.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/ui/jel_userpic.h"
+#include "jel/utils/telegram_helpers.h"
 #include "styles/style_info.h"
 
 
@@ -919,7 +919,7 @@ void SetupAccountsWrap(
 			pen.setWidthF(line);
 			p.setPen(pen);
 			p.setBrush(Qt::NoBrush);
-			AyuUserpic::PaintShape(p, rect);
+			JelUserpic::PaintShape(p, rect);
 		}
 	}, state->userpic.lifetime());
 

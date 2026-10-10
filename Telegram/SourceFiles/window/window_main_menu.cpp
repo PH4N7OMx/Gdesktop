@@ -85,13 +85,13 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QGuiApplication>
 #include <QtGui/QClipboard>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/utils/telegram_helpers.h"
 #include "boxes/abstract_box.h"
-#include "styles/style_ayu_icons.h"
+#include "styles/style_jel_icons.h"
 #include "lang_auto.h"
-#include "ayu/ui/settings/settings_main.h"
+#include "jel/ui/settings/settings_main.h"
 #include "styles/style_info.h"
 
 
@@ -116,7 +116,7 @@ constexpr auto kPlayStatusLimit = 12;
 
 [[nodiscard]] rpl::producer<TextWithEntities> SetStatusLabel(
 		not_null<Main::Session*> session) {
-	return tr::ayu_AyuPreferences() | rpl::map([](const QString& text) {
+	return tr::jel_JelPreferences() | rpl::map([](const QString& text) {
 		return tr::link(text);
 	});
 }
@@ -398,7 +398,7 @@ MainMenu::MainMenu(
 
 	_telegram->setMarkedText(tr::link(
 		u"GummyGram Desktop"_q,
-		u"https://ayugram.one"_q));
+		u"https://github.com/PH4N7OMx/Gdesktop"_q));
 	_telegram->setLinksTrusted();
 	// The canary version is too long for the "Version {version}" form.
 	_version->setMarkedText(
@@ -676,7 +676,7 @@ void MainMenu::setupAccountsToggle() {
 
 void MainMenu::setupSetEmojiStatus() {
 	_setEmojiStatus->overrideLinkClickHandler([=] {
-		_controller->showSettings(Settings::AyuMain::Id());
+		_controller->showSettings(Settings::JelMain::Id());
 	});
 }
 
@@ -699,7 +699,7 @@ void MainMenu::showFinished() {
 void MainMenu::setupMenu() {
 	using namespace Settings;
 
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 
 	const auto controller = _controller;
 	const auto addAction = [&](
@@ -776,11 +776,11 @@ void MainMenu::setupMenu() {
 
 		if (settings.showLReadToggleInDrawer()) {
 			addAction(
-				tr::ayu_LReadMessages(),
-				{&st::ayuLReadMenuIcon}
+				tr::jel_LReadMessages(),
+				{&st::jelLReadMenuIcon}
 			)->setClickedCallback([=]() mutable
 			{
-				auto &ghost = AyuSettings::ghost(&controller->session());
+				auto &ghost = JelSettings::ghost(&controller->session());
 				const auto prev = ghost.sendReadMessages();
 				ghost.setSendReadMessages(false);
 
@@ -793,7 +793,7 @@ void MainMenu::setupMenu() {
 
 		if (settings.showSReadToggleInDrawer()) {
 			auto callback = [=](Fn<void()> &&close) mutable {
-				auto &ghost = AyuSettings::ghost(&controller->session());
+				auto &ghost = JelSettings::ghost(&controller->session());
 				const auto prev = ghost.sendReadMessages();
 				ghost.setSendReadMessages(true);
 
@@ -802,21 +802,21 @@ void MainMenu::setupMenu() {
 
 				// slight delay for forums to send packets
 				dispatchToMainThread(crl::guard(controller, [=] {
-					auto &ghost = AyuSettings::ghost(&controller->session());
+					auto &ghost = JelSettings::ghost(&controller->session());
 					ghost.setSendReadMessages(prev);
 				}), 200);
 				close();
 			};
 
 			addAction(
-				tr::ayu_SReadMessages(),
-				{&st::ayuSReadMenuIcon}
+				tr::jel_SReadMessages(),
+				{&st::jelSReadMenuIcon}
 			)->setClickedCallback([=]
 			{
 				auto box = Ui::MakeConfirmBox({
-					.text = tr::ayu_ReadConfirmationBoxQuestion(),
+					.text = tr::jel_ReadConfirmationBoxQuestion(),
 					.confirmed = callback,
-					.confirmText = tr::ayu_ReadConfirmationBoxActionText()
+					.confirmText = tr::jel_ReadConfirmationBoxActionText()
 				});
 				Ui::show(std::move(box));
 			});
@@ -917,22 +917,22 @@ void MainMenu::setupMenu() {
 	}
 
 	if (settings.showGhostToggleInDrawer()) {
-		auto ghostActiveChanges = AyuSettings::getInstance().useGlobalGhostModeValue()
+		auto ghostActiveChanges = JelSettings::getInstance().useGlobalGhostModeValue()
 			| rpl::map([controller = _controller](bool) {
-				return AyuSettings::ghost(&controller->session()).ghostModeActiveValue();
+				return JelSettings::ghost(&controller->session()).ghostModeActiveValue();
 			})
 			| rpl::flatten_latest();
 
 		const auto ghostModeToggle = addAction(
-			tr::ayu_GhostModeToggle(),
-			{&st::ayuGhostIcon}
+			tr::jel_GhostModeToggle(),
+			{&st::jelGhostIcon}
 		)->toggleOn(std::move(ghostActiveChanges));
 
 		ghostModeToggle->toggledChanges(
 		) | rpl::on_next(
 			[controller = _controller](bool ghostMode)
 			{
-				auto &ghost = AyuSettings::ghost(&controller->session());
+				auto &ghost = JelSettings::ghost(&controller->session());
 				ghost.setGhostModeEnabled(ghostMode);
 			},
 			ghostModeToggle->lifetime());
@@ -940,15 +940,15 @@ void MainMenu::setupMenu() {
 
 	if (settings.showStreamerToggleInDrawer()) {
 		const auto streamerModeToggle = addAction(
-			tr::ayu_StreamerModeToggle(),
-			{&st::ayuStreamerModeMenuIcon}
-		)->toggleOn(AyuSettings::getInstance().streamerModeValue());
+			tr::jel_StreamerModeToggle(),
+			{&st::jelStreamerModeMenuIcon}
+		)->toggleOn(JelSettings::getInstance().streamerModeValue());
 
 		streamerModeToggle->toggledChanges(
 		) | rpl::on_next(
 			[=](bool enabled)
 			{
-				AyuSettings::getInstance().setStreamerMode(enabled);
+				JelSettings::getInstance().setStreamerMode(enabled);
 			},
 			streamerModeToggle->lifetime());
 	}

@@ -21,12 +21,12 @@ add_subdirectory(lib_webrtc)
 add_subdirectory(lib_webview)
 add_subdirectory(codegen)
 
-# AyuGram filters
+# GummyGram filters
 add_subdirectory(lib_icu)
 if (NOT MSVC)
     target_compile_options(icu_regex_minimal PRIVATE -w)
 endif()
-# AyuGram filters
+# GummyGram filters
 
 get_filename_component(src_loc SourceFiles REALPATH)
 get_filename_component(res_loc Resources REALPATH)
@@ -123,170 +123,170 @@ PRIVATE
     desktop-app::external_wallet_engine
     desktop-app::external_xxhash
 
-    # AyuGram filters
-    ayugram::lib_icu
+    # GummyGram filters
+    gummygram::lib_icu
 )
 
-set(ayugram_files
-        ayu/ayu_worker.cpp
-        ayu/ayu_worker.h
-        ayu/plugins/plugin_package.cpp
-        ayu/plugins/plugin_package.h
-        ayu/plugins/plugin_sandbox.cpp
-        ayu/plugins/plugin_sandbox.h
-        ayu/plugins/plugin_worker.cpp
-        ayu/plugins/plugin_worker.h
-        ayu/plugins/plugin_manager.cpp
-        ayu/plugins/plugin_manager.h
-        ayu/ui/settings/settings_plugins.cpp
-        ayu/ui/settings/settings_plugins.h
-        ayu/ayu_url_handlers.cpp
-        ayu/ayu_url_handlers.h
-        ayu/ayu_state.cpp
-        ayu/ayu_state.h
-        ayu/ayu_settings.cpp
-        ayu/ayu_settings.h
-        ayu/ayu_lang.cpp
-        ayu/ayu_lang.h
-        ayu/ayu_infra.cpp
-        ayu/ayu_infra.h
-        ayu/utils/ayu_mapper.cpp
-        ayu/utils/ayu_mapper.h
-        ayu/utils/qt_key_modifiers_extended.h
-        ayu/utils/account_info.cpp
-        ayu/utils/account_info.h
-        ayu/utils/registration_model.h
-        ayu/utils/telegram_helpers.cpp
-        ayu/utils/telegram_helpers.h
-        ayu/utils/windows_utils.cpp
-        ayu/utils/windows_utils.h
-        ayu/utils/rc_manager.cpp
-        ayu/utils/rc_manager.h
-        ayu/ui/ayu_logo.cpp
-        ayu/ui/ayu_logo.h
-        ayu/ui/toasts.cpp
-        ayu/ui/toasts.h
-        ayu/ui/ayu_userpic.cpp
-        ayu/ui/ayu_userpic.h
-        ayu/ui/utils/ayu_profile_values.cpp
-        ayu/ui/utils/ayu_profile_values.h
-        ayu/ui/utils/color_cut_quantizer.cpp
-        ayu/ui/utils/color_cut_quantizer.h
-        ayu/ui/utils/color_utils.cpp
-        ayu/ui/utils/color_utils.h
-        ayu/ui/utils/palette.cpp
-        ayu/ui/utils/palette.h
-        ayu/ui/utils/itunes_search.cpp
-        ayu/ui/utils/itunes_search.h
-        ayu/ui/settings/ayu_builder.cpp
-        ayu/ui/settings/ayu_builder.h
-        ayu/ui/settings/settings_appearance.cpp
-        ayu/ui/settings/settings_appearance.h
-        ayu/ui/settings/settings_ayu_utils.cpp
-        ayu/ui/settings/settings_ayu_utils.h
-        ayu/ui/settings/settings_chats.cpp
-        ayu/ui/settings/settings_chats.h
-        ayu/ui/settings/settings_general.cpp
-        ayu/ui/settings/settings_general.h
-        ayu/ui/settings/settings_ayu.cpp
-        ayu/ui/settings/settings_ayu.h
-        ayu/ui/settings/settings_filters.cpp
-        ayu/ui/settings/settings_filters.h
-        ayu/ui/settings/settings_main.cpp
-        ayu/ui/settings/settings_main.h
-        ayu/ui/settings/settings_other.cpp
-        ayu/ui/settings/settings_other.h
-        ayu/ui/settings/filters/settings_filters_list.cpp
-        ayu/ui/settings/filters/settings_filters_list.h
-        ayu/ui/settings/filters/per_dialog_filter.cpp
-        ayu/ui/settings/filters/per_dialog_filter.h
-        ayu/ui/settings/filters/edit_filter.cpp
-        ayu/ui/settings/filters/edit_filter.h
-        ayu/ui/context_menu/context_menu.cpp
-        ayu/ui/context_menu/context_menu.h
-        ayu/ui/context_menu/menu_item_subtext.cpp
-        ayu/ui/context_menu/menu_item_subtext.h
-        ayu/ui/message_history/history_inner.cpp
-        ayu/ui/message_history/history_inner.h
-        ayu/ui/message_history/history_item.cpp
-        ayu/ui/message_history/history_item.h
-        ayu/ui/message_history/history_section.cpp
-        ayu/ui/message_history/history_section.h
-        ayu/ui/boxes/edit_mark_box.cpp
-        ayu/ui/boxes/edit_mark_box.h
-        ayu/ui/boxes/font_selector.cpp
-        ayu/ui/boxes/font_selector.h
-        ayu/ui/boxes/import_filters_box.cpp
-        ayu/ui/boxes/import_filters_box.h
-        ayu/ui/boxes/theme_selector_box.cpp
-        ayu/ui/boxes/theme_selector_box.h
-        ayu/ui/boxes/message_shot_box.cpp
-        ayu/ui/boxes/message_shot_box.h
-        ayu/ui/boxes/donate_qr_box.cpp
-        ayu/ui/boxes/donate_qr_box.h
-        ayu/ui/boxes/donate_info_box.cpp
-        ayu/ui/boxes/donate_info_box.h
-        ayu/ui/boxes/plugin_info_box.cpp
-        ayu/ui/boxes/plugin_info_box.h
-        ayu/ui/components/image_view.cpp
-        ayu/ui/components/image_view.h
-        ayu/ui/components/icon_picker.cpp
-        ayu/ui/components/icon_picker.h
-        ayu/ui/components/avatar_corners_preview.cpp
-        ayu/ui/components/avatar_corners_preview.h
-        ayu/ui/components/message_preview.cpp
-        ayu/ui/components/message_preview.h
-        ayu/ui/components/saved_music.cpp
-        ayu/ui/components/saved_music.h
-        ayu/libs/json.hpp
-        ayu/libs/json_ext.hpp
-        ayu/libs/sqlite/sqlite3.c
-        ayu/libs/sqlite/sqlite3.h
-        ayu/libs/sqlite/sqlite_orm.h
-        ayu/features/streamer_mode/platform/linux/streamer_mode_linux.cpp
-        ayu/features/streamer_mode/platform/linux/streamer_mode_linux.h
-        ayu/features/streamer_mode/platform/mac/streamer_mode_mac.mm
-        ayu/features/streamer_mode/platform/mac/streamer_mode_mac.h
-        ayu/features/streamer_mode/platform/win/streamer_mode_win.cpp
-        ayu/features/streamer_mode/platform/win/streamer_mode_win.h
-        ayu/features/streamer_mode/platform/platform_streamer_mode.h
-        ayu/features/streamer_mode/streamer_mode.cpp
-        ayu/features/streamer_mode/streamer_mode.h
-        ayu/features/message_shot/message_shot.cpp
-        ayu/features/message_shot/message_shot.h
-        ayu/features/message_shot/message_shot_theme_state.cpp
-        ayu/features/message_shot/message_shot_theme_state.h
-        ayu/features/forward/ayu_forward.cpp
-        ayu/features/forward/ayu_forward.h
-        ayu/features/forward/ayu_forward_rich.cpp
-        ayu/features/forward/ayu_forward_rich.h
-        ayu/features/forward/ayu_sync.cpp
-        ayu/features/forward/ayu_sync.h
-        ayu/features/translator/ayu_translator.cpp
-        ayu/features/translator/ayu_translator.h
-        ayu/features/translator/ayu_translate_provider.cpp
-        ayu/features/translator/ayu_translate_provider.h
-        ayu/features/translator/html_parser.cpp
-        ayu/features/translator/html_parser.h
-        ayu/features/translator/implementations/google.cpp
-        ayu/features/translator/implementations/google.h
-        ayu/features/translator/implementations/yandex.cpp
-        ayu/features/translator/implementations/yandex.h
-        ayu/features/translator/implementations/base.cpp
-        ayu/features/translator/implementations/base.h
-        ayu/features/filters/filters_controller.cpp
-        ayu/features/filters/filters_controller.h
-        ayu/features/filters/filters_cache_controller.cpp
-        ayu/features/filters/filters_cache_controller.h
-        ayu/features/filters/filters_utils.cpp
-        ayu/features/filters/filters_utils.h
-        ayu/data/messages_storage.cpp
-        ayu/data/messages_storage.h
-        ayu/data/entities.h
-        ayu/data/ayu_database.cpp
-        ayu/data/ayu_database.h
-        ayu/features/avatars/ayu_avatar_resolver.cpp
-        ayu/features/avatars/ayu_avatar_resolver.h
+set(gummygram_files
+        jel/jel_worker.cpp
+        jel/jel_worker.h
+        jel/plugins/plugin_package.cpp
+        jel/plugins/plugin_package.h
+        jel/plugins/plugin_sandbox.cpp
+        jel/plugins/plugin_sandbox.h
+        jel/plugins/plugin_worker.cpp
+        jel/plugins/plugin_worker.h
+        jel/plugins/plugin_manager.cpp
+        jel/plugins/plugin_manager.h
+        jel/ui/settings/settings_plugins.cpp
+        jel/ui/settings/settings_plugins.h
+        jel/jel_url_handlers.cpp
+        jel/jel_url_handlers.h
+        jel/jel_state.cpp
+        jel/jel_state.h
+        jel/jel_settings.cpp
+        jel/jel_settings.h
+        jel/jel_lang.cpp
+        jel/jel_lang.h
+        jel/jel_infra.cpp
+        jel/jel_infra.h
+        jel/utils/jel_mapper.cpp
+        jel/utils/jel_mapper.h
+        jel/utils/qt_key_modifiers_extended.h
+        jel/utils/account_info.cpp
+        jel/utils/account_info.h
+        jel/utils/registration_model.h
+        jel/utils/telegram_helpers.cpp
+        jel/utils/telegram_helpers.h
+        jel/utils/windows_utils.cpp
+        jel/utils/windows_utils.h
+        jel/utils/rc_manager.cpp
+        jel/utils/rc_manager.h
+        jel/ui/jel_logo.cpp
+        jel/ui/jel_logo.h
+        jel/ui/toasts.cpp
+        jel/ui/toasts.h
+        jel/ui/jel_userpic.cpp
+        jel/ui/jel_userpic.h
+        jel/ui/utils/jel_profile_values.cpp
+        jel/ui/utils/jel_profile_values.h
+        jel/ui/utils/color_cut_quantizer.cpp
+        jel/ui/utils/color_cut_quantizer.h
+        jel/ui/utils/color_utils.cpp
+        jel/ui/utils/color_utils.h
+        jel/ui/utils/palette.cpp
+        jel/ui/utils/palette.h
+        jel/ui/utils/itunes_search.cpp
+        jel/ui/utils/itunes_search.h
+        jel/ui/settings/jel_builder.cpp
+        jel/ui/settings/jel_builder.h
+        jel/ui/settings/settings_appearance.cpp
+        jel/ui/settings/settings_appearance.h
+        jel/ui/settings/settings_jel_utils.cpp
+        jel/ui/settings/settings_jel_utils.h
+        jel/ui/settings/settings_chats.cpp
+        jel/ui/settings/settings_chats.h
+        jel/ui/settings/settings_general.cpp
+        jel/ui/settings/settings_general.h
+        jel/ui/settings/settings_jel.cpp
+        jel/ui/settings/settings_jel.h
+        jel/ui/settings/settings_filters.cpp
+        jel/ui/settings/settings_filters.h
+        jel/ui/settings/settings_main.cpp
+        jel/ui/settings/settings_main.h
+        jel/ui/settings/settings_other.cpp
+        jel/ui/settings/settings_other.h
+        jel/ui/settings/filters/settings_filters_list.cpp
+        jel/ui/settings/filters/settings_filters_list.h
+        jel/ui/settings/filters/per_dialog_filter.cpp
+        jel/ui/settings/filters/per_dialog_filter.h
+        jel/ui/settings/filters/edit_filter.cpp
+        jel/ui/settings/filters/edit_filter.h
+        jel/ui/context_menu/context_menu.cpp
+        jel/ui/context_menu/context_menu.h
+        jel/ui/context_menu/menu_item_subtext.cpp
+        jel/ui/context_menu/menu_item_subtext.h
+        jel/ui/message_history/history_inner.cpp
+        jel/ui/message_history/history_inner.h
+        jel/ui/message_history/history_item.cpp
+        jel/ui/message_history/history_item.h
+        jel/ui/message_history/history_section.cpp
+        jel/ui/message_history/history_section.h
+        jel/ui/boxes/edit_mark_box.cpp
+        jel/ui/boxes/edit_mark_box.h
+        jel/ui/boxes/font_selector.cpp
+        jel/ui/boxes/font_selector.h
+        jel/ui/boxes/import_filters_box.cpp
+        jel/ui/boxes/import_filters_box.h
+        jel/ui/boxes/theme_selector_box.cpp
+        jel/ui/boxes/theme_selector_box.h
+        jel/ui/boxes/message_shot_box.cpp
+        jel/ui/boxes/message_shot_box.h
+        jel/ui/boxes/donate_qr_box.cpp
+        jel/ui/boxes/donate_qr_box.h
+        jel/ui/boxes/donate_info_box.cpp
+        jel/ui/boxes/donate_info_box.h
+        jel/ui/boxes/plugin_info_box.cpp
+        jel/ui/boxes/plugin_info_box.h
+        jel/ui/components/image_view.cpp
+        jel/ui/components/image_view.h
+        jel/ui/components/icon_picker.cpp
+        jel/ui/components/icon_picker.h
+        jel/ui/components/avatar_corners_preview.cpp
+        jel/ui/components/avatar_corners_preview.h
+        jel/ui/components/message_preview.cpp
+        jel/ui/components/message_preview.h
+        jel/ui/components/saved_music.cpp
+        jel/ui/components/saved_music.h
+        jel/libs/json.hpp
+        jel/libs/json_ext.hpp
+        jel/libs/sqlite/sqlite3.c
+        jel/libs/sqlite/sqlite3.h
+        jel/libs/sqlite/sqlite_orm.h
+        jel/features/streamer_mode/platform/linux/streamer_mode_linux.cpp
+        jel/features/streamer_mode/platform/linux/streamer_mode_linux.h
+        jel/features/streamer_mode/platform/mac/streamer_mode_mac.mm
+        jel/features/streamer_mode/platform/mac/streamer_mode_mac.h
+        jel/features/streamer_mode/platform/win/streamer_mode_win.cpp
+        jel/features/streamer_mode/platform/win/streamer_mode_win.h
+        jel/features/streamer_mode/platform/platform_streamer_mode.h
+        jel/features/streamer_mode/streamer_mode.cpp
+        jel/features/streamer_mode/streamer_mode.h
+        jel/features/message_shot/message_shot.cpp
+        jel/features/message_shot/message_shot.h
+        jel/features/message_shot/message_shot_theme_state.cpp
+        jel/features/message_shot/message_shot_theme_state.h
+        jel/features/forward/jel_forward.cpp
+        jel/features/forward/jel_forward.h
+        jel/features/forward/jel_forward_rich.cpp
+        jel/features/forward/jel_forward_rich.h
+        jel/features/forward/jel_sync.cpp
+        jel/features/forward/jel_sync.h
+        jel/features/translator/jel_translator.cpp
+        jel/features/translator/jel_translator.h
+        jel/features/translator/jel_translate_provider.cpp
+        jel/features/translator/jel_translate_provider.h
+        jel/features/translator/html_parser.cpp
+        jel/features/translator/html_parser.h
+        jel/features/translator/implementations/google.cpp
+        jel/features/translator/implementations/google.h
+        jel/features/translator/implementations/yandex.cpp
+        jel/features/translator/implementations/yandex.h
+        jel/features/translator/implementations/base.cpp
+        jel/features/translator/implementations/base.h
+        jel/features/filters/filters_controller.cpp
+        jel/features/filters/filters_controller.h
+        jel/features/filters/filters_cache_controller.cpp
+        jel/features/filters/filters_cache_controller.h
+        jel/features/filters/filters_utils.cpp
+        jel/features/filters/filters_utils.h
+        jel/data/messages_storage.cpp
+        jel/data/messages_storage.h
+        jel/data/entities.h
+        jel/data/jel_database.cpp
+        jel/data/jel_database.h
+        jel/features/avatars/jel_avatar_resolver.cpp
+        jel/features/avatars/jel_avatar_resolver.h
 
         info/profile/info_profile_music_button.cpp
         info/profile/info_profile_music_button.h
@@ -300,7 +300,7 @@ target_precompile_headers(Telegram PRIVATE $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:${sr
 nice_target_sources(Telegram ${src_loc}
 PRIVATE
     ${style_files}
-    ${ayugram_files}
+    ${gummygram_files}
 
     api/api_attached_stickers.cpp
     api/api_attached_stickers.h
@@ -2561,7 +2561,7 @@ endif()
 
 nice_target_sources(Telegram ${res_loc}
 PRIVATE
-    qrc/ayu/ayu.qrc
+    qrc/jel/jel.qrc
 
     qrc/emoji_1.qrc
     qrc/emoji_2.qrc
@@ -2741,9 +2741,9 @@ if (build_macstore)
     )
 else()
     if (CMAKE_GENERATOR STREQUAL Xcode)
-        set(bundle_identifier "one.ayugram.AyuGramDesktop$<$<CONFIG:Debug>:Debug>")
+        set(bundle_identifier "com.gummygram.GummyGramDesktop$<$<CONFIG:Debug>:Debug>")
     else()
-        set(bundle_identifier "one.ayugram.AyuGramDesktop")
+        set(bundle_identifier "com.gummygram.GummyGramDesktop")
     endif()
     set(bundle_entitlements "Telegram.entitlements")
     set(output_name "GummyGram")
@@ -2788,7 +2788,7 @@ PRIVATE
     TDESKTOP_API_ID=${TDESKTOP_API_ID}
     TDESKTOP_API_HASH=${TDESKTOP_API_HASH}
     G_LOG_DOMAIN="Telegram"
-    U_STATIC_IMPLEMENTATION=1 # AyuGram: do not use __declspec(dllimport) when including icu headers
+    U_STATIC_IMPLEMENTATION=1 # GummyGram: do not use __declspec(dllimport) when including icu headers
 )
 
 get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
@@ -2977,28 +2977,28 @@ endif()
 
 if (LINUX AND DESKTOP_APP_USE_PACKAGED)
     include(GNUInstallDirs)
-    configure_file("../lib/xdg/com.ayugram.desktop.service" "${CMAKE_CURRENT_BINARY_DIR}/com.ayugram.desktop.service" @ONLY)
-    configure_file("../lib/xdg/com.ayugram.desktop.metainfo.xml" "${CMAKE_CURRENT_BINARY_DIR}/com.ayugram.desktop.metainfo.xml" @ONLY)
-    generate_appstream_changelog(Telegram "${CMAKE_SOURCE_DIR}/changelog.txt" "${CMAKE_CURRENT_BINARY_DIR}/com.ayugram.desktop.metainfo.xml")
+    configure_file("../lib/xdg/com.gummygram.desktop.service" "${CMAKE_CURRENT_BINARY_DIR}/com.gummygram.desktop.service" @ONLY)
+    configure_file("../lib/xdg/com.gummygram.desktop.metainfo.xml" "${CMAKE_CURRENT_BINARY_DIR}/com.gummygram.desktop.metainfo.xml" @ONLY)
+    generate_appstream_changelog(Telegram "${CMAKE_SOURCE_DIR}/changelog.txt" "${CMAKE_CURRENT_BINARY_DIR}/com.gummygram.desktop.metainfo.xml")
     install(TARGETS Telegram RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" BUNDLE DESTINATION "${CMAKE_INSTALL_BINDIR}")
-    install(FILES "Resources/art/icon16.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/16x16/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon16@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/16x16@2/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon32.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/32x32/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon32@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/32x32@2/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon48.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/48x48/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon48@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/48x48@2/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon64.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon64@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64@2/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon128.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/128x128/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon128@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/128x128@2/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon256.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/256x256/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon256@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/256x256@2/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon512.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/art/icon512@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512@2/apps" RENAME "com.ayugram.desktop.png")
-    install(FILES "Resources/icons/tray_monochrome.svg" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/symbolic/apps" RENAME "com.ayugram.desktop-symbolic.svg")
-    install(FILES "Resources/icons/tray_monochrome_attention.svg" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/symbolic/apps" RENAME "com.ayugram.desktop-attention-symbolic.svg")
-    install(FILES "Resources/icons/tray_monochrome_mute.svg" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/symbolic/apps" RENAME "com.ayugram.desktop-mute-symbolic.svg")
-    install(FILES "../lib/xdg/com.ayugram.desktop.desktop" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/applications")
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/com.ayugram.desktop.service" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/dbus-1/services")
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/com.ayugram.desktop.metainfo.xml" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/metainfo")
+    install(FILES "Resources/art/icon16.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/16x16/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon16@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/16x16@2/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon32.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/32x32/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon32@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/32x32@2/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon48.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/48x48/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon48@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/48x48@2/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon64.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon64@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64@2/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon128.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/128x128/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon128@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/128x128@2/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon256.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/256x256/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon256@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/256x256@2/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon512.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/art/icon512@2x.png" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512@2/apps" RENAME "com.gummygram.desktop.png")
+    install(FILES "Resources/icons/tray_monochrome.svg" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/symbolic/apps" RENAME "com.gummygram.desktop-symbolic.svg")
+    install(FILES "Resources/icons/tray_monochrome_attention.svg" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/symbolic/apps" RENAME "com.gummygram.desktop-attention-symbolic.svg")
+    install(FILES "Resources/icons/tray_monochrome_mute.svg" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/symbolic/apps" RENAME "com.gummygram.desktop-mute-symbolic.svg")
+    install(FILES "../lib/xdg/com.gummygram.desktop.desktop" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/applications")
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/com.gummygram.desktop.service" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/dbus-1/services")
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/com.gummygram.desktop.metainfo.xml" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/metainfo")
 endif()

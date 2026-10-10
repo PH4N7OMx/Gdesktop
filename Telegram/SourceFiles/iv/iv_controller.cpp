@@ -37,9 +37,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <ada.h>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/streamer_mode/streamer_mode.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/streamer_mode/streamer_mode.h"
 
 
 namespace Iv {
@@ -297,8 +297,8 @@ void Controller::createWebview(const Webview::StorageId &storageId) {
 
 	const auto window = _window.get();
 
-	if (AyuSettings::getInstance().streamerMode()) {
-		AyuFeatures::StreamerMode::hideWidgetWindow(window);
+	if (JelSettings::getInstance().streamerMode()) {
+		JelFeatures::StreamerMode::hideWidgetWindow(window);
 	}
 
 	_webview = std::make_unique<Webview::Window>(

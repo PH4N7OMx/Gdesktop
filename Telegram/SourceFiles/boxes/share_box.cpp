@@ -67,8 +67,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QGuiApplication>
 #include <QtGui/QClipboard>
 
-// AyuGram includes
-#include "ayu/features/forward/ayu_forward.h"
+// GummyGram includes
+#include "jel/features/forward/jel_forward.h"
 
 
 class ShareBox::Inner final : public Ui::RpWidget {
@@ -1892,7 +1892,7 @@ ShareBox::SubmitCallback ShareBox::DefaultForwardCallback(
 			&& result.front()->peer()->isSelf()
 			&& history->session().premium();
 
-		// AyuGram-changed
+		// GummyGram-changed
 		const auto dismiss = [=]
 		{
 			if (show->valid()) {
@@ -1900,10 +1900,10 @@ ShareBox::SubmitCallback ShareBox::DefaultForwardCallback(
 			}
 		};
 
-		if (AyuForward::isFullAyuForwardNeeded(items.front())) {
+		if (JelForward::isFullJelForwardNeeded(items.front())) {
 			crl::async([=]{
 				for (const auto thread : result) {
-					AyuForward::forwardMessages(
+					JelForward::forwardMessages(
 					&history->owner().session(),
 					Api::SendAction(thread, options),
 					false,
@@ -1913,11 +1913,11 @@ ShareBox::SubmitCallback ShareBox::DefaultForwardCallback(
 
 			dismiss();
 			return;
-		} else if (AyuForward::isAyuForwardNeeded(items)) {
+		} else if (JelForward::isJelForwardNeeded(items)) {
 			crl::async([=]
 			{
 				for (const auto thread : result) {
-					AyuForward::intelligentForward(
+					JelForward::intelligentForward(
 						&history->owner().session(),
 						Api::SendAction(thread, options),
 						Data::ResolvedForwardDraft(items, forwardOptions));
@@ -1927,7 +1927,7 @@ ShareBox::SubmitCallback ShareBox::DefaultForwardCallback(
 			dismiss();
 			return;
 		}
-		// AyuGram-changed
+		// GummyGram-changed
 
 		for (const auto &thread : result) {
 			const auto peer = thread->peer();

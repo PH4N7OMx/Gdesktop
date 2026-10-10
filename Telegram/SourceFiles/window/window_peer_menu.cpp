@@ -141,11 +141,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QAction>
 #include <QtWidgets/QApplication>
 
-// AyuGram includes
-#include "ayu/utils/telegram_helpers.h"
-#include "styles/style_ayu_icons.h"
-#include "ayu/ui/context_menu/context_menu.h"
-#include "ayu/features/forward/ayu_forward.h"
+// GummyGram includes
+#include "jel/utils/telegram_helpers.h"
+#include "styles/style_jel_icons.h"
+#include "jel/ui/context_menu/context_menu.h"
+#include "jel/features/forward/jel_forward.h"
 
 
 namespace Window {
@@ -286,18 +286,18 @@ void PeerMenuAddMuteSubmenuAction(
 	}
 
 	const auto peerId = thread->peer()->id.value;
-	const auto &ayuSettings = AyuSettings::getInstance();
-	if (ayuSettings.mentionsDisabled(peerId)) {
-		const auto text = tr::ayu_EnableMentions(tr::now)
+	const auto &jelSettings = JelSettings::getInstance();
+	if (jelSettings.mentionsDisabled(peerId)) {
+		const auto text = tr::jel_EnableMentions(tr::now)
 			+ '\t'
 			+ Ui::FormatMuteForTiny(
-				ayuSettings.mentionsMuteUntil(peerId) - base::unixtime::now());
+				jelSettings.mentionsMuteUntil(peerId) - base::unixtime::now());
 		addAction(text, with([=](not_null<Data::Thread*>) {
-			AyuSettings::getInstance().enableMentions(peerId);
+			JelSettings::getInstance().enableMentions(peerId);
 		}), &st::menuIconUnmute);
 	} else {
 		addAction(PeerMenuCallback::Args{
-			.text = tr::ayu_DisableMentions(tr::now),
+			.text = tr::jel_DisableMentions(tr::now),
 			.handler = nullptr,
 			.icon = &st::menuIconMute,
 			.fillSubmenu = [=](not_null<Ui::PopupMenu*> menu) {
@@ -1631,7 +1631,7 @@ void Filler::addToggleNoForwards() {
 			}
 		}).send();
 	};
-	const auto disabledNow = user->isAyuNoForwards();
+	const auto disabledNow = user->isJelNoForwards();
 	_addAction(disabledNow
 		? tr::lng_enable_sharing(tr::now)
 		: tr::lng_disable_sharing(tr::now), [=] {
@@ -1958,7 +1958,7 @@ void Filler::fillContextMenuActions() {
 	}
 	addBanFromChannel();
 	addClearHistory();
-	AyuUi::AddDeleteOwnMessagesAction(_peer, _topic, _controller, _addAction);
+	JelUi::AddDeleteOwnMessagesAction(_peer, _topic, _controller, _addAction);
 	addDeleteChat();
 	addLeaveChat();
 	addDeleteTopic();
@@ -1966,11 +1966,11 @@ void Filler::fillContextMenuActions() {
 
 void Filler::fillHistoryActions() {
 	addToggleMuteSubmenu(true);
-	AyuUi::AddAyuGramActions(_peer, _thread, _controller, _addAction);
+	JelUi::AddGummyGramActions(_peer, _thread, _controller, _addAction);
 	addCreateTopic();
 	addInfo();
-	AyuUi::AddJumpToBeginningAction(_peer, _thread, _controller, _addAction);
-	AyuUi::AddOpenChannelAction(_peer, _controller, _addAction);
+	JelUi::AddJumpToBeginningAction(_peer, _thread, _controller, _addAction);
+	JelUi::AddOpenChannelAction(_peer, _controller, _addAction);
 	addViewAsTopics();
 	addManageChat();
 	addStoryArchive();
@@ -1986,7 +1986,7 @@ void Filler::fillHistoryActions() {
 	addTranslate();
 	addReport();
 	addClearHistory();
-	AyuUi::AddDeleteOwnMessagesAction(_peer, _topic, _controller, _addAction);
+	JelUi::AddDeleteOwnMessagesAction(_peer, _topic, _controller, _addAction);
 	addDeleteChat();
 	addLeaveChat();
 }
@@ -2008,8 +2008,8 @@ void Filler::fillProfileActions() {
 	addTopicLink();
 	addManageTopic();
 	addToggleTopicClosed();
-	AyuUi::AddOpenChannelAction(_peer, _controller, _addAction);
-	AyuUi::AddShadowBanAction(_peer, _addAction);
+	JelUi::AddOpenChannelAction(_peer, _controller, _addAction);
+	JelUi::AddShadowBanAction(_peer, _addAction);
 	addViewDiscussion();
 	addDirectMessages();
 	addExportChat();
@@ -2024,10 +2024,10 @@ void Filler::fillProfileActions() {
 }
 
 void Filler::fillRepliesActions() {
-	AyuUi::AddAyuGramActions(_peer, _thread, _controller, _addAction);
+	JelUi::AddGummyGramActions(_peer, _thread, _controller, _addAction);
 	if (_topic) {
 		addInfo();
-		AyuUi::AddJumpToBeginningAction(_peer, _thread, _controller, _addAction);
+		JelUi::AddJumpToBeginningAction(_peer, _thread, _controller, _addAction);
 		addManageTopic();
 	}
 	addBoostChat();
@@ -3714,13 +3714,13 @@ base::weak_qptr<Ui::BoxContent> ShowForwardMessagesBox(
 			options,
 			forwardOptions);
 		const auto items = history->owner().idsToItems(msgIds);
-		const auto ayuForwarding = AyuForward::isAyuForwardNeeded(items)
-			|| AyuForward::isFullAyuForwardNeeded(items.front());
+		const auto jelForwarding = JelForward::isJelForwardNeeded(items)
+			|| JelForward::isFullJelForwardNeeded(items.front());
 
-		if ((!state->submit || ayuForwarding) && successCallback) {
+		if ((!state->submit || jelForwarding) && successCallback) {
 			successCallback();
 		}
-		// AyuGram-changed
+		// GummyGram-changed
 	};
 
 	const auto sendMenuType = [=] {

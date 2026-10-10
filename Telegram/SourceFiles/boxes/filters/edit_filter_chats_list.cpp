@@ -25,8 +25,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_window.h"
 #include "styles/style_boxes.h"
 
-// AyuGram includes
-#include "ayu/ui/ayu_userpic.h"
+// GummyGram includes
+#include "jel/ui/jel_userpic.h"
 
 
 namespace {
@@ -375,7 +375,7 @@ void PaintFilterChatsTypeIcon(
 	bg.setStops({ { 0., color1->c }, { 1., color2->c } });
 	p.setBrush(bg);
 	p.setPen(Qt::NoPen);
-	AyuUserpic::PaintShape(p, rect);
+	JelUserpic::PaintShape(p, rect);
 	icon.paintInCenter(p, rect);
 }
 

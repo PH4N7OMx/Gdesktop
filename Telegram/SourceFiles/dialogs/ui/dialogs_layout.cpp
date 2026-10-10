@@ -45,8 +45,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/text/text_options.h"
 #include "ui/text/text_utilities.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 #include "ui/unread_badge.h"
 #include "ui/unread_badge_paint.h"
 #include "ui/unread_counter_format.h"
@@ -55,9 +55,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_widgets.h"
 #include "styles/style_window.h"
 
-// AyuGram includes
-#include "ayu/features/filters/filters_controller.h"
-#include "styles/style_ayu_icons.h"
+// GummyGram includes
+#include "jel/features/filters/filters_controller.h"
+#include "styles/style_jel_icons.h"
 
 
 namespace Dialogs::Ui {

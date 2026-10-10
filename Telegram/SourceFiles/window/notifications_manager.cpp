@@ -54,9 +54,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <gio/gio.hpp>
 #endif // __has_include(<gio/gio.hpp>)
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/utils/telegram_helpers.h"
 
 
 namespace Window {
@@ -169,7 +169,7 @@ base::options::toggle HideReplyButtonOption({
 		PeerData *from) {
 	if (item && item->mentionsMe()) {
 		const auto peerId = thread->peer()->id.value;
-		const auto &settings = AyuSettings::getInstance();
+		const auto &settings = JelSettings::getInstance();
 		if (settings.mentionsSoundDisabled(peerId)) {
 			return std::nullopt;
 		}
@@ -355,8 +355,8 @@ System::SkipState System::computeSkipState(
 	const auto messageType = (type == Data::ItemNotificationType::Message);
 	const auto mention = messageType && item->mentionsMe();
 	const auto peerId = thread->peer()->id.value;
-	const auto &ayuSettings = AyuSettings::getInstance();
-	if (mention && ayuSettings.mentionsDisabled(peerId)) {
+	const auto &jelSettings = JelSettings::getInstance();
+	if (mention && jelSettings.mentionsDisabled(peerId)) {
 		return { SkipState::Skip };
 	}
 	const auto withSilent = [&](
@@ -368,14 +368,14 @@ System::SkipState System::computeSkipState(
 				|| !messageType
 				|| item->isSilent()
 				|| (mention
-					? (ayuSettings.mentionsSoundDisabled(peerId)
-						|| (!ayuSettings.mentionsSoundId(peerId)
+					? (jelSettings.mentionsSoundDisabled(peerId)
+						|| (!jelSettings.mentionsSoundId(peerId)
 							&& notifySettings->sound(thread).none))
 					: notifySettings->sound(thread).none)),
 		};
 	};
 	const auto showForMuted = messageType
-		&& ((mention && !ayuSettings.mentionsDisabled(peerId))
+		&& ((mention && !jelSettings.mentionsDisabled(peerId))
 			|| (item->out() && item->isFromScheduled()));
 	const auto notifyBy = messageType
 		? item->specialNotificationPeer()
@@ -435,7 +435,7 @@ System::Timing System::countTiming(
 		delay = config.notifyDefaultDelay;
 	}
 
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (settings.disableNotificationsDelay()) {
 		delay = minimalDelay;
 	}

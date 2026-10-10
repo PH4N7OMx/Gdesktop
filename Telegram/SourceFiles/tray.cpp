@@ -17,8 +17,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtWidgets/QApplication>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 #include "window/window_controller.h"
 #include "lang_auto.h"
 
@@ -114,12 +114,12 @@ void Tray::rebuildMenu() {
 			[=] { toggleSoundNotifications(); });
 	}
 
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 
 	if (settings.showGhostToggleInTray()) {
-		auto ghostActiveChanges = AyuSettings::getInstance().useGlobalGhostModeValue()
+		auto ghostActiveChanges = JelSettings::getInstance().useGlobalGhostModeValue()
 			| rpl::map([](bool) {
-				return AyuSettings::ghost().ghostModeActiveValue();
+				return JelSettings::ghost().ghostModeActiveValue();
 			})
 			| rpl::flatten_latest();
 
@@ -128,14 +128,14 @@ void Tray::rebuildMenu() {
 			std::move(ghostActiveChanges)
 		) | rpl::map([=](auto, bool active) {
 			return active
-				? tr::ayu_DisableGhostModeTray(tr::now)
-				: tr::ayu_EnableGhostModeTray(tr::now);
+				? tr::jel_DisableGhostModeTray(tr::now)
+				: tr::jel_EnableGhostModeTray(tr::now);
 		});
 		_tray.addAction(
 			std::move(turnGhostModeText),
 			[=]
 			{
-				auto &ghost = AyuSettings::ghost();
+				auto &ghost = JelSettings::ghost();
 				ghost.setGhostModeEnabled(!ghost.isGhostModeActive());
 			});
 	}
@@ -143,18 +143,18 @@ void Tray::rebuildMenu() {
 	if (settings.showStreamerToggleInTray()) {
 		auto turnStreamerModeText = rpl::combine(
 			_textUpdates.events_starting_with({}),
-			AyuSettings::getInstance().streamerModeValue()
+			JelSettings::getInstance().streamerModeValue()
 		) | rpl::map([=](auto, bool enabled) {
 			return enabled
-					   ? tr::ayu_DisableStreamerModeTray(tr::now)
-					   : tr::ayu_EnableStreamerModeTray(tr::now);
+					   ? tr::jel_DisableStreamerModeTray(tr::now)
+					   : tr::jel_EnableStreamerModeTray(tr::now);
 		});
 		_tray.addAction(
 			std::move(turnStreamerModeText),
 			[]
 			{
-				auto &ayuSettings = AyuSettings::getInstance();
-				ayuSettings.setStreamerMode(!ayuSettings.streamerMode());
+				auto &jelSettings = JelSettings::getInstance();
+				jelSettings.setStreamerMode(!jelSettings.streamerMode());
 			});
 	}
 

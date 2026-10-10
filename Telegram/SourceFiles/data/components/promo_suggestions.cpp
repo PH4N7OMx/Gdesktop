@@ -20,8 +20,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_session.h"
 #include "main/main_session_settings.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace Data {
@@ -135,7 +135,7 @@ void PromoSuggestions::refreshTopPromotion() {
 					|= _dismissedSuggestions.emplace(qs(suggestion)).second;
 			}
 
-			const auto &settings = AyuSettings::getInstance();
+			const auto &settings = JelSettings::getInstance();
 			if (settings.disableAds()) {
 				setTopPromoted(nullptr, QString(), QString());
 				return;

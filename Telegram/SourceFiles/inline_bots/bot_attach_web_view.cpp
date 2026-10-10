@@ -103,8 +103,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QSvgRenderer>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace InlineBots {
@@ -835,7 +835,7 @@ void BotAction::handleKeyPress(not_null<QKeyEvent*> e) {
 }
 
 QString WebviewPlatform() {
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	return settings.spoofWebviewAsAndroid() ? "android" : "tdesktop";
 }
 

@@ -71,11 +71,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_iv.h"
 #include "styles/style_polls.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/filters/filters_controller.h"
-#include "ayu/features/message_shot/message_shot.h"
-#include "styles/style_ayu_icons.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/filters/filters_controller.h"
+#include "jel/features/message_shot/message_shot.h"
+#include "styles/style_jel_icons.h"
 
 
 namespace HistoryView {
@@ -540,7 +540,7 @@ struct BadgePillGeometry {
 		: (st::msgTagBadgeBoostSkip + badge->boosts.maxWidth());
 	if (badge->role == BadgeRole::User) {
 		const auto tagWidth = (badge->channel
-				&& AyuSettings::getInstance().replaceBottomInfoWithIcons())
+				&& JelSettings::getInstance().replaceBottomInfoWithIcons())
 			? st::inChannelBadgeIcon.width()
 			: badge->tag.isEmpty()
 			? 0
@@ -1120,8 +1120,8 @@ void Message::refreshRightBadge() {
 		}
 		return;
 	}
-	if (AyuFeatures::MessageShot::ignoreRender(
-			AyuFeatures::MessageShot::RenderPart::HeaderDecorations)) {
+	if (JelFeatures::MessageShot::ignoreRender(
+			JelFeatures::MessageShot::RenderPart::HeaderDecorations)) {
 		if (Has<RightBadge>()) {
 			RemoveComponents(RightBadge::Bit());
 		}
@@ -1790,7 +1790,7 @@ int Message::marginTop() const {
 	}
 	result += displayedDateHeight();
 	if (const auto bar = Get<UnreadBar>()) {
-		if (!AyuFeatures::MessageShot::isTakingShot()) {
+		if (!JelFeatures::MessageShot::isTakingShot()) {
 			result += bar->height();
 		}
 	}
@@ -1798,7 +1798,7 @@ int Message::marginTop() const {
 		result += bar->height();
 	}
 	if (const auto service = Get<ServicePreMessage>()) {
-		if (!service->below && !AyuFeatures::MessageShot::isTakingShot()) {
+		if (!service->below && !JelFeatures::MessageShot::isTakingShot()) {
 			result += service->height;
 		}
 	}
@@ -1887,7 +1887,7 @@ void Message::draw(Painter &p, const PaintContext &context) const {
 	auto mediaOnBottom = (mediaDisplayed && media->isBubbleBottom()) || check || (entry/* && entry->isBubbleBottom()*/);
 	auto mediaOnTop = (mediaDisplayed && media->isBubbleTop()) || (entry && entry->isBubbleTop());
 
-	const auto displayInfo = needInfoDisplay() && !AyuFeatures::MessageShot::ignoreRender(AyuFeatures::MessageShot::RenderPart::Date);
+	const auto displayInfo = needInfoDisplay() && !JelFeatures::MessageShot::ignoreRender(JelFeatures::MessageShot::RenderPart::Date);
 	const auto reactionsInBubble = _reactions && embedReactionsInBubble();
 
 	// We need to count geometry without keyboard and reactions
@@ -2423,7 +2423,7 @@ void Message::paintCommentsButton(
 		Painter &p,
 		QRect &g,
 		const PaintContext &context) const {
-	if (AyuFeatures::MessageShot::isTakingShot()) {
+	if (JelFeatures::MessageShot::isTakingShot()) {
 		return;
 	}
 
@@ -2601,7 +2601,7 @@ void Message::paintFromName(
 		}
 		return &info->nameText();
 	}();
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	const auto hidePremiumStatuses = settings.hidePremiumStatuses();
 	const auto statusWidth = _fromNameStatus && !hidePremiumStatuses
 		? st::dialogsPremiumIcon.icon.width()
@@ -2725,7 +2725,7 @@ void Message::paintFromName(
 				+ trect.width()
 				- badgeWidth;
 			if (badge->channel
-				&& AyuSettings::getInstance().replaceBottomInfoWithIcons()) {
+				&& JelSettings::getInstance().replaceBottomInfoWithIcons()) {
 				const auto badgeTop = trect.top()
 					+ (st::msgNameFont->height
 						- stm->channelBadgeIcon.height()) / 2;
@@ -3682,7 +3682,7 @@ BottomRippleMask Message::bottomRippleMask(int buttonHeight) const {
 	const auto &large = CachedCornersMasks(Radius::BubbleLarge);
 	const auto &small = CachedCornersMasks(Radius::BubbleSmall);
 	auto rounding = countBubbleRounding();
-	if (AyuSettings::getInstance().removeMessageTail()) {
+	if (JelSettings::getInstance().removeMessageTail()) {
 		if (rounding.bottomLeft == Corner::Tail) {
 			rounding.bottomLeft = Corner::Large;
 		}
@@ -6081,7 +6081,7 @@ bool Message::displayRightActionComments() const {
 }
 
 std::optional<QSize> Message::rightActionSize() const {
-	if (AyuFeatures::MessageShot::isTakingShot()
+	if (JelFeatures::MessageShot::isTakingShot()
 		|| context() == Context::MediaEditor) {
 		return std::nullopt;
 	} else if (displayRightActionComments()) {
@@ -6105,7 +6105,7 @@ std::optional<QSize> Message::rightActionSize() const {
 }
 
 bool Message::displayFastShare() const {
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (settings.hideFastShare()) {
 		return false;
 	}
@@ -6985,7 +6985,7 @@ int Message::resizeContentGetHeight(int newWidth) {
 			newHeight += (bottomInfoHeight - st::msgDateFont->height);
 		}
 
-		if (hasCommentsButton() && !AyuFeatures::MessageShot::isTakingShot()) {
+		if (hasCommentsButton() && !JelFeatures::MessageShot::isTakingShot()) {
 			newHeight += st::historyCommentsButtonHeight;
 		} else if (_comments) {
 			_comments = nullptr;

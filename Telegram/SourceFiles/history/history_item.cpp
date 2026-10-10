@@ -92,11 +92,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_credits.h"
 #include "styles/style_dialogs.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/filters/filters_controller.h"
-#include "ayu/features/message_shot/message_shot.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/filters/filters_controller.h"
+#include "jel/features/message_shot/message_shot.h"
+#include "jel/utils/telegram_helpers.h"
 #include "ui/emoji_config.h"
 
 
@@ -2308,8 +2308,8 @@ bool HistoryItem::isSponsored() const {
 	return _flags & MessageFlag::Sponsored;
 }
 
-bool HistoryItem::isAyuNoForwards() const {
-	return _flags & MessageFlag::AyuNoForwards;
+bool HistoryItem::isJelNoForwards() const {
+	return _flags & MessageFlag::JelNoForwards;
 }
 
 bool HistoryItem::canLookupMessageAuthor() const {
@@ -2819,10 +2819,10 @@ void HistoryItem::applySentMessage(const MTPDmessage &data) {
 	} else {
 		_flags &= ~MessageFlag::InvertMedia;
 	}
-	if (data.is_ayuNoforwards()) {
-		_flags |= MessageFlag::AyuNoForwards;
+	if (data.is_jelNoforwards()) {
+		_flags |= MessageFlag::JelNoForwards;
 	} else {
-		_flags &= ~MessageFlag::AyuNoForwards;
+		_flags &= ~MessageFlag::JelNoForwards;
 	}
 
 	const auto wasTypes = sharedMediaTypes();
@@ -3913,11 +3913,11 @@ void HistoryItem::updateReactionsUnknown() {
 
 const std::vector<Data::MessageReaction> &HistoryItem::reactions() const {
 	static const auto kEmpty = std::vector<Data::MessageReaction>();
-	return _reactions && !AyuFeatures::MessageShot::ignoreRender(AyuFeatures::MessageShot::RenderPart::Reactions) ? _reactions->list() : kEmpty;
+	return _reactions && !JelFeatures::MessageShot::ignoreRender(JelFeatures::MessageShot::RenderPart::Reactions) ? _reactions->list() : kEmpty;
 }
 
 std::vector<Data::MessageReaction> HistoryItem::reactionsWithLocal() const {
-	if (!_reactions || AyuFeatures::MessageShot::ignoreRender(AyuFeatures::MessageShot::RenderPart::Reactions)) {
+	if (!_reactions || JelFeatures::MessageShot::ignoreRender(JelFeatures::MessageShot::RenderPart::Reactions)) {
 		return {};
 	}
 	auto result = _reactions->list();
@@ -4325,8 +4325,8 @@ void HistoryItem::setDeleted() {
 	}
 
 	if (isService()) {
-		const auto &settings = AyuSettings::getInstance();
-		setAyuHint(settings.deletedMark());
+		const auto &settings = JelSettings::getInstance();
+		setJelHint(settings.deletedMark());
 	} else {
 		history()->owner().requestItemViewRefresh(this);
 		history()->owner().requestItemResize(this);
@@ -4349,7 +4349,7 @@ void HistoryItem::markDeletedAnimated() {
 	_deletedAnimated = false;
 }
 
-void HistoryItem::setAyuHint(const QString &hint) {
+void HistoryItem::setJelHint(const QString &hint) {
 	try {
 		auto msgsigned = Get<HistoryMessageSigned>();
 		if (hint.isEmpty()) {
@@ -4828,7 +4828,7 @@ void HistoryItem::detectTextLinks(
 
 void HistoryItem::setText(TextWithEntities textWithEntities) {
 	auto text = textWithEntities;
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (settings.filterZalgo()) {
 		text.text = filterZalgo(text.text);
 	}

@@ -14,8 +14,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat.h"
 #include "styles/style_chat_style.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace Ui {
@@ -96,7 +96,7 @@ void PaintBubbleGeneric(
 		return;
 	}
 
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (settings.removeMessageTail()) {
 		if (bottomWithTailLeft == Corner::Tail) {
 			bottomWithTailLeft = Corner::Large;

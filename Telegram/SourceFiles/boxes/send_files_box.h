@@ -371,7 +371,7 @@ private:
 
 	rpl::event_stream<TextWithTags> _textWithTagsRequests;
 
-	// AyuGram files reordering
+	// GummyGram files reordering
 
 	[[nodiscard]] bool isFileBlock(int i) const;
 	void moveFile(int from, int to);

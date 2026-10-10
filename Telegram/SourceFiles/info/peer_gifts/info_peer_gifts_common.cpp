@@ -42,9 +42,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_layers.h"
 #include "styles/style_overview.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/ui/ayu_userpic.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/ui/jel_userpic.h"
 
 
 namespace Info::PeerGifts {
@@ -823,7 +823,7 @@ void GiftButton::paint(QPainter &p, float64 craftProgress) {
 			_userpic->subscribeToUpdates([=] { update(); });
 		}
 		const auto image = _userpic->image(st::giftBoxUserpicSize);
-		const auto corners = AyuSettings::getInstance().avatarCorners();
+		const auto corners = JelSettings::getInstance().avatarCorners();
 		constexpr auto kMaxAvatarCorners = 23;
 		const auto extraSkip = int(double(kMaxAvatarCorners - corners) / kMaxAvatarCorners * 6.0);
 		const auto skip = st::giftBoxUserpicSkip + extraSkip;

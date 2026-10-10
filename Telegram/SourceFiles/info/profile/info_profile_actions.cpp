@@ -6,7 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "info/profile/info_profile_actions.h"
-#include "ayu/utils/account_info.h"
+#include "jel/utils/account_info.h"
 #include "countries/countries_instance.h"
 
 #include "api/api_blocked_peers.h"
@@ -119,10 +119,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QGuiApplication>
 #include <QtGui/QClipboard>
 
-// AyuGram includes
-#include "ayu/ui/utils/ayu_profile_values.h"
-#include "ayu/utils/telegram_helpers.h"
-#include "styles/style_ayu_styles.h"
+// GummyGram includes
+#include "jel/ui/utils/jel_profile_values.h"
+#include "jel/utils/telegram_helpers.h"
+#include "styles/style_jel_styles.h"
 #include "ui/widgets/tooltip.h"
 #include "ui/text/text_entity.h"
 
@@ -1870,7 +1870,7 @@ Section DetailsFiller::makeInfo() {
 				user, Data::PeerUpdate::Flag::FullInfo
 			) | rpl::map([=] {
 				return user->isBot() ? QString()
-					: Ayu::AccountInfo::PhoneCountry(user);
+					: Jel::AccountInfo::PhoneCountry(user);
 			});
 			auto idDrawableText = rpl::combine(
 				IDValue(user),
@@ -1889,7 +1889,7 @@ Section DetailsFiller::makeInfo() {
 			auto idInfo = addInfoOneLine(
 				idLabel,
 				std::move(idDrawableText),
-				tr::ayu_ContextCopyID(tr::now)
+				tr::jel_ContextCopyID(tr::now)
 			);
 
 			std::move(country) | rpl::on_next([label = idInfo.text](const QString &code) {
@@ -1905,7 +1905,7 @@ Section DetailsFiller::makeInfo() {
 				const auto idText = IDString(user);
 				if (!idText.isEmpty()) {
 					QGuiApplication::clipboard()->setText(idText);
-					controller->showToast(tr::ayu_IDCopiedToast(tr::now));
+					controller->showToast(tr::jel_IDCopiedToast(tr::now));
 				}
 				return false;
 			});
@@ -1915,7 +1915,7 @@ Section DetailsFiller::makeInfo() {
 					label->fillContextMenu(request);
 					return;
 				}
-				request.menu->addAction(tr::ayu_ContextCopyID(tr::now), [=] {
+				request.menu->addAction(tr::jel_ContextCopyID(tr::now), [=] {
 					QGuiApplication::clipboard()->setText(IDString(user));
 				});
 			});
@@ -2023,7 +2023,7 @@ Section DetailsFiller::makeInfo() {
 			auto idInfo = addInfoOneLine(
 				idLabel,
 				std::move(idDrawableText),
-				tr::ayu_ContextCopyID(tr::now)
+				tr::jel_ContextCopyID(tr::now)
 			);
 
 			idInfo.text->setClickHandlerFilter([=, peer = _peer](auto &&...)
@@ -2031,7 +2031,7 @@ Section DetailsFiller::makeInfo() {
 				const auto idText = IDString(peer);
 				if (!idText.isEmpty()) {
 					QGuiApplication::clipboard()->setText(idText);
-					controller->showToast(tr::ayu_IDCopiedToast(tr::now));
+					controller->showToast(tr::jel_IDCopiedToast(tr::now));
 				}
 				return false;
 			});
@@ -2048,7 +2048,7 @@ Section DetailsFiller::makeInfo() {
 			auto idInfo = addInfoOneLine(
 				rpl::single(u"ID"_q),
 				std::move(idDrawableText),
-				tr::ayu_ContextCopyID(tr::now)
+				tr::jel_ContextCopyID(tr::now)
 			);
 
 			idInfo.text->setClickHandlerFilter([=, peer = _peer](auto &&...)
@@ -2056,7 +2056,7 @@ Section DetailsFiller::makeInfo() {
 				const auto idText = IDString(peer->forumTopicFor(topicRootId)->topicRootId());
 				if (!idText.isEmpty()) {
 					QGuiApplication::clipboard()->setText(idText);
-					controller->showToast(tr::ayu_IDCopiedToast(tr::now));
+					controller->showToast(tr::jel_IDCopiedToast(tr::now));
 				}
 				return false;
 			});

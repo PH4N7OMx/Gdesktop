@@ -20,8 +20,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QGuiApplication>
 #include <QtGui/QPalette>
 
-// AyuGram includes
-#include "ayu/features/message_shot/message_shot.h"
+// GummyGram includes
+#include "jel/features/message_shot/message_shot.h"
 
 
 namespace Window {
@@ -214,7 +214,7 @@ style::colorizer ColorizerForTheme(const QString &absolutePath) {
 		}
 	}
 	const auto &colors = settings.themesAccentColors();
-	if (const auto accent = AyuFeatures::MessageShot::isChoosingTheme() ? AyuFeatures::MessageShot::getSelectedColorFromDefault() : colors.get(i->type)) {
+	if (const auto accent = JelFeatures::MessageShot::isChoosingTheme() ? JelFeatures::MessageShot::getSelectedColorFromDefault() : colors.get(i->type)) {
 		return ColorizerFrom(*i, *accent);
 	}
 	return {};

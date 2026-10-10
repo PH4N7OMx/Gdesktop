@@ -24,8 +24,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "info/info_controller.h"
 #include "base/event_filter.h"
 
-// AyuGram includes
-#include "ayu/features/avatars/ayu_avatar_resolver.h"
+// GummyGram includes
+#include "jel/features/avatars/jel_avatar_resolver.h"
 
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QScrollBar>
@@ -225,7 +225,7 @@ Widget::Widget(
 	if (const auto peer = controller->peer()) {
 		if (const auto user = peer->asUser()) {
 			if (!user->username().isEmpty()) {
-				Ayu::AyuAvatarResolver::Instance().resolve(user);
+				Jel::JelAvatarResolver::Instance().resolve(user);
 			}
 		}
 	}

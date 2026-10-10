@@ -21,9 +21,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_polls.h"
 #include "styles/style_widgets.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "styles/style_ayu_icons.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "styles/style_jel_icons.h"
 
 
 namespace Ui {
@@ -51,7 +51,7 @@ void EnsureBlockquoteCache(
 	cache->outlines = colors.outlines;
 	cache->icon = colors.name;
 
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (settings.simpleQuotesAndReplies()) {
 		cache->bg = QColor(0, 0, 0, 0);
 	}
@@ -522,10 +522,10 @@ ChatStyle::ChatStyle(rpl::producer<ColorIndicesCompressed> colorIndices) {
 		st::historyFileOutDocumentSelected);
 	make(
 		&MessageStyle::historyFilePlugin,
-		st::ayuHistoryFileInPlugin,
-		st::ayuHistoryFileInPluginSelected,
-		st::ayuHistoryFileOutPlugin,
-		st::ayuHistoryFileOutPluginSelected);
+		st::jelHistoryFileInPlugin,
+		st::jelHistoryFileInPluginSelected,
+		st::jelHistoryFileOutPlugin,
+		st::jelHistoryFileOutPluginSelected);
 	make(
 		&MessageStyle::historyAudioDownload,
 		st::historyAudioInDownload,

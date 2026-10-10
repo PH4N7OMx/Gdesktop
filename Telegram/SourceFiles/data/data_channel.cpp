@@ -40,9 +40,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/unread_badge.h"
 #include "window/notifications_manager.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/utils/telegram_helpers.h"
 
 
 namespace {
@@ -139,7 +139,7 @@ void ChannelData::setName(
 		const QString &newName,
 		const QString &newUsername) {
 	auto filteredName = newName;
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (settings.filterZalgo()) {
 		filteredName = filterZalgo(filteredName);
 	}
@@ -233,10 +233,10 @@ void ChannelData::setFlags(ChannelDataFlags which) {
 		}
 
 		if (wasIn && !amIn()) {
-			if (!AyuSettings::getInstance().keepForbiddenChats() || !wasRemoved()) {
+			if (!JelSettings::getInstance().keepForbiddenChats() || !wasRemoved()) {
 				crl::on_main(&session(), [=] {
 					if (!amIn()
-						&& (!AyuSettings::getInstance().keepForbiddenChats()
+						&& (!JelSettings::getInstance().keepForbiddenChats()
 							|| !wasRemoved())) {
 						Core::App().closeChatFromWindows(this);
 					}
@@ -788,8 +788,8 @@ bool ChannelData::canAddAdmins() const {
 	return amCreator() || (adminRights() & AdminRight::AddAdmins);
 }
 
-bool ChannelData::isAyuNoForwards() const {
-	return flags() & Flag::AyuNoForwards;
+bool ChannelData::isJelNoForwards() const {
+	return flags() & Flag::JelNoForwards;
 }
 
 bool ChannelData::allowsForwarding() const {

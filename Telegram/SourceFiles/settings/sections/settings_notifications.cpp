@@ -64,8 +64,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QScreen>
 #include <QSvgRenderer>
 
-// AyuGram includes
-#include "ayu/ui/ayu_userpic.h"
+// GummyGram includes
+#include "jel/ui/jel_userpic.h"
 
 
 namespace Settings {
@@ -451,7 +451,7 @@ void NotificationsCount::prepareNotificationSampleSmall() {
 		auto padding = height / 8;
 		auto userpicSize = height - 2 * padding;
 		p.setBrush(st::notificationSampleUserpicFg);
-		AyuUserpic::PaintShape(p, QRectF(style::rtlrect(padding, padding, userpicSize, userpicSize, width)));
+		JelUserpic::PaintShape(p, QRectF(style::rtlrect(padding, padding, userpicSize, userpicSize, width)));
 
 		auto rowLeft = height;
 		auto rowHeight = padding;
@@ -808,7 +808,7 @@ void NotifyPreview::paint(Painter &p, int x, int y) {
 		QSize{ st::notifyPreviewUserpicSize, st::notifyPreviewUserpicSize });
 
 	if (_nameShown) {
-		const auto r = AyuUserpic::ComputeRadiusF(userpic.width());
+		const auto r = JelUserpic::ComputeRadiusF(userpic.width());
 		auto clip = QPainterPath();
 		clip.addRoundedRect(QRectF(userpic), r, r);
 		p.save();

@@ -47,9 +47,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QDateTime>
 #include <QtCore/QLocale>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/ayu_url_handlers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/jel_url_handlers.h"
 
 
 #include <ada.h>
@@ -460,8 +460,8 @@ void HiddenUrlClickHandler::Open(QString url, QVariant context) {
 			|| (HiddenUrlRequiresConfirmation(parsedUrl)
 				&& !skipConfirmation);
 		const auto skipWarning
-			= AyuSettings::getInstance().disableOpenLinkWarning()
-			&& AyuUrlHandlers::IsWebUrl(parsedUrl);
+			= JelSettings::getInstance().disableOpenLinkWarning()
+			&& JelUrlHandlers::IsWebUrl(parsedUrl);
 		if (!skipWarning && requiresConfirmation) {
 			if (!my.show) {
 				Core::App().hideMediaView();

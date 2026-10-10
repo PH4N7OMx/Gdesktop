@@ -36,8 +36,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <IOKit/IOKitLib.h>
 #include <IOKit/hidsystem/ev_keymap.h>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 using Platform::Q2NSString;
@@ -199,7 +199,7 @@ ApplicationDelegate *_sharedDelegate = nil;
 namespace Platform {
 
 void SetApplicationIcon(const QIcon &icon) {
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
     if (settings.appIcon().isEmpty()) {
         return;
     }

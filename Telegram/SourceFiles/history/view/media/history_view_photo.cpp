@@ -45,9 +45,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "core/ui_integration.h"
 #include "styles/style_chat.h"
 
-// AyuGram includes
-#include "ayu/features/message_shot/message_shot.h"
-#include "ayu/ui/ayu_userpic.h"
+// GummyGram includes
+#include "jel/features/message_shot/message_shot.h"
+#include "jel/ui/jel_userpic.h"
 
 
 namespace HistoryView {
@@ -432,7 +432,7 @@ void Photo::draw(Painter &p, const PaintContext &context) const {
 			p.setBrush(over ? st->msgDateImgBgOver() : st->msgDateImgBg());
 		}
 	}
-	if (paintInCenter && !AyuFeatures::MessageShot::isTakingShot()) {
+	if (paintInCenter && !JelFeatures::MessageShot::isTakingShot()) {
 		const auto radialOpacity = (radial && loaded && !_data->uploading())
 			? _animation->radial.opacity() :
 			1.;
@@ -566,10 +566,10 @@ void Photo::validateUserpicImageCache(QSize size, bool forum) const {
 	const auto shape = forumValue
 		? Ui::PeerUserpicShape::Forum
 		: Ui::PeerUserpicShape::Circle;
-	if (AyuUserpic::ShouldOverrideShape(shape)) {
+	if (JelUserpic::ShouldOverrideShape(shape)) {
 		original = Images::Round(
 			std::move(original),
-			Images::CornersMask(AyuUserpic::ComputeRadius(size.width())));
+			Images::CornersMask(JelUserpic::ComputeRadius(size.width())));
 	} else {
 		original = Images::Round(
 			std::move(original),
@@ -671,8 +671,8 @@ void Photo::paintUserpicFrame(
 		const auto shape = forum
 			? Ui::PeerUserpicShape::Forum
 			: Ui::PeerUserpicShape::Circle;
-		if (AyuUserpic::ShouldOverrideShape(shape)) {
-			AyuUserpic::ApplyFrameRounding(
+		if (JelUserpic::ShouldOverrideShape(shape)) {
+			JelUserpic::ApplyFrameRounding(
 				request,
 				_streamed->roundingCorners,
 				_streamed->roundingMask,
@@ -902,7 +902,7 @@ void Photo::drawGrouped(
 			|| (!loaded && !_data->loading())
 			|| _data->waitingForAlbum()
 			|| ttlCovered);
-	if (paintInCenter && !AyuFeatures::MessageShot::isTakingShot()) {
+	if (paintInCenter && !JelFeatures::MessageShot::isTakingShot()) {
 		const auto radialOpacity = radial
 			? _animation->radial.opacity()
 			: 1.;
@@ -1017,11 +1017,11 @@ bool Photo::dataLoaded() const {
 }
 
 bool Photo::needInfoDisplay() const {
-	if (AyuFeatures::MessageShot::ignoreRender(AyuFeatures::MessageShot::RenderPart::Date)) {
+	if (JelFeatures::MessageShot::ignoreRender(JelFeatures::MessageShot::RenderPart::Date)) {
 		return false;
 	}
 
-	if (AyuFeatures::MessageShot::isTakingShot()) {
+	if (JelFeatures::MessageShot::isTakingShot()) {
 		return true;
 	}
 

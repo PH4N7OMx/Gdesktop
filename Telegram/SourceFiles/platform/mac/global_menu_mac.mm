@@ -33,8 +33,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <Cocoa/Cocoa.h>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace Platform {
@@ -190,7 +190,7 @@ GhostModeAccountSettings *Manager::resolveGhostSettings() const {
 		return nullptr;
 	}
 	const auto session = window->maybeSession();
-	return session ? &AyuSettings::ghost(session) : nullptr;
+	return session ? &JelSettings::ghost(session) : nullptr;
 }
 
 bool Manager::clipboardHasText() {
@@ -254,22 +254,22 @@ void Manager::retranslate() {
 		_clearFormat->setText(tr::lng_menu_formatting_clear(tr::now));
 	}
 	if (_ghostModeMenu) {
-		_ghostModeMenu->setTitle(tr::ayu_CategoryGhostMode(tr::now));
+		_ghostModeMenu->setTitle(tr::jel_CategoryGhostMode(tr::now));
 	}
 	if (_ghostMode) {
 		if (const auto ghost = resolveGhostSettings()) {
 			_ghostMode->setText(ghost->isGhostModeActive()
-				? tr::ayu_DisableGhostMode(tr::now)
-				: tr::ayu_EnableGhostMode(tr::now));
+				? tr::jel_DisableGhostMode(tr::now)
+				: tr::jel_EnableGhostMode(tr::now));
 		} else {
-			_ghostMode->setText(tr::ayu_EnableGhostMode(tr::now));
+			_ghostMode->setText(tr::jel_EnableGhostMode(tr::now));
 		}
 	}
 	if (_readOnInteract) {
-		_readOnInteract->setText(tr::ayu_MarkReadAfterAction(tr::now));
+		_readOnInteract->setText(tr::jel_MarkReadAfterAction(tr::now));
 	}
 	if (_scheduleMessages) {
-		_scheduleMessages->setText(tr::ayu_UseScheduledMessages(tr::now));
+		_scheduleMessages->setText(tr::jel_UseScheduledMessages(tr::now));
 	}
 }
 
@@ -407,8 +407,8 @@ void Manager::recomputeState() {
 		action->blockSignals(wasBlocked);
 	};
 	_ghostMode->setText(next.ghostModeActive
-		? tr::ayu_DisableGhostMode(tr::now)
-		: tr::ayu_EnableGhostMode(tr::now));
+		? tr::jel_DisableGhostMode(tr::now)
+		: tr::jel_EnableGhostMode(tr::now));
 	setChecked(_readOnInteract, next.readOnInteract);
 	setChecked(_scheduleMessages, next.scheduleMessages);
 }

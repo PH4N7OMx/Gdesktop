@@ -44,9 +44,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QScreen>
 #include <QtWidgets/QApplication>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/streamer_mode/streamer_mode.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/streamer_mode/streamer_mode.h"
 
 
 namespace Media {
@@ -989,10 +989,10 @@ void Pip::setupPanel() {
 	_panel.setPosition(Deserialize(_delegate->pipLoadGeometry()));
 	_panel.widget()->show();
 
-	if (AyuSettings::getInstance().streamerMode()) {
-		AyuFeatures::StreamerMode::hideWidgetWindow(_panel.widget());
+	if (JelSettings::getInstance().streamerMode()) {
+		JelFeatures::StreamerMode::hideWidgetWindow(_panel.widget());
 	} else {
-		AyuFeatures::StreamerMode::showWidgetWindow(_panel.widget());
+		JelFeatures::StreamerMode::showWidgetWindow(_panel.widget());
 	}
 
 	_panel.saveGeometryRequests(

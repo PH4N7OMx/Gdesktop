@@ -1,13 +1,13 @@
-# GummyGram: первый этап ребрендинга
+# GummyGram branding and Jel internals
 
-Приложение называется **GummyGram Desktop**. Сейчас проект подключён только к https://github.com/PH4N7OMx/Gdesktop.
+The client is **GummyGram Desktop**. The internal short name is **jel**: source and resource directories, includes, style names and translation prefixes use jel; C++ classes and namespaces use Jel. The plugin platform remains JellyPlugins and packages use .jelly.
 
-Обновлены видимое название, исполняемый файл GummyGram, установщик Windows, названия артефактов CI, Linux metadata, ссылки на поддержку, SDK и документация плагинов. Авторство и лицензии исходных проектов сохранены.
+The main repository pins the matching versions of codegen, lib_ui, lib_tl and lib_icu. Codegen recognizes lng_ and jel_ keys; subset cache version 3 invalidates older generated caches. Localization files and generators are maintained in the separate Languages repository without Crowdin.
 
-Документация находится в `docs/JellyPlugins-documentation`, SDK — в `jellyplugins`. В GitBook можно импортировать ZIP с Markdown-файлами и SUMMARY.md либо подключить эту папку через Git Sync. Порядок публикации описан в `docs/maintainers/jellyplugins.md`.
+Application identities use GummyGram on Windows/macOS and com.gummygram.desktop on Linux. The Telegram profile and JellyPlugins storage remain in their existing locations. Settings write tdata/jel_settings.json and can read legacy settings and backup files. A legacy message database is copied to tdata/jeldata.db using SQLite's online backup API, including committed WAL contents; the original database remains available as a backup. New databases use the Jel name. Legacy translation caches and settings links are accepted for compatibility.
 
-Для совместимости пока сохранены идентификаторы приложения Windows/macOS/Linux, внутреннее имя Qt, настройки `ayu`, профиль и хранилище плагинов. API 1 использует расширение `.jelly` с импортом старых `.jellyplugin`, имя экспорта `JellyPlugin` и внутренний протокол запуска. Это не отдельный продукт; такие имена пока нужны для совместимости пакетов.
+Original author credits, licenses and upstream history links remain accurate. The existing update and remote-configuration endpoints and signing keys are retained until corresponding GummyGram infrastructure exists; they must not be replaced with invented URLs. Project links point to PH4N7OMx/Gdesktop, @GummyDesktop and @GdesktopChat.
 
-Установлены два предоставленных логотипа: первый по умолчанию, второй в настройках внешнего вида. Старые наборы логотипов удалены. Следующий этап: отдельные системные идентификаторы с миграцией профиля, собственные сервисы переводов и обновлений. Существующие серверы переводов и подписанные настройки обновлений не заменены выдуманными адресами. Канал проекта — @GummyDesktop, чат — @GdesktopChat. Пункт Crowdin удалён, раздел «Другое» временно скрыт из навигации и поиска настроек. Вкладка функций называется Gummy. Копируемые ссылки настроек используют tg://gummysettings, старые ссылки Ayu поддерживаются. Видимые названия обновлены также в трее, окне «О программе», уведомлениях, предпросмотрах и сообщениях о сбоях.
+Original sources for the two active logos are preserved in docs/assets/branding. Runtime icons are in Telegram/Resources/art/gummy; temporary archives and discarded design iterations are not source dependencies.
 
-В корневом репозитории оставлен только origin: PH4N7OMx/Gdesktop. Ветка и история не менялись. C++ сборка и запуск после переименования не проверялись: AGENTS.md запрещает сборку проекта. Выполняются проверки исходников и существующие тесты SDK.
+Native compilation and application startup are unverified: AGENTS.md says to avoid building the project. Focused codegen/prepare tests, SDK tests and source/resource checks are used instead.

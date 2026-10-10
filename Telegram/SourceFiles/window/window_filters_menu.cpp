@@ -50,8 +50,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtGui/QtEvents>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 namespace Window {
 namespace {
@@ -243,7 +243,7 @@ void FiltersMenu::setupMainMenuIcon() {
 			? &st::windowFiltersMainMenuUnread
 			: &st::windowFiltersMainMenuUnreadMuted;
 
-		const auto &settings = AyuSettings::getInstance();
+		const auto &settings = JelSettings::getInstance();
 		if (settings.hideNotificationCounters()) {
 			icon = nullptr;
 		}
@@ -355,8 +355,8 @@ bool FiltersMenu::listFocused() const {
 }
 
 void FiltersMenu::refresh() {
-	// AyuGram hideAllChatsFolder
-	const auto &settings = AyuSettings::getInstance();
+	// GummyGram hideAllChatsFolder
+	const auto &settings = JelSettings::getInstance();
 
 	const auto filters = &_session->session().data().chatsFilters();
 	if (!filters->has() || _ignoreRefresh) {
@@ -624,7 +624,7 @@ base::unique_qptr<Ui::SideBarButton> FiltersMenu::prepareButton(
 		rpl::combine(
 			Data::UnreadStateValue(&_session->session(), id),
 			Data::IncludeMutedCounterFoldersValue(),
-			AyuSettings::getInstance().hideNotificationCountersValue()
+			JelSettings::getInstance().hideNotificationCountersValue()
 		) | rpl::on_next([=](
 				const Dialogs::UnreadState &state,
 				bool includeMuted,
@@ -831,8 +831,8 @@ void FiltersMenu::applyReorder(
 		return;
 	}
 
-	// AyuGram hideAllChatsFolder
-	const auto &settings = AyuSettings::getInstance();
+	// GummyGram hideAllChatsFolder
+	const auto &settings = JelSettings::getInstance();
 
 	const auto filters = &_session->session().data().chatsFilters();
 	const auto &list = filters->list();

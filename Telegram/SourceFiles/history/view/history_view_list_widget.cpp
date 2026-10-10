@@ -7,7 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/view/history_view_list_widget.h"
 
-#include "ayu/ayu_settings.h"
+#include "jel/jel_settings.h"
 #include "history/view/history_view_about_view.h"
 #include "base/unixtime.h"
 #include "base/qt/qt_key_modifiers.h"
@@ -108,9 +108,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtWidgets/QApplication>
 #include <QtCore/QMimeData>
 
-// AyuGram includes
-#include "ayu/features/filters/filters_cache_controller.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/features/filters/filters_cache_controller.h"
+#include "jel/utils/telegram_helpers.h"
 
 
 namespace HistoryView {
@@ -5877,7 +5877,7 @@ void ListWidget::itemRemoved(not_null<const HistoryItem*> item) {
 	saveScrollState();
 	const auto guard = gsl::finally([&] {
 		restoreScrollState();
-		const auto &settings = AyuSettings::getInstance();
+		const auto &settings = JelSettings::getInstance();
 		if (settings.filtersEnabled() && settings.collapseDuplicates()) {
 			_delegate->listScrollTo(savedTop);
 		}

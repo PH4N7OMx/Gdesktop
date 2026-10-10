@@ -109,10 +109,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <ksandbox.h>
 
-// AyuGram includes
-#include "ayu/ayu_infra.h"
-#include "ayu/ayu_settings.h"
-#include "ayu/features/streamer_mode/streamer_mode.h"
+// GummyGram includes
+#include "jel/jel_infra.h"
+#include "jel/jel_settings.h"
+#include "jel/features/streamer_mode/streamer_mode.h"
 
 
 namespace Core {
@@ -345,7 +345,7 @@ void Application::run() {
 	_translator = std::make_unique<Lang::Translator>();
 	QCoreApplication::instance()->installTranslator(_translator.get());
 
-	AyuInfra::init();
+	JelInfra::init();
 	style::StartManager(cScale());
 	Ui::Accessible::Init();
 	Ui::InitTextOptions();
@@ -607,8 +607,8 @@ void Application::processCreatedWindow(
 	window->openInMediaViewRequests(
 	) | rpl::start_to_stream(_openInMediaViewRequests, window->lifetime());
 
-	if (AyuSettings::getInstance().streamerMode()) {
-		AyuFeatures::StreamerMode::hideWidgetWindow(window->widget());
+	if (JelSettings::getInstance().streamerMode()) {
+		JelFeatures::StreamerMode::hideWidgetWindow(window->widget());
 	}
 }
 

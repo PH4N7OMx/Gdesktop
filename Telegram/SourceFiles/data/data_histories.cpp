@@ -34,11 +34,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "core/application.h"
 #include "apiwrap.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/ayu_worker.h"
-#include "ayu/data/messages_storage.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/jel_worker.h"
+#include "jel/data/messages_storage.h"
+#include "jel/utils/telegram_helpers.h"
 
 
 namespace Data {
@@ -719,8 +719,8 @@ void Histories::reportPendingDeliveries() {
 void Histories::sendReadRequests() {
 	DEBUG_LOG(("Reading: send requests with count %1.").arg(_states.size()));
 
-	// AyuGram sendReadMessages
-	const auto &ghost = AyuSettings::ghost(&_owner->session());
+	// GummyGram sendReadMessages
+	const auto &ghost = JelSettings::ghost(&_owner->session());
 	if (!ghost.sendReadMessages()) {
 		DEBUG_LOG(("[GummyGram] Don't read messages"));
 		_readRequestsTimer.cancel();
@@ -1037,7 +1037,7 @@ void Histories::deleteMessages(const MessageIdsList &ids, bool revoke) {
 			}
 			remove.push_back(item);
 			if (item->isDeleted()) {
-				AyuMessages::removeDeletedMessage(item);
+				JelMessages::removeDeletedMessage(item);
 			} else if (item->isRegular()) {
 				idsByPeer[history].push_back(MTP_int(itemId.msg));
 			}
@@ -1211,7 +1211,7 @@ int Histories::sendPreparedMessage(
 					const MTPUpdates &result,
 					const MTP::Response &response) {
 				api->applyUpdates(result, randomId);
-				AyuWorker::markAsOnline(&history->owner().session());
+				JelWorker::markAsOnline(&history->owner().session());
 				done(result, response);
 				finish();
 			}).fail([=](

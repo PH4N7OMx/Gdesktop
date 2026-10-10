@@ -60,9 +60,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtWidgets/QApplication>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "styles/style_ayu_styles.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "styles/style_jel_styles.h"
 
 
 namespace ChatHelpers {
@@ -881,7 +881,7 @@ void StickersListWidget::fillLocalSearchShortcuts(const QString &query) {
 }
 
 bool StickersListWidget::addSearchShortcut(not_null<StickersSet*> set) {
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (settings.showOnlyAddedEmojisAndStickers()
 		&& !SetInMyList(set->flags)) {
 		return false;
@@ -2990,7 +2990,7 @@ void StickersListWidget::mouseReleaseEvent(QMouseEvent *e) {
 				&& (e->modifiers() & Qt::ControlModifier)) {
 				showStickerSetBox(document, set.id);
 			} else {
-				const auto &settings = AyuSettings::getInstance();
+				const auto &settings = JelSettings::getInstance();
 				auto from = messageSentAnimationInfo(
 					sticker->section,
 					sticker->index,
@@ -3010,7 +3010,7 @@ void StickersListWidget::mouseReleaseEvent(QMouseEvent *e) {
 
 				if (settings.stickerConfirmation() && _requireConfirmation) {
 					_show->showBox(Ui::MakeConfirmBox({
-						.text = tr::ayu_ConfirmationSticker(),
+						.text = tr::jel_ConfirmationSticker(),
 						.confirmed = sendStickerCallback,
 						.confirmText = tr::lng_send_button()
 					}));
@@ -3496,7 +3496,7 @@ auto StickersListWidget::collectRecentStickers() -> std::vector<Sticker> {
 
 	auto add = [&](not_null<DocumentData*> document, bool custom) {
 		if (result.size() >= kRecentDisplayLimit
-			&& !AyuSettings::getInstance().unlimitedRecentStickers()) {
+			&& !JelSettings::getInstance().unlimitedRecentStickers()) {
 			return;
 		}
 		const auto i = ranges::find(result, document, &Sticker::document);

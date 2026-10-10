@@ -27,7 +27,7 @@
 | `Telegram/ThirdParty/xxHash` | `c87183a77d67f7d37e3d2d1b7eaac5e7c695e4f0` |
 | `Telegram/ThirdParty/zxcvbn` | `ab51000506afc1a450557a3608646bc04ba951fa` |
 
-Соседние репозитории codegen и lib_ui синхронизированы с используемыми submodules. Languages обновлён из AyuGram upstream/main с сохранением дополнений форка. lib_tl и lib_icu проверены: обновлений не требуется.
+Соседние репозитории codegen и lib_ui синхронизированы с используемыми submodules. Languages обновлён из GummyGram upstream/main с сохранением дополнений форка. lib_tl и lib_icu проверены: обновлений не требуется.
 
 Обновления отправлены в PH4N7OMx/codegen (master-codegen), PH4N7OMx/lib_ui (master-ui) и PH4N7OMx/Languages (main) с явным --force-with-lease; удалённые ревизии проверены после push. Интеграция включается в основной репозиторий Gdesktop в ветке dev вместе с актуальными указателями submodules.
 
@@ -39,11 +39,11 @@
 
 ## Дополнительная проверка совместимости
 
-Run 37944123203 прошёл подготовку Qt на Windows и дошёл до компиляции клиента. Windows и Linux выявили ошибки в history_item.cpp: const-метод isTtlCoveredMedia вызывал isMessageSavable с const HistoryItem*, а новый upstream applySentMessage использовал отсутствующий MessageFlag::NoForwards. Проверка сохранения теперь принимает not_null<const HistoryItem*> (она не изменяет сообщение). Обновление флага отправленного сообщения использует AyuNoForwards и is_ayuNoforwards: обычный is_noforwards намеренно возвращает false в генераторе форка. Проверены все прямые обращения к MessageFlag во всех исходниках; отсутствующих значений нет. В завершённых Windows/Linux логах других ошибок компилятора не найдено; успешная сборка исправления ещё не подтверждена.
+Run 37944123203 прошёл подготовку Qt на Windows и дошёл до компиляции клиента. Windows и Linux выявили ошибки в history_item.cpp: const-метод isTtlCoveredMedia вызывал isMessageSavable с const HistoryItem*, а новый upstream applySentMessage использовал отсутствующий MessageFlag::NoForwards. Проверка сохранения теперь принимает not_null<const HistoryItem*> (она не изменяет сообщение). Обновление флага отправленного сообщения использует JelNoForwards и is_jelNoforwards: обычный is_noforwards намеренно возвращает false в генераторе форка. Проверены все прямые обращения к MessageFlag во всех исходниках; отсутствующих значений нет. В завершённых Windows/Linux логах других ошибок компилятора не найдено; успешная сборка исправления ещё не подтверждена.
 
 После ошибок CI проверены изменения заголовков между v7.2.9 и v7.3.0 и их обращения из кода форка. Исправлены получение внешнего wallet-engine.patch, сериализация MsgId, вызов построителя настроек плагинов и новый обязательный ElementDelegate::elementGramReadLine. Для истории изменений сообщений последний возвращает nullptr, как в upstream admin log; отображение Gram использует предусмотренный upstream вариант без общей очереди анимации.
 
-Поиск по удалённым и изменённым API дополнительно обнаружил IconCurrencyColored в окне доната. Он заменён на IconCurrencyTwoTone, актуальный вариант Telegram для цветной иконки TON. Проверены объявления и определения методов делегата истории, локальные include в 155 файлах форка и 358 используемых ключей перевода. Проверка схемы API не выявила в коде ayu обращений к удалённому FirebasePNV или изменённым структурам bot verification. Проверены FullDate и отдельные биты AyuDeleted/AyuBurnt.
+Поиск по удалённым и изменённым API дополнительно обнаружил IconCurrencyColored в окне доната. Он заменён на IconCurrencyTwoTone, актуальный вариант Telegram для цветной иконки TON. Проверены объявления и определения методов делегата истории, локальные include в 155 файлах форка и 358 используемых ключей перевода. Проверка схемы API не выявила в коде jel обращений к удалённому FirebasePNV или изменённым структурам bot verification. Проверены FullDate и отдельные биты JelDeleted/JelBurnt.
 
 CI Linux, macOS и Windows теперь передаёт Ninja -k 0, чтобы собирать независимые ошибки компиляции за один запуск. Ошибки по-прежнему завершают шаг с ненулевым статусом и блокируют упаковку. Для Linux используется уже существующий KEEP_GOING в build.sh. Это проверка исходников и конфигурации; она не заменяет успешную компиляцию и проверку клиента на всех платформах.
 

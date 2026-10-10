@@ -79,10 +79,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtWidgets/QApplication>
 #include <QtSvg/QSvgRenderer>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/utils/telegram_helpers.h"
-#include "styles/style_ayu_styles.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/utils/telegram_helpers.h"
+#include "styles/style_jel_styles.h"
 #include "data/data_user.h"
 
 
@@ -1010,14 +1010,14 @@ void StickerSetBox::updateButtons() {
 		const auto addPackIdActions = [=](Ui::PopupMenu *menu)
 		{
 			if (type == Data::StickersType::Stickers || type == Data::StickersType::Emoji) {
-				const auto &settings = AyuSettings::getInstance();
+				const auto &settings = JelSettings::getInstance();
 				const auto weak = base::make_weak(this);
 				const auto session = _session;
 				const auto setId = _inner->setId();
 				const auto innerId = setId >> 32;
 
 				menu->addAction(
-					tr::ayu_MessageDetailsPackOwnerPC(tr::now),
+					tr::jel_MessageDetailsPackOwnerPC(tr::now),
 					[weak, session, innerId]
 					{
 						if (!weak) {
@@ -1045,7 +1045,7 @@ void StickerSetBox::updateButtons() {
 
 								if (!user) {
 									QGuiApplication::clipboard()->setText(QString::number(innerId));
-									strongInner->showToast(tr::ayu_IDCopiedToast(tr::now));
+									strongInner->showToast(tr::jel_IDCopiedToast(tr::now));
 									return;
 								}
 
@@ -1060,7 +1060,7 @@ void StickerSetBox::updateButtons() {
 
 				if (settings.showPeerId() != PeerIdDisplay::Hidden) {
 					menu->addAction(
-						tr::ayu_ContextCopyID(tr::now),
+						tr::jel_ContextCopyID(tr::now),
 						[weak, setId]
 						{
 							if (!weak) {
@@ -1073,7 +1073,7 @@ void StickerSetBox::updateButtons() {
 							}
 
 							QGuiApplication::clipboard()->setText(QString::number(setId));
-							strongInner->showToast(tr::ayu_IDCopiedToast(tr::now));
+							strongInner->showToast(tr::jel_IDCopiedToast(tr::now));
 						},
 						&st::menuIconCopy);
 				}
@@ -1852,9 +1852,9 @@ void StickerSetBox::Inner::contextMenuEvent(QContextMenuEvent *e) {
 				TextUtilities::SetClipboardText(text);
 			}, &st::menuIconCopy);
 
-			const auto &settings = AyuSettings::getInstance();
+			const auto &settings = JelSettings::getInstance();
 			if (settings.showPeerId() != PeerIdDisplay::Hidden) {
-				_menu->addAction(tr::ayu_ContextCopyID(tr::now),
+				_menu->addAction(tr::jel_ContextCopyID(tr::now),
 								 [=]
 								 {
 									 QGuiApplication::clipboard()->setText(QString::number(_pack[index]->id));

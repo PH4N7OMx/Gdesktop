@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/jelly/plugins">
+        <file alias="runtime.js">../../../../jellyplugins/sdk/runtime.js</file>
+    </qresource>
+    <qresource prefix="/gui">
+        <file alias="art/gummy/default/app.png">../../art/gummy/default/app.png</file>
+        <file alias="art/gummy/default/app_icon.ico">../../art/gummy/default/app_icon.ico</file>
+        <file alias="art/gummy/alt/app.png">../../art/gummy/alt/app.png</file>
+        <file alias="art/gummy/alt/app_icon.ico">../../art/gummy/alt/app_icon.ico</file>
+        <file alias="icons/jel/nocover.svg">../../icons/jel/nocover.svg</file>
+        <file alias="icons/jel/donates/boosty.svg">../../icons/jel/donates/boosty.svg</file>
+        <file alias="icons/jel/donates/ton.svg">../../icons/jel/donates/ton.svg</file>
+        <file alias="icons/jel/donates/bitcoin.svg">../../icons/jel/donates/bitcoin.svg</file>
+        <file alias="icons/jel/donates/ethereum.svg">../../icons/jel/donates/ethereum.svg</file>
+        <file alias="icons/jel/donates/solana.svg">../../icons/jel/donates/solana.svg</file>
+        <file alias="icons/jel/donates/tron.svg">../../icons/jel/donates/tron.svg</file>
+        <file alias="icons/jel/donates/support_logo.svg">../../icons/jel/donates/support_logo.svg</file>
+    </qresource>
+</RCC>

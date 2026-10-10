@@ -47,7 +47,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_intro.h"
 #include "base/qt/qt_common_adapters.h"
 
-// AyuGram includes
+// GummyGram includes
 #include "boxes/about_box.h"
 
 

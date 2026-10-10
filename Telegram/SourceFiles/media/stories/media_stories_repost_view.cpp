@@ -26,8 +26,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat.h"
 #include "styles/style_media_view.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace Media::Stories {
@@ -100,7 +100,7 @@ void RepostView::draw(Painter &p, int x, int y, int availableWidth) {
 	Ui::Text::ValidateQuotePaintCache(*cache, quoteSt);
 	Ui::Text::FillQuotePaint(p, rect, *cache, quoteSt);
 
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 	if (!settings.simpleQuotesAndReplies() && backgroundEmoji) {
 		using namespace HistoryView;
 		if (backgroundEmoji->firstFrameMask.isNull()

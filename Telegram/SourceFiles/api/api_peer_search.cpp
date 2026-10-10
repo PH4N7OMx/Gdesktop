@@ -13,8 +13,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "dialogs/ui/chat_search_in.h" // IsHashOrCashtagSearchQuery
 #include "main/main_session.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace Api {
@@ -98,7 +98,7 @@ void PeerSearch::requestSponsored() {
 	).done([=](
 			const MTPcontacts_SponsoredPeers &result,
 			mtpRequestId requestId) {
-		const auto &settings = AyuSettings::getInstance();
+		const auto &settings = JelSettings::getInstance();
 		if (settings.disableAds()) {
 			finishSponsored(requestId, PeerSearchResult{});
 			return;

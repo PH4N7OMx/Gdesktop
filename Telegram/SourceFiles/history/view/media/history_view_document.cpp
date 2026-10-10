@@ -45,9 +45,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat_style.h"
 #include "styles/style_dialogs.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/features/message_shot/message_shot.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/features/message_shot/message_shot.h"
 
 
 namespace HistoryView {
@@ -404,7 +404,7 @@ Document::Document(
 			const auto &data = &_parent->data()->history()->owner();
 			_parent->data()->removeFromSharedMediaIndex();
 			setDocumentLinks(_data, realParent, [=] {
-				const auto &settings = AyuSettings::getInstance();
+				const auto &settings = JelSettings::getInstance();
 				if (!settings.saveDeletedMessages()) {
 					_openl = nullptr;
 				}
@@ -783,7 +783,7 @@ void Document::draw(
 		}
 
 		if (!mediaEditor
-			&& !AyuFeatures::MessageShot::isTakingShot()
+			&& !JelFeatures::MessageShot::isTakingShot()
 			&& (radial
 				|| (!loaded && !_data->loading())
 				|| _data->waitingForAlbum())) {
@@ -1243,7 +1243,7 @@ void Document::drawCornerDownload(
 	if (dataLoaded()
 		|| _data->loadedInMediaCache()
 		|| !downloadInCorner()
-		|| AyuFeatures::MessageShot::isTakingShot()) {
+		|| JelFeatures::MessageShot::isTakingShot()) {
 		return;
 	}
 	auto topMinus = isBubbleTop() ? 0 : st::msgFileTopMinus;

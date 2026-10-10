@@ -26,8 +26,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat_helpers.h"
 #include "styles/style_menu_icons.h"
 
-// AyuGram includes
-#include "ayu/ui/ayu_userpic.h"
+// GummyGram includes
+#include "jel/ui/jel_userpic.h"
 
 
 namespace HistoryView::Reactions {
@@ -637,7 +637,7 @@ void Manager::paintButton(
 	if (expanded) {
 		q->fillRect(QRect(QPoint(), size), context.st->windowBg());
 	} else {
-		const auto radius = AyuUserpic::ComputeRadiusF(_inner.height());
+		const auto radius = JelUserpic::ComputeRadiusF(_inner.height());
 		const auto frame = _cachedRound.validateFrame(
 			frameIndex,
 			scale,
@@ -710,8 +710,8 @@ void Manager::paintButton(
 	}
 
 	if (expanded) {
-		const auto radiusMin = AyuUserpic::ComputeRadiusF(_inner.height());
-		const auto radiusMax = AyuUserpic::ComputeRadiusF(_inner.width());
+		const auto radiusMin = JelUserpic::ComputeRadiusF(_inner.height());
+		const auto radiusMax = JelUserpic::ComputeRadiusF(_inner.width());
 		_cachedRound.overlayExpandedBorder(
 			*q,
 			size,

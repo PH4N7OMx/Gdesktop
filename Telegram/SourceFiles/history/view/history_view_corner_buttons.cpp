@@ -7,7 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/view/history_view_corner_buttons.h"
 
-#include "ayu/ayu_settings.h"
+#include "jel/jel_settings.h"
 #include "ui/chat/chat_style.h"
 #include "ui/controls/jump_down_button.h"
 #include "ui/widgets/elastic_scroll.h"
@@ -477,7 +477,7 @@ void CornerButtons::updateUnreadThingsVisibility() {
 			(count > 0) && _delegate->cornerButtonsUnreadMayBeShown());
 	};
 	if (_delegate->cornerButtonsHas(Type::Mentions)
-		&& !AyuSettings::getInstance().mentionsDisabled(thread->peer()->id.value)
+		&& !JelSettings::getInstance().mentionsDisabled(thread->peer()->id.value)
 		&& unreadThings.trackMentions(thread)) {
 		if (const auto count = thread->unreadMentions().count(0)) {
 			_mentions.widget->setUnreadCount(count);

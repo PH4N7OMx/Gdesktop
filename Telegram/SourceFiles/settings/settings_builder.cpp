@@ -22,8 +22,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "window/window_session_controller.h"
 #include "styles/style_settings.h"
 
-// AyuGram includes
-#include "ayu/ui/settings/settings_ayu_utils.h"
+// GummyGram includes
+#include "jel/ui/settings/settings_jel_utils.h"
 
 
 namespace Settings::Builder {

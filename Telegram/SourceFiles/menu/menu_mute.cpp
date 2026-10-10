@@ -7,7 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "menu/menu_mute.h"
 
-#include "ayu/ayu_settings.h"
+#include "jel/jel_settings.h"
 #include "boxes/ringtones_box.h"
 #include "data/notify/data_notify_settings.h"
 #include "data/notify/data_peer_notify_settings.h"
@@ -183,8 +183,8 @@ MentionsMuteItem::MentionsMuteItem(
 
 void MentionsMuteItem::setDisabled(bool disabled) {
 	action()->setText(disabled
-		? tr::ayu_EnableMentions(tr::now)
-		: tr::ayu_DisableMentions(tr::now));
+		? tr::jel_EnableMentions(tr::now)
+		: tr::jel_DisableMentions(tr::now));
 	if (_inited && disabled == _isDisabled) {
 		return;
 	}
@@ -307,15 +307,15 @@ void MentionsMuteBox(
 
 	const auto state = box->lifetime().make_state<State>();
 
-	box->setTitle(tr::ayu_MentionsMuteBoxTitle());
+	box->setTitle(tr::jel_MentionsMuteBoxTitle());
 
 	auto confirmText = std::move(
 		chooseTimeResult.secondsValue
 	) | rpl::map([=](int seconds) {
 		state->lastSeconds = seconds;
 		return !seconds
-			? tr::ayu_EnableMentions()
-			: tr::ayu_DisableMentions();
+			? tr::jel_EnableMentions()
+			: tr::jel_DisableMentions();
 	}) | rpl::flatten_latest();
 
 	Ui::ConfirmBox(box, {
@@ -351,11 +351,11 @@ void PickMentionsMuteBox(
 			descriptor.session->saveSettings();
 			box->closeBox();
 		},
-		.confirmText = tr::ayu_DisableMentions(),
+		.confirmText = tr::jel_DisableMentions(),
 		.cancelText = tr::lng_cancel(),
 	});
 
-	box->setTitle(tr::ayu_MentionsMuteBoxTitle());
+	box->setTitle(tr::jel_MentionsMuteBoxTitle());
 
 	const auto top = box->addTopButton(st::infoTopBarMenu);
 	top->setClickedCallback([=] {
@@ -382,28 +382,28 @@ void PickMentionsMuteBox(
 MentionsDescriptor MentionsThreadDescriptor(not_null<Data::Thread*> thread) {
 	const auto peerId = thread->peer()->id.value;
 	const auto mentionsDisabled = [=] {
-		return AyuSettings::getInstance().mentionsDisabled(peerId);
+		return JelSettings::getInstance().mentionsDisabled(peerId);
 	};
 	const auto currentSound = [=] {
-		const auto &settings = AyuSettings::getInstance();
+		const auto &settings = JelSettings::getInstance();
 		return Data::NotifySound{
 			.id = settings.mentionsSoundId(peerId),
 			.none = settings.mentionsSoundDisabled(peerId),
 		};
 	};
 	const auto updateSound = [=](Data::NotifySound sound) {
-		AyuSettings::getInstance().setMentionsSound(
+		JelSettings::getInstance().setMentionsSound(
 			peerId,
 			sound.id,
 			sound.none);
 	};
 	const auto updateMutePeriod = [=](TimeId mute) {
 		if (!mute) {
-			AyuSettings::getInstance().enableMentions(peerId);
+			JelSettings::getInstance().enableMentions(peerId);
 		} else if (mute == kMuteForeverValue) {
-			AyuSettings::getInstance().disableMentionsForever(peerId);
+			JelSettings::getInstance().disableMentionsForever(peerId);
 		} else {
-			AyuSettings::getInstance().setMentionsMutePeriod(peerId, mute);
+			JelSettings::getInstance().setMentionsMutePeriod(peerId, mute);
 		}
 	};
 	return {
@@ -588,7 +588,7 @@ void FillMentionsMenu(
 			descriptor.volumeController));
 	};
 	menu->addAction(
-		tr::ayu_MentionsMenuSoundSelect(tr::now),
+		tr::jel_MentionsMenuSoundSelect(tr::now),
 		soundSelect,
 		&st::menuIconSoundSelect);
 
@@ -600,8 +600,8 @@ void FillMentionsMenu(
 	};
 	menu->addAction(
 		(soundIsNone
-			? tr::ayu_MentionsMenuSoundOn(tr::now)
-			: tr::ayu_MentionsMenuSoundOff(tr::now)),
+			? tr::jel_MentionsMenuSoundOn(tr::now)
+			: tr::jel_MentionsMenuSoundOff(tr::now)),
 		toggleSound,
 		soundIsNone ? &st::menuIconSoundOn : &st::menuIconSoundOff);
 
@@ -618,7 +618,7 @@ void FillMentionsMenu(
 			st,
 			Ui::Menu::CreateAction(
 				menu->menu().get(),
-				tr::ayu_MentionsMenuDurationAny(
+				tr::jel_MentionsMenuDurationAny(
 					tr::now,
 					lt_duration,
 					Ui::FormatMuteFor(muteFor)),
@@ -630,7 +630,7 @@ void FillMentionsMenu(
 	}
 
 	menu->addAction(
-		tr::ayu_MentionsMenuDuration(tr::now),
+		tr::jel_MentionsMenuDuration(tr::now),
 		[=] { show->showBox(Box(PickMentionsMuteBox, descriptor)); },
 		&st::menuIconMuteFor);
 

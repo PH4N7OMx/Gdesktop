@@ -135,11 +135,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <kurlmimedata.h>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
-#include "ayu/ayu_state.h"
-#include "ayu/features/streamer_mode/streamer_mode.h"
-#include "ayu/utils/telegram_helpers.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
+#include "jel/jel_state.h"
+#include "jel/features/streamer_mode/streamer_mode.h"
+#include "jel/utils/telegram_helpers.h"
 
 
 namespace Media {
@@ -1338,10 +1338,10 @@ void OverlayWidget::refreshTtlBadge(TimeId destroyAt) {
 						_message->history()->peer->shortName()
 					) | rpl::map(tr::rich),
 					tr::rich)
-			: AyuSettings::getInstance().saveDeletedMessages()
+			: JelSettings::getInstance().saveDeletedMessages()
 			? (isVideo
-				? tr::ayu_OnceVideoMessageNote
-				: tr::ayu_OncePhotoMessageNote)(tr::rich)
+				? tr::jel_OnceVideoMessageNote
+				: tr::jel_OncePhotoMessageNote)(tr::rich)
 			: (isVideo
 				? tr::lng_ttl_video_tooltip_in
 				: tr::lng_ttl_photo_tooltip_in)(tr::rich);
@@ -1394,7 +1394,7 @@ void OverlayWidget::markTimedMediaRead() {
 	if (!item || !item->isTtlCoveredMedia()) {
 		return;
 	} else if (item->isIncomingUnreadMedia()) {
-		const auto &ghost = AyuSettings::ghost(&item->history()->session());
+		const auto &ghost = JelSettings::ghost(&item->history()->session());
 		if (!ghost.sendReadMessages()) {
 			item->markContentsRead(true);
 			return;
@@ -1470,7 +1470,7 @@ bool OverlayWidget::hasCopyMediaRestriction(bool skipPremiumCheck) const {
 			return true;
 		}
 	}
-	// AyuGram: removed; allow downloading any stories
+	// GummyGram: removed; allow downloading any stories
 	return false;
 }
 
@@ -1507,7 +1507,7 @@ QSize OverlayWidget::videoSize() const {
 bool OverlayWidget::streamingRequiresControls() const {
 	return !_stories
 		&& _document;
-	// AyuGram: allow vieo messages seeking
+	// GummyGram: allow vieo messages seeking
 	//  && (!_document->isAnimation() || _document->isVideoMessage());
 }
 
@@ -4542,10 +4542,10 @@ void OverlayWidget::activate() {
 	QApplication::setActiveWindow(_window);
 	setFocus();
 
-	if (AyuSettings::getInstance().streamerMode()) {
-		AyuFeatures::StreamerMode::hideWidgetWindow(_window);
+	if (JelSettings::getInstance().streamerMode()) {
+		JelFeatures::StreamerMode::hideWidgetWindow(_window);
 	} else {
-		AyuFeatures::StreamerMode::showWidgetWindow(_window);
+		JelFeatures::StreamerMode::showWidgetWindow(_window);
 	}
 }
 
@@ -8867,7 +8867,7 @@ Window::SessionController *OverlayWidget::findWindow(bool switchTo) const {
 
 // #TODO unite and check
 void OverlayWidget::clearBeforeHide() {
-	AyuState::disableGhostModeOnStoryClose(_storiesSession);
+	JelState::disableGhostModeOnStoryClose(_storiesSession);
 	checkSingleViewMediaBurn();
 	_message = nullptr;
 	_sharedMedia = nullptr;

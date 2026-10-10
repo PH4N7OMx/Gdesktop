@@ -110,7 +110,7 @@ void InstallTestAgentCrashHandling() {
 #endif // _DEBUG
 }
 
-LONG WINAPI AyuUnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo) {
+LONG WINAPI JelUnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo) {
 	const auto ep = pExceptionInfo ? pExceptionInfo->ExceptionRecord : nullptr;
 	const auto ctx = pExceptionInfo ? pExceptionInfo->ContextRecord : nullptr;
 
@@ -179,8 +179,8 @@ LONG WINAPI AyuUnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo) {
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
-void InstallAyuCrashHandler() {
-	SetUnhandledExceptionFilter(AyuUnhandledExceptionFilter);
+void InstallJelCrashHandler() {
+	SetUnhandledExceptionFilter(JelUnhandledExceptionFilter);
 	_set_purecall_handler([] {
 		FILE *f = nullptr;
 		if (fopen_s(&f, "crash_log.txt", "w") == 0 && f) {
@@ -208,7 +208,7 @@ Launcher::Launcher(int argc, char *argv[])
 }
 
 void Launcher::initHook() {
-	InstallAyuCrashHandler();
+	InstallJelCrashHandler();
 	if (cTestAgent()) {
 		InstallTestAgentCrashHandling();
 	}

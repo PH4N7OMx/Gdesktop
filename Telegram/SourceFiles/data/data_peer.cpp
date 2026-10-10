@@ -6,7 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "data/data_peer.h"
-#include "ayu/utils/account_info.h"
+#include "jel/utils/account_info.h"
 
 #include "api/api_sensitive_content.h"
 #include "data/data_user.h"
@@ -56,8 +56,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "storage/storage_facade.h"
 #include "storage/storage_shared_media.h"
 
-// AyuGram includes
-#include "ayu/ui/ayu_userpic.h"
+// GummyGram includes
+#include "jel/ui/jel_userpic.h"
 
 
 namespace {
@@ -493,8 +493,8 @@ QImage PeerData::GenerateUserpicImage(
 		const auto shape = peer->isForum()
 			? Ui::PeerUserpicShape::Forum
 			: Ui::PeerUserpicShape::Circle;
-		if (AyuUserpic::ShouldOverrideShape(shape)) {
-			radius = AyuUserpic::ComputeRadius(size);
+		if (JelUserpic::ShouldOverrideShape(shape)) {
+			radius = JelUserpic::ComputeRadius(size);
 		}
 	}
 	if (const auto userpic = peer->userpicCloudImage(view)) {
@@ -881,7 +881,7 @@ void PeerData::setBarSettings(const MTPPeerSettings &data) {
 				= data.vcharge_paid_message_stars().value_or_empty();
 		}
 		if (const auto user = asUser()) {
-			if (Ayu::AccountInfo::Observe(user)) {
+			if (Jel::AccountInfo::Observe(user)) {
 				session().changes().peerUpdated(this, UpdateFlag::FullInfo);
 			}
 		}
@@ -1707,13 +1707,13 @@ void PeerData::processTopics(const MTPVector<MTPForumTopic> &topics) {
 	}
 }
 
-bool PeerData::isAyuNoForwards() const {
+bool PeerData::isJelNoForwards() const {
 	if (const auto user = asUser()) {
-		return user->isAyuNoForwards();
+		return user->isJelNoForwards();
 	} else if (const auto channel = asChannel()) {
-		return channel->isAyuNoForwards();
+		return channel->isJelNoForwards();
 	} else if (const auto chat = asChat()) {
-		return chat->isAyuNoForwards();
+		return chat->isJelNoForwards();
 	}
 	return true;
 }

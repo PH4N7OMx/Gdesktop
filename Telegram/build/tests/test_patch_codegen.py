@@ -23,14 +23,14 @@ class PatchCodegenTests(unittest.TestCase):
     def test_original_scanner_and_cache(self):
         patched = module.patch_source(ORIGINAL)
         self.assertIn("const auto isLng", patched)
-        self.assertIn("const auto isAyu", patched)
-        self.assertIn("kCacheVersion = quint32(2)", patched)
+        self.assertIn("const auto isJel", patched)
+        self.assertIn("kCacheVersion = quint32(3)", patched)
         self.assertIn("IsIdentifierChar(data[i - 1])", patched)
         self.assertEqual(module.patch_source(patched), patched)
 
     def test_previous_workflow_patch_invalidates_cache(self):
-        patched = module.patch_source(ORIGINAL).replace("quint32(2)", "quint32(1)")
-        self.assertIn("quint32(2)", module.patch_source(patched))
+        patched = module.patch_source(ORIGINAL).replace("quint32(3)", "quint32(1)")
+        self.assertIn("quint32(3)", module.patch_source(patched))
 
     def test_unknown_source_fails(self):
         with self.assertRaises(RuntimeError):

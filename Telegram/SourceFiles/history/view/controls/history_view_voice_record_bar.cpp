@@ -54,8 +54,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <tgcalls/VideoCaptureInterface.h>
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 #include "boxes/abstract_box.h"
 
 
@@ -3026,11 +3026,11 @@ void VoiceRecordBar::stopRecording(StopType type, bool ttlBeforeHide) {
 								close();
 							});
 
-						const auto &settings = AyuSettings::getInstance();
+						const auto &settings = JelSettings::getInstance();
 						if (settings.roundConfirmation()) {
 							_show->showBox(Ui::MakeConfirmBox(
 								{
-									.text = tr::ayu_ConfirmationRound(),
+									.text = tr::jel_ConfirmationRound(),
 									.confirmed = std::move(sendRoundCallback),
 									.confirmText = tr::lng_send_button()
 								}));
@@ -3076,11 +3076,11 @@ void VoiceRecordBar::stopRecording(StopType type, bool ttlBeforeHide) {
 					close();
 				});
 
-			const auto &settings = AyuSettings::getInstance();
+			const auto &settings = JelSettings::getInstance();
 			if (settings.voiceConfirmation()) {
 				_show->showBox(Ui::MakeConfirmBox(
 					{
-						.text = tr::ayu_ConfirmationVoice(),
+						.text = tr::jel_ConfirmationVoice(),
 						.confirmed = std::move(sendVoiceCallback),
 						.confirmText = tr::lng_send_button()
 					}));
@@ -3156,7 +3156,7 @@ void VoiceRecordBar::requestToSendWithOptions(Api::SendOptions options) {
 		}
 
 		const auto video = !_data.minithumbs.isNull();
-		const auto &settings = AyuSettings::getInstance();
+		const auto &settings = JelSettings::getInstance();
 		auto sendVoiceCallback = crl::guard(
 			this,
 			[=, this](Fn<void()> &&close)
@@ -3175,8 +3175,8 @@ void VoiceRecordBar::requestToSendWithOptions(Api::SendOptions options) {
 			_show->showBox(Ui::MakeConfirmBox(
 				{
 					.text = (video
-						? tr::ayu_ConfirmationRound()
-						: tr::ayu_ConfirmationVoice()),
+						? tr::jel_ConfirmationRound()
+						: tr::jel_ConfirmationVoice()),
 					.confirmed = std::move(sendVoiceCallback),
 					.confirmText = tr::lng_send_button()
 				}));

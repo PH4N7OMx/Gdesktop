@@ -1,0 +1,82 @@
+/*
+ * This is the source code of AyuGram for Desktop.
+ *
+ * We do not and cannot prevent the use of our code,
+ * but be respectful and credit the original author.
+ *
+ * Copyright @Radolyn, 2025
+ */
+
+using "ui/colors.palette";
+using "ui/chat/chat.style";
+using "ui/widgets/widgets.style";
+using "dialogs/dialogs.style";
+
+jelGhostIcon: icon {{ "jel/ghost", menuIconColor }};
+jelGhostModeGlobalIcon: icon {{ "jel/ghost_mode_global", historyPeerUserpicFg }};
+jelEditsHistoryIcon: icon {{ "jel/edits_history", menuIconColor }};
+jelLReadMenuIcon: icon {{ "jel/lread", menuIconColor }};
+jelSReadMenuIcon: icon {{ "jel/sread", menuIconColor }};
+jelStreamerModeMenuIcon: icon {{ "jel/streamer", menuIconColor }};
+jelToBeginningMenuIcon: icon {{ "jel/to_beginning", menuIconColor }};
+jelRepeatMenuIcon: icon {{ "jel/repeat", menuIconColor }};
+jelContactsMutualIcon: icon {{ "jel/contacts_mutual", contactsStatusFg }};
+jelContactsMutualIconOver: icon {{ "jel/contacts_mutual", contactsStatusFgOver }};
+
+messageFieldAttachIcon: icon {{ "jel/message_field/attach", menuIconColor }};
+messageFieldCommandsIcon: icon {{ "jel/message_field/commands", menuIconColor }};
+messageFieldEmojiIcon: icon {{ "jel/message_field/emoji", menuIconColor }};
+messageFieldVoiceIcon: icon {{ "jel/message_field/voice", menuIconColor }};
+messageFieldTTLIcon: icon {{ "jel/message_field/ttl", menuIconColor }};
+messageFieldCocoonAiIcon: icon{
+	{ size(24px, 24px), transparent },
+	{ "chat/ai_letters-20x20", menuIconColor, point(2px, 2px) },
+	{ "chat/ai_star1-20x20", menuIconColor, point(2px, 2px) },
+	{ "chat/ai_star2-20x20", menuIconColor, point(2px, 2px) },
+};
+
+inChannelBadgeIcon: icon {{ "jel/channel", msgInDateFg }};
+inChannelBadgeSelectedIcon: icon {{ "jel/channel", msgInDateFgSelected }};
+outChannelBadgeIcon: icon {{ "jel/channel", msgOutDateFg }};
+outChannelBadgeSelectedIcon: icon {{ "jel/channel", msgOutDateFgSelected }};
+
+infoExteraOfficialBadge: icon {{ "jel/extera_official", profileVerifiedCheckBg }};
+infoExteraSupporterBadge: icon {{ "jel/extera_badge", profileVerifiedCheckBg }};
+
+winEnterWithGuestIcon: icon {{ "jel/ghost_tray", windowFg }};
+
+editedIcon: IconEmoji{
+    icon: icon{{ "jel/edited", windowFg }};
+    padding: margins(0px, 0px, 0px, 0px);
+    useIconColor: false;
+}
+
+deletedIcon: IconEmoji{
+    icon: icon{{ "jel/trash_bin", windowFg }};
+    padding: margins(0px, 0px, 0px, 0px);
+    useIconColor: false;
+}
+
+burntIcon: IconEmoji{
+    icon: icon{{ "jel/burnt", windowFg }};
+    padding: margins(0px, 0px, 0px, 0px);
+    useIconColor: false;
+}
+
+dialogsExteraOfficialIcon: ThreeStateIcon {
+	icon: icon {{ "jel/dialogs_extera_official", dialogsVerifiedIconBg }};
+	over: icon {{ "jel/dialogs_extera_official", dialogsVerifiedIconBgOver }};
+	active: icon {{ "jel/dialogs_extera_official", dialogsVerifiedIconBgActive }};
+}
+dialogsExteraSupporterIcon: ThreeStateIcon {
+	icon: icon {{ "jel/dialogs_extera_supporter", dialogsVerifiedIconBg }};
+	over: icon {{ "jel/dialogs_extera_supporter", dialogsVerifiedIconBgOver }};
+	active: icon {{ "jel/dialogs_extera_supporter", dialogsVerifiedIconBgActive }};
+}
+
+jelHistoryFileInPlugin: icon {{ "jel/history_file_plugin", historyFileInIconFg }};
+jelHistoryFileInPluginSelected: icon {{ "jel/history_file_plugin", historyFileInIconFgSelected }};
+jelHistoryFileOutPlugin: icon {{ "jel/history_file_plugin", historyFileOutIconFg }};
+jelHistoryFileOutPluginSelected: icon {{ "jel/history_file_plugin", historyFileOutIconFgSelected }};
+
+menuIconClearAttention: icon {{ "menu/clear", menuIconAttentionColor }};

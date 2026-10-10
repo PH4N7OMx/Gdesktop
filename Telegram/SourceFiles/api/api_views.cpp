@@ -15,8 +15,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history_item.h"
 #include "main/main_session.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace Api {
@@ -87,7 +87,7 @@ void ViewsManager::pollExtendedMedia(
 }
 
 void ViewsManager::viewsIncrement() {
-	const auto &ghost = AyuSettings::ghost(_session);
+	const auto &ghost = JelSettings::ghost(_session);
 
 	for (auto i = _toIncrement.begin(); i != _toIncrement.cend();) {
 		if (_incrementRequests.contains(i->first)) {

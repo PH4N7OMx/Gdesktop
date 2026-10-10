@@ -19,8 +19,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/options.h"
 #include "styles/style_chat_helpers.h"
 
-// AyuGram includes
-#include "ayu/ayu_settings.h"
+// GummyGram includes
+#include "jel/jel_settings.h"
 
 
 namespace ChatHelpers {
@@ -40,7 +40,7 @@ base::options::toggle TabbedPanelShowOnClick({
 const char kOptionTabbedPanelShowOnClick[] = "tabbed-panel-show-on-click";
 
 bool ShowPanelOnClick() {
-	return !AyuSettings::getInstance().showEmojiPopup();
+	return !JelSettings::getInstance().showEmojiPopup();
 }
 
 TabbedPanel::TabbedPanel(
@@ -492,7 +492,7 @@ void TabbedPanel::showStarted() {
 }
 
 bool TabbedPanel::eventFilter(QObject *obj, QEvent *e) {
-	const auto &settings = AyuSettings::getInstance();
+	const auto &settings = JelSettings::getInstance();
 
 	if (!settings.showEmojiPopup()) {
 		return false;

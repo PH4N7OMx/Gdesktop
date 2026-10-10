@@ -44,9 +44,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <xxhash.h> // XXH64.
 #include <QtWidgets/QApplication>
 
-// AyuGram includes
-#include "styles/style_ayu_icons.h"
-#include "ayu/ui/ayu_userpic.h"
+// GummyGram includes
+#include "styles/style_jel_icons.h"
+#include "jel/ui/jel_userpic.h"
 
 
 [[nodiscard]] PeerListRowId UniqueRowIdFromString(const QString &d) {
@@ -1124,7 +1124,7 @@ void PeerListRow::paintDisabledCheckUserpic(
 				* Ui::ForumUserpicRadiusMultiplier();
 			p.drawRoundedRect(userpicEllipse, radius, radius);
 		} else {
-			AyuUserpic::PaintShape(p, userpicEllipse);
+			JelUserpic::PaintShape(p, userpicEllipse);
 		}
 
 		p.setPen(iconBorderPen);

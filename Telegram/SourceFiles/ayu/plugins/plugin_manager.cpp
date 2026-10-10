@@ -5,11 +5,14 @@
 #include "ayu/plugins/plugin_sandbox.h"
 #include "base/random.h"
 #include "data/data_chat_participant_status.h"
+#include "data/data_channel.h"
 #include "data/data_peer.h"
 #include "data/data_session.h"
 #include "history/history.h"
 #include "history/history_item.h"
 #include "history/history_item_helpers.h"
+#include "history/history_item_components.h"
+#include "history/history_item_reply_markup.h"
 #include "main/main_session.h"
 #include "apiwrap.h"
 
@@ -30,10 +33,11 @@
 #include <QSaveFile>
 #include <QUrl>
 #include <algorithm>
+#include <climits>
 #include <deque>
 #include <set>
 
-namespace GummyPlugins {
+namespace JellyPlugins {
 namespace {
 
 bool SaveJson(const QString &path, const QJsonObject &json) {
@@ -568,8 +572,13 @@ void Manager::reply(const EntryPtr &entry, int id, const QJsonValue &value,
 		return;
 	}
 	entry->pendingDeadlines.erase(id);
-	write(entry, { { u"type"_q, u"result"_q }, { u"id"_q, id },
-		{ u"value"_q, value }, { u"error"_q, error }, { u"retryAfter"_q, retryAfter } });
+	auto frame = QJsonObject{ { u"type"_q, u"result"_q }, { u"id"_q, id },
+		{ u"value"_q, value }, { u"error"_q, error }, { u"retryAfter"_q, retryAfter } };
+	if (QJsonDocument(frame).toJson(QJsonDocument::Compact).size() >= kFrameLimit) {
+		frame[u"value"_q] = QJsonValue();
+		frame[u"error"_q] = u"RESPONSE_LIMIT"_q;
+	}
+	write(entry, frame);
 }
 
 void Manager::request(const EntryPtr &entry, const QJsonObject &frame) {
@@ -588,6 +597,8 @@ void Manager::request(const EntryPtr &entry, const QJsonObject &frame) {
 	const auto &grant = entry->info.granted;
 	if (method == u"telegram.sendMessage"_q) {
 		sendMessage(entry, id, params);
+	} else if (method.startsWith(u"telegram."_q)) {
+		telegramAction(entry, id, method, params);
 	} else if (method == u"http.get"_q) {
 		getHttp(entry, id, params);
 	} else if (method.startsWith(u"storage."_q) && grant.storage) {
@@ -662,37 +673,13 @@ void Manager::sendMessage(const EntryPtr &entry, int id, const QJsonObject &para
 		reply(entry, id, {}, u"CHAT_UNAVAILABLE_OR_INVALID_MESSAGE"_q);
 		return;
 	}
-	const auto now = QDateTime::currentSecsSinceEpoch();
-	while (!entry->sends.empty() && entry->sends.front() <= now - 3600) {
-		entry->sends.pop_front();
-	}
-	while (!_accountSends.empty() && _accountSends.front() <= now - 3600) _accountSends.pop_front();
-	const auto blocked = std::max(entry->blockedUntil, _accountBlockedUntil);
-	if (blocked > now) {
-		reply(entry, id, {}, u"FLOOD_WAIT"_q, int(blocked - now));
-		return;
-	}
-	if (_accountSends.size() >= 60 || entry->sends.size() >= size_t(entry->info.granted.maxMessagesPerHour)
-		|| (!entry->sends.empty() && entry->sends.back() > now - 3)) {
-		reply(entry, id, {}, u"RATE_LIMIT"_q,
-			_accountSends.size() >= 60 ? int(_accountSends.front() + 3600 - now)
-				: entry->sends.size() >= size_t(entry->info.granted.maxMessagesPerHour)
-				? int(entry->sends.front() + 3600 - now) : 3);
-		return;
-	}
 	const auto replyTo = params[u"replyTo"_q].toInt();
 	if (replyTo < 0 || (params.contains(u"replyTo"_q)
 		&& params[u"replyTo"_q].toDouble() != replyTo)) {
 		reply(entry, id, {}, u"INVALID_REPLY"_q);
 		return;
 	}
-	entry->sends.push_back(now);
-	_accountSends.push_back(now);
-	auto error = QString();
-	if (!saveState(entry, error) || !saveAccountLimits()) {
-		reply(entry, id, {}, u"STATE_WRITE_FAILED"_q);
-		return;
-	}
+	if (!reserveTelegram(entry, id)) return;
 	auto action = Api::SendAction(_session->data().history(peer));
 	if (replyTo) {
 		action.replyTo.messageId = FullMsgId(peer->id, MsgId(replyTo));
@@ -754,6 +741,259 @@ void Manager::sendMessage(const EntryPtr &entry, int id, const QJsonObject &para
 	}).handleFloodErrors().send();
 }
 
+bool Manager::reserveTelegram(const EntryPtr &entry, int id) {
+	const auto now = QDateTime::currentSecsSinceEpoch();
+	while (!entry->sends.empty() && entry->sends.front() <= now - 3600) entry->sends.pop_front();
+	while (!_accountSends.empty() && _accountSends.front() <= now - 3600) _accountSends.pop_front();
+	const auto blocked = std::max(entry->blockedUntil, _accountBlockedUntil);
+	if (blocked > now) {
+		reply(entry, id, {}, u"FLOOD_WAIT"_q, int(blocked - now));
+		return false;
+	}
+	if (_accountSends.size() >= 60
+		|| entry->sends.size() >= size_t(entry->info.granted.maxMessagesPerHour)
+		|| (!entry->sends.empty() && entry->sends.back() > now - 3)) {
+		reply(entry, id, {}, u"RATE_LIMIT"_q,
+			_accountSends.size() >= 60 ? int(_accountSends.front() + 3600 - now)
+				: entry->sends.size() >= size_t(entry->info.granted.maxMessagesPerHour)
+				? int(entry->sends.front() + 3600 - now) : 3);
+		return false;
+	}
+	entry->sends.push_back(now);
+	_accountSends.push_back(now);
+	auto error = QString();
+	if (!saveState(entry, error) || !saveAccountLimits()) {
+		reply(entry, id, {}, u"STATE_WRITE_FAILED"_q);
+		return false;
+	}
+	return true;
+}
+
+void Manager::telegramFailure(const EntryPtr &entry, int id, const MTP::Error &failure) {
+	entry->telegramRequests.erase(id);
+	static const auto flood = QRegularExpression(u"^FLOOD(?:_PREMIUM)?_WAIT_([0-9]+)$"_q);
+	const auto match = flood.match(failure.type());
+	const auto seconds = match.hasMatch() ? match.captured(1).toInt() : 0;
+	if (seconds > 0) {
+		entry->blockedUntil = QDateTime::currentSecsSinceEpoch() + seconds;
+		_accountBlockedUntil = std::max(_accountBlockedUntil, entry->blockedUntil);
+		auto error = QString();
+		if (!saveState(entry, error) || !saveAccountLimits()) log(entry, u"Cannot save FloodWait."_q);
+	}
+	reply(entry, id, {}, seconds ? u"FLOOD_WAIT"_q : failure.type(), seconds);
+}
+
+void Manager::telegramAction(const EntryPtr &entry, int id,
+		const QString &method, const QJsonObject &params) {
+	const auto &grant = entry->info.granted;
+	const auto chat = params[u"chatId"_q].toString();
+	const auto scope = [&]() -> const QStringList* {
+		if (method == u"telegram.joinChannel"_q) return &grant.joinChannels;
+		if (method == u"telegram.clickButton"_q) return &grant.botChats;
+		if (method == u"telegram.sendAttachment"_q) return &grant.sendChats;
+		if (method == u"telegram.editMessage"_q) return &grant.editChats;
+		if (method == u"telegram.setReaction"_q) return &grant.reactionChats;
+		if (method == u"telegram.getHistory"_q) return &grant.historyChats;
+		return nullptr;
+	}();
+	if (!scope || !scope->contains(chat)) {
+		reply(entry, id, {}, u"PERMISSION_DENIED"_q);
+		return;
+	}
+	const auto peer = _session->data().peerLoaded(PeerFromChatId(chat));
+	if (!peer) {
+		reply(entry, id, {}, u"CHAT_UNAVAILABLE"_q);
+		return;
+	}
+	const auto integer = [&](const QString &key, int minimum, int maximum, int fallback) {
+		if (params.contains(key) && !params[key].isDouble()) return -1;
+		const auto value = params.value(key).toDouble(fallback);
+		return value >= minimum && value <= maximum && value == int(value)
+			? int(value) : -1;
+	};
+	const auto messageId = integer(u"messageId"_q, 1, INT_MAX, -1);
+	const auto item = messageId > 0
+		? _session->data().message(FullMsgId(peer->id, MsgId(messageId))) : nullptr;
+	const auto generation = entry->generation;
+	const auto guard = QPointer<Manager>(this);
+	const auto active = [=] {
+		return guard && entry->info.enabled && entry->generation == generation;
+	};
+	const auto failed = [=](const MTP::Error &failure) {
+		if (active()) telegramFailure(entry, id, failure);
+	};
+	const auto done = [=](const MTPUpdates &updates) {
+		if (!active()) return;
+		entry->telegramRequests.erase(id);
+		_session->api().applyUpdates(updates);
+		reply(entry, id, true);
+		log(entry, method + u" → "_q + chat);
+	};
+	if (method == u"telegram.joinChannel"_q) {
+		const auto channel = peer->asChannel();
+		if (!channel) {
+			reply(entry, id, {}, u"INVALID_CHANNEL"_q);
+			return;
+		}
+		if (!reserveTelegram(entry, id)) return;
+		entry->telegramRequests[id] = _session->api().request(MTPchannels_JoinChannel(
+			channel->inputChannel()
+		)).done([=](const MTPmessages_ChatInviteJoinResult &result) {
+			if (!active()) return;
+			entry->telegramRequests.erase(id);
+			if (result.type() == mtpc_messages_chatInviteJoinResultOk) {
+				done(result.c_messages_chatInviteJoinResultOk().vupdates());
+			} else {
+				reply(entry, id, {}, u"INTERACTIVE_JOIN_REQUIRED"_q);
+			}
+		}).fail(failed).handleFloodErrors().send();
+	} else if (method == u"telegram.getHistory"_q) {
+		const auto before = integer(u"beforeId"_q, 0, INT_MAX, 0);
+		const auto limit = integer(u"limit"_q, 1, 100, 20);
+		if (before < 0 || limit < 0) {
+			reply(entry, id, {}, u"INVALID_HISTORY_OPTIONS"_q);
+			return;
+		}
+		if (!reserveTelegram(entry, id)) return;
+		entry->telegramRequests[id] = _session->api().request(MTPmessages_GetHistory(
+			peer->input(), MTP_int(before), MTP_int(0), MTP_int(0),
+			MTP_int(limit), MTP_int(0), MTP_int(0), MTP_long(0)
+		)).done([=](const MTPmessages_Messages &result) {
+			if (!active()) return;
+			entry->telegramRequests.erase(id);
+			auto messages = QJsonArray();
+			const auto collect = [&](const auto &data) {
+				_session->data().processUsers(data.vusers());
+				_session->data().processChats(data.vchats());
+				for (const auto &message : data.vmessages().v) {
+					if (messages.size() >= limit) break;
+					const auto loaded = _session->data().addNewMessage(
+						message, MessageFlags(), NewMessageType::Existing);
+					if (!loaded || loaded->isService() || loaded->history()->peer != peer) continue;
+					auto buttons = QJsonArray();
+					if (const auto markup = loaded->inlineReplyMarkup()) {
+						for (auto row = 0; row < int(markup->data.rows.size()); ++row) {
+							const auto &columns = markup->data.rows[row];
+							for (auto column = 0; column < int(columns.size()); ++column) {
+								const auto &button = columns[column];
+								if (button.type == HistoryMessageMarkupButton::Type::Callback) {
+									buttons.push_back(QJsonObject{
+										{ u"row"_q, row }, { u"column"_q, column },
+										{ u"text"_q, button.text.left(80) },
+									});
+								}
+							}
+						}
+					}
+					messages.push_back(QJsonObject{
+						{ u"chatId"_q, chat }, { u"messageId"_q, int(loaded->id.bare) },
+						{ u"senderId"_q, loaded->from() ? SerializeChatId(loaded->from()->id) : chat },
+						{ u"text"_q, loaded->originalText().text.left(16384) },
+						{ u"date"_q, int(loaded->date()) },
+						{ u"hasAttachment"_q, loaded->media()
+							&& (loaded->media()->photo() || loaded->media()->document()) },
+						{ u"buttons"_q, buttons },
+					});
+				}
+			};
+			result.match(
+				[&](const MTPDmessages_messages &data) { collect(data); },
+				[&](const MTPDmessages_messagesSlice &data) { collect(data); },
+				[&](const MTPDmessages_channelMessages &data) { collect(data); },
+				[&](const MTPDmessages_messagesNotModified &) {});
+			reply(entry, id, messages);
+			log(entry, method + u" → "_q + chat);
+		}).fail(failed).handleFloodErrors().send();
+	} else if (method == u"telegram.sendAttachment"_q) {
+		const auto sourceChat = params[u"sourceChatId"_q].toString();
+		if (!grant.attachmentChats.contains(sourceChat)) {
+			reply(entry, id, {}, u"PERMISSION_DENIED"_q);
+			return;
+		}
+		const auto source = _session->data().peerLoaded(PeerFromChatId(sourceChat));
+		const auto attachment = source && messageId > 0
+			? _session->data().message(FullMsgId(source->id, MsgId(messageId))) : nullptr;
+		if (!attachment || !attachment->allowsForward() || !attachment->media()
+			|| (!attachment->media()->photo() && !attachment->media()->document())
+			|| attachment->media()->webpage() || attachment->media()->invoice()
+			|| !Data::CanSendTexts(peer) || peer->starsPerMessageChecked() != 0) {
+			reply(entry, id, {}, u"ATTACHMENT_UNAVAILABLE"_q);
+			return;
+		}
+		if (!reserveTelegram(entry, id)) return;
+		using Flag = MTPmessages_ForwardMessages::Flag;
+		auto flags = MTPmessages_ForwardMessages::Flags(Flag::f_drop_author);
+		if (params[u"silent"_q].toBool()) flags |= Flag::f_silent;
+		const auto randomId = base::RandomValue<uint64>();
+		entry->telegramRequests[id] = _session->api().request(MTPmessages_ForwardMessages(
+			MTP_flags(flags), source->input(), MTP_vector<MTPint>({ MTP_int(messageId) }),
+			MTP_vector<MTPlong>({ MTP_long(randomId) }), peer->input(),
+			MTP_int(0), MTPInputReplyTo(), MTP_int(0), MTP_int(0), MTP_inputPeerEmpty(),
+			MTPInputQuickReplyShortcut(), MTP_long(0), MTP_int(0), MTP_long(0), MTPSuggestedPost()
+		)).done([=](const MTPUpdates &updates) {
+			if (!active()) return;
+			entry->telegramRequests.erase(id);
+			_session->api().applyUpdates(updates);
+			reply(entry, id, QJsonObject{ { u"accepted"_q, true },
+				{ u"messageId"_q, SentId(updates, randomId) } });
+			log(entry, method + u" → "_q + chat);
+		}).fail(failed).handleFloodErrors().send();
+	} else if (messageId <= 0) {
+		reply(entry, id, {}, u"INVALID_MESSAGE_ID"_q);
+	} else if (method == u"telegram.clickButton"_q) {
+		const auto row = integer(u"row"_q, 0, 100, -1);
+		const auto column = integer(u"column"_q, 0, 100, -1);
+		const auto button = item && row >= 0 && column >= 0
+			? HistoryMessageMarkupButton::Get(&_session->data(), item->fullId(), row, column) : nullptr;
+		if (!button || button->type != HistoryMessageMarkupButton::Type::Callback
+			|| button->requestId || !item->getMessageBot()) {
+			reply(entry, id, {}, u"BUTTON_UNAVAILABLE"_q);
+			return;
+		}
+		if (!reserveTelegram(entry, id)) return;
+		entry->telegramRequests[id] = _session->api().request(MTPmessages_GetBotCallbackAnswer(
+			MTP_flags(MTPmessages_GetBotCallbackAnswer::Flag::f_data),
+			peer->input(), MTP_int(messageId), MTP_bytes(button->data), MTP_inputCheckPasswordEmpty()
+		)).done([=](const MTPmessages_BotCallbackAnswer &answer) {
+			if (!active()) return;
+			entry->telegramRequests.erase(id);
+			const auto &data = answer.data();
+			reply(entry, id, QJsonObject{
+				{ u"text"_q, data.vmessage() ? qs(*data.vmessage()).left(4096) : QString() },
+				{ u"alert"_q, data.is_alert() },
+			});
+			log(entry, method + u" → "_q + chat);
+		}).fail(failed).handleFloodErrors().send();
+	} else if (method == u"telegram.editMessage"_q) {
+		const auto text = params[u"text"_q].toString();
+		if (!item || !item->out() || !item->allowsEdit(TimeId(QDateTime::currentSecsSinceEpoch()))
+			|| text.isEmpty() || text.size() > 4096) {
+			reply(entry, id, {}, u"MESSAGE_NOT_EDITABLE"_q);
+			return;
+		}
+		if (!reserveTelegram(entry, id)) return;
+		entry->telegramRequests[id] = _session->api().request(MTPmessages_EditMessage(
+			MTP_flags(MTPmessages_EditMessage::Flag::f_message | MTPmessages_EditMessage::Flag::f_no_webpage),
+			peer->input(), MTP_int(messageId), MTP_string(text), MTPInputMedia(),
+			MTPReplyMarkup(), MTPVector<MTPMessageEntity>(), MTP_int(0), MTP_int(0),
+			MTP_int(0), MTPInputRichMessage()
+		)).done(done).fail(failed).handleFloodErrors().send();
+	} else if (method == u"telegram.setReaction"_q) {
+		const auto emoji = params[u"emoji"_q].toString();
+		if (!params[u"emoji"_q].isString() || emoji.size() > 32) {
+			reply(entry, id, {}, u"INVALID_REACTION"_q);
+			return;
+		}
+		if (!reserveTelegram(entry, id)) return;
+		auto reactions = QVector<MTPReaction>();
+		if (!emoji.isEmpty()) reactions.push_back(MTP_reactionEmoji(MTP_string(emoji)));
+		entry->telegramRequests[id] = _session->api().request(MTPmessages_SendReaction(
+			MTP_flags(MTPmessages_SendReaction::Flag::f_reaction),
+			peer->input(), MTP_int(messageId), MTP_vector<MTPReaction>(reactions)
+		)).done(done).fail(failed).handleFloodErrors().send();
+	}
+}
+
 void Manager::getHttp(const EntryPtr &entry, int id, const QJsonObject &params) {
 	const auto original = QUrl(params[u"url"_q].toString(), QUrl::StrictMode);
 	const auto host = original.host().toLower();
@@ -796,7 +1036,7 @@ void Manager::getHttp(const EntryPtr &entry, int id, const QJsonObject &params) 
 		auto request = QNetworkRequest(pinned);
 		request.setPeerVerifyName(host);
 		request.setRawHeader("Host", host.toUtf8());
-		request.setRawHeader("User-Agent", "GummyGram-Plugins/1");
+		request.setRawHeader("User-Agent", "JellyPlugins/1");
 		request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
 		request.setAttribute(QNetworkRequest::CookieLoadControlAttribute, QNetworkRequest::Manual);
 		request.setAttribute(QNetworkRequest::CookieSaveControlAttribute, QNetworkRequest::Manual);
@@ -862,4 +1102,4 @@ void Manager::tick() {
 	}
 }
 
-} // namespace GummyPlugins
+} // namespace JellyPlugins

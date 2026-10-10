@@ -3,12 +3,15 @@
 #include "ayu/plugins/plugin_manager.h"
 #include "ayu/ui/settings/settings_main.h"
 #include "lang/lang_text_entity.h"
+#include "lang/lang_instance.h"
 #include "main/main_session.h"
 #include "settings/settings_builder.h"
 #include "ui/boxes/confirm_box.h"
 #include "ui/layers/generic_box.h"
 #include "ui/widgets/fields/input_field.h"
 #include "ui/widgets/checkbox.h"
+#include "ui/widgets/buttons.h"
+#include "ui/basic_click_handlers.h"
 #include "ui/widgets/labels.h"
 #include "ui/wrap/vertical_layout.h"
 #include "window/window_session_controller.h"
@@ -21,29 +24,32 @@
 
 #include <QFile>
 #include <QFileDialog>
+#include <QFontDatabase>
 #include <QJsonDocument>
 #include <QPointer>
 #include <QTimer>
+#include <QTextEdit>
 #include <tuple>
 
 namespace Settings {
 namespace {
 
 using namespace Builder;
-using GummyPlugins::PluginInfo;
+using JellyPlugins::PluginInfo;
 
 void AddLabel(not_null<Ui::GenericBox*> box, const QString &text) {
 	box->addRow(object_ptr<Ui::FlatLabel>(box, rpl::single(text), st::boxLabel));
 }
 
 void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo info) {
-	const auto manager = QPointer<GummyPlugins::Manager>(&controller->session().plugins());
+	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
 	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
 		box->setTitle(tr::ayu_JellyPermissions());
 		box->setWidth(st::boxWideWidth);
 		AddLabel(box, info.package.name + u" · "_q + info.package.version);
 		AddLabel(box, tr::ayu_JellyPermissionNotice(tr::now));
-		if (!info.package.permissions.readChats.isEmpty()
+		if ((!info.package.permissions.readChats.isEmpty()
+			|| !info.package.permissions.historyChats.isEmpty())
 			&& !info.package.permissions.httpHosts.isEmpty()) {
 			AddLabel(box, tr::ayu_JellyCombinedRisk(tr::now));
 		}
@@ -60,6 +66,12 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 		};
 		addScopes(tr::ayu_JellyReadChats(tr::now), u"readChats"_q, info.package.permissions.readChats);
 		addScopes(tr::ayu_JellySendChats(tr::now), u"sendChats"_q, info.package.permissions.sendChats);
+		addScopes(tr::ayu_JellyJoinChannels(tr::now), u"joinChannels"_q, info.package.permissions.joinChannels);
+		addScopes(tr::ayu_JellyBotChats(tr::now), u"botChats"_q, info.package.permissions.botChats);
+		addScopes(tr::ayu_JellyAttachmentChats(tr::now), u"attachmentChats"_q, info.package.permissions.attachmentChats);
+		addScopes(tr::ayu_JellyEditChats(tr::now), u"editChats"_q, info.package.permissions.editChats);
+		addScopes(tr::ayu_JellyReactionChats(tr::now), u"reactionChats"_q, info.package.permissions.reactionChats);
+		addScopes(tr::ayu_JellyHistoryChats(tr::now), u"historyChats"_q, info.package.permissions.historyChats);
 		addScopes(tr::ayu_JellyHttpHosts(tr::now), u"httpHosts"_q, info.package.permissions.httpHosts);
 		for (const auto &[key, allowed, title] : {
 			std::tuple(u"storage"_q, info.package.permissions.storage, tr::ayu_JellyStorage(tr::now)),
@@ -85,6 +97,12 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 			};
 			grant.readChats = selected(u"readChats"_q, grant.readChats);
 			grant.sendChats = selected(u"sendChats"_q, grant.sendChats);
+			grant.joinChannels = selected(u"joinChannels"_q, grant.joinChannels);
+			grant.botChats = selected(u"botChats"_q, grant.botChats);
+			grant.attachmentChats = selected(u"attachmentChats"_q, grant.attachmentChats);
+			grant.editChats = selected(u"editChats"_q, grant.editChats);
+			grant.reactionChats = selected(u"reactionChats"_q, grant.reactionChats);
+			grant.historyChats = selected(u"historyChats"_q, grant.historyChats);
 			grant.httpHosts = selected(u"httpHosts"_q, grant.httpHosts);
 			grant.storage = grant.storage && (*checks)[u"storage"_q][0]->checked();
 			grant.timers = grant.timers && (*checks)[u"timers"_q][0]->checked();
@@ -101,7 +119,7 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 }
 
 void ShowConfiguration(not_null<Window::SessionController*> controller, PluginInfo info) {
-	const auto manager = QPointer<GummyPlugins::Manager>(&controller->session().plugins());
+	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
 	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
 		box->setTitle(tr::ayu_JellyConfiguration());
 		box->setWidth(st::boxWideWidth);
@@ -129,7 +147,7 @@ void ShowConfiguration(not_null<Window::SessionController*> controller, PluginIn
 }
 
 void ShowDetails(not_null<Window::SessionController*> controller, PluginInfo info) {
-	const auto manager = QPointer<GummyPlugins::Manager>(&controller->session().plugins());
+	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
 	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
 		box->setTitle(rpl::single(info.package.name));
 		box->setWidth(st::boxWideWidth);
@@ -140,6 +158,12 @@ void ShowDetails(not_null<Window::SessionController*> controller, PluginInfo inf
 			AddLabel(box, tr::ayu_JellyPermissions(tr::now));
 			AddLabel(box, tr::ayu_JellyReadChats(tr::now) + u": "_q + info.granted.readChats.join(u", "_q));
 			AddLabel(box, tr::ayu_JellySendChats(tr::now) + u": "_q + info.granted.sendChats.join(u", "_q));
+			AddLabel(box, tr::ayu_JellyJoinChannels(tr::now) + u": "_q + info.granted.joinChannels.join(u", "_q));
+			AddLabel(box, tr::ayu_JellyBotChats(tr::now) + u": "_q + info.granted.botChats.join(u", "_q));
+			AddLabel(box, tr::ayu_JellyAttachmentChats(tr::now) + u": "_q + info.granted.attachmentChats.join(u", "_q));
+			AddLabel(box, tr::ayu_JellyEditChats(tr::now) + u": "_q + info.granted.editChats.join(u", "_q));
+			AddLabel(box, tr::ayu_JellyReactionChats(tr::now) + u": "_q + info.granted.reactionChats.join(u", "_q));
+			AddLabel(box, tr::ayu_JellyHistoryChats(tr::now) + u": "_q + info.granted.historyChats.join(u", "_q));
 			AddLabel(box, tr::ayu_JellyHttpHosts(tr::now) + u": "_q + info.granted.httpHosts.join(u", "_q));
 		}
 		box->addButton(info.enabled ? tr::ayu_JellyDisable() : tr::ayu_JellyEnable(), [=] {
@@ -156,6 +180,22 @@ void ShowDetails(not_null<Window::SessionController*> controller, PluginInfo inf
 			box->closeBox();
 			ShowConfiguration(controller, info);
 		});
+		box->addRow(object_ptr<Ui::SettingsButton>(box, tr::ayu_JellyViewCode(), st::settingsButton))
+			->setClickedCallback([=] {
+				controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> codeBox) {
+					codeBox->setTitle(tr::ayu_JellyViewCode());
+					codeBox->setWidth(st::boxWideWidth);
+					AddLabel(codeBox, tr::ayu_JellyCodeNotice(tr::now));
+					const auto field = codeBox->addRow(object_ptr<Ui::InputField>(
+						codeBox, st::defaultInputField, Ui::InputField::Mode::MultiLine,
+						rpl::single(QString()), info.package.code));
+					field->setMinHeight(st::boxWideWidth / 2);
+					field->setMaxHeight(st::boxWideWidth / 2);
+					field->rawTextEdit()->setReadOnly(true);
+					field->rawTextEdit()->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+					codeBox->addButton(tr::lng_close(), [=] { codeBox->closeBox(); });
+				}));
+			});
 		box->addButton(tr::ayu_JellyLog(), [=] {
 			controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> logBox) {
 				logBox->setTitle(tr::ayu_JellyLog());
@@ -196,7 +236,7 @@ const auto kMeta = BuildHelper({
 	if (!controller) {
 		return;
 	}
-	const auto manager = QPointer<GummyPlugins::Manager>(&controller->session().plugins());
+	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
 	builder.addSkip();
 	builder.addButton({
 		.id = u"jelly/plugins/install"_q,
@@ -204,17 +244,17 @@ const auto kMeta = BuildHelper({
 		.icon = { &st::menuIconFile },
 		.onClick = [=] {
 			const auto path = QFileDialog::getOpenFileName(nullptr,
-				tr::ayu_JellyInstall(tr::now), {}, u"GummyGram plugins (*.jellyplugin)"_q);
+				tr::ayu_JellyInstall(tr::now), {}, u"JellyPlugins (*.jelly *.jellyplugin)"_q);
 			if (path.isEmpty() || !manager) return;
 			auto file = QFile(path);
-			if (!file.open(QIODevice::ReadOnly) || file.size() > GummyPlugins::kPackageLimit) {
+			if (!file.open(QIODevice::ReadOnly) || file.size() > JellyPlugins::kPackageLimit) {
 				controller->showToast(tr::ayu_JellyInvalidPackage(tr::now));
 				return;
 			}
-			const auto data = file.read(GummyPlugins::kPackageLimit + 1);
-			auto package = GummyPlugins::Package();
+			const auto data = file.read(JellyPlugins::kPackageLimit + 1);
+			auto package = JellyPlugins::Package();
 			auto error = QString();
-			if (!GummyPlugins::ParsePackage(data, package, error)) {
+			if (!JellyPlugins::ParsePackage(data, package, error)) {
 				controller->showToast(error);
 				return;
 			}
@@ -242,12 +282,26 @@ const auto kMeta = BuildHelper({
 	builder.addSkip();
 	builder.addDivider();
 	builder.addSkip();
+	builder.addButton({
+		.id = u"jelly/plugins/documentation"_q,
+		.title = tr::ayu_JellyDocumentation(),
+		.icon = { &st::menuIconInfo },
+		.onClick = [=] {
+			const auto &language = Lang::GetInstance();
+			const auto russian = language.id() == u"ru"_q || language.baseId() == u"ru"_q;
+			UrlClickHandler::Open(u"https://github.com/PH4N7OMx/Gdesktop/tree/dev/docs/JellyPlugins-documentation/"_q
+				+ (russian ? u"ru"_q : u"en"_q));
+		},
+	});
+	builder.addSkip();
 	builder.addSubsectionTitle(tr::ayu_JellyPlugins());
 	const auto plugins = manager->plugins();
 	if (plugins.empty()) {
 		builder.add([](const WidgetContext &ctx) -> SectionBuilder::WidgetToAdd {
 			return { .widget = object_ptr<Ui::FlatLabel>(ctx.container,
-				tr::ayu_JellyEmpty(), st::boxLabel) };
+				tr::ayu_JellyEmpty(), st::boxLabel),
+				.margin = QMargins(st::settingsCheckboxPadding.left(), 0,
+					st::settingsCheckboxPadding.left(), st::settingsCheckboxPadding.bottom()) };
 		});
 	}
 	for (const auto &info : plugins) {

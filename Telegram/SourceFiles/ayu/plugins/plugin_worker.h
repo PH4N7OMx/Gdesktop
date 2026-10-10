@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QString>
 
-namespace GummyPlugins {
+namespace JellyPlugins {
 
 class WorkerBridge final : public QObject {
 	Q_OBJECT
@@ -15,4 +15,4 @@ public:
 
 [[nodiscard]] int RunWorker(int argc, char *argv[]);
 
-} // namespace GummyPlugins
+} // namespace JellyPlugins

@@ -321,7 +321,7 @@ Session::Session(
 	}, _lifetime);
 
 	InitializeBlockedPeers(this);
-	_plugins = std::make_unique<GummyPlugins::Manager>(this);
+	_plugins = std::make_unique<JellyPlugins::Manager>(this);
 }
 
 void Session::appConfigRefreshed() {

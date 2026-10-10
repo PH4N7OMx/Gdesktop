@@ -15,7 +15,11 @@ namespace Main {
 class Session;
 } // namespace Main
 
-namespace GummyPlugins {
+namespace MTP {
+class Error;
+} // namespace MTP
+
+namespace JellyPlugins {
 
 struct PluginInfo {
 	Package package;
@@ -58,6 +62,9 @@ private:
 	void reply(const EntryPtr &entry, int id, const QJsonValue &value,
 		const QString &error = {}, int retryAfter = 0);
 	void sendMessage(const EntryPtr &entry, int id, const QJsonObject &params);
+	void telegramAction(const EntryPtr &entry, int id, const QString &method, const QJsonObject &params);
+	[[nodiscard]] bool reserveTelegram(const EntryPtr &entry, int id);
+	void telegramFailure(const EntryPtr &entry, int id, const MTP::Error &failure);
 	void getHttp(const EntryPtr &entry, int id, const QJsonObject &params);
 	void tick();
 
@@ -73,4 +80,4 @@ private:
 
 };
 
-} // namespace GummyPlugins
+} // namespace JellyPlugins

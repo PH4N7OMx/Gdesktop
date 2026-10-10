@@ -16,7 +16,7 @@
 #include <userenv.h>
 #endif
 
-namespace GummyPlugins {
+namespace JellyPlugins {
 namespace {
 
 #ifdef Q_OS_WIN
@@ -245,4 +245,4 @@ bool IsSandboxWorker() {
 #endif
 }
 
-} // namespace GummyPlugins
+} // namespace JellyPlugins

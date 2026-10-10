@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/jelly/plugins">
-        <file alias="runtime.js">../../../../gummygram-plugins/sdk/runtime.js</file>
+        <file alias="runtime.js">../../../../jellyplugins/sdk/runtime.js</file>
     </qresource>
     <qresource prefix="/gui">
         <file alias="art/gummy/default/app.png">../../art/gummy/default/app.png</file>

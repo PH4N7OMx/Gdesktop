@@ -9588,8 +9588,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "ayu_PluginNoAuthor" = "Unknown Author";
 "ayu_PluginsNotAvailable" = "This plugin format is not supported by GummyGram. Install a .jellyplugin package from the Plugins settings.";
 
-"ayu_JellyPlugins" = "Plugins";
-"ayu_JellyInstall" = "Install plugin";
+"ayu_JellyPlugins" = "JellyPlugins";
+"ayu_JellyInstall" = "Install JellyPlugin";
 "ayu_JellyInstallNotice" = "The package will be saved without running. Replacing a plugin stops it and requires new permission approval.";
 "ayu_JellyPermissions" = "Plugin permissions";
 "ayu_JellyPermissionNotice" = "Allow only the capabilities you need. Device files, account keys and system commands are unavailable.";
@@ -9600,14 +9600,14 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "ayu_JellyStorage" = "Store plugin data locally";
 "ayu_JellyTimers" = "Run tasks on a schedule while the app is open";
 "ayu_JellyActions" = "Add buttons to the Plugins page";
-"ayu_JellyMessageLimit" = "Maximum messages per hour: ";
+"ayu_JellyMessageLimit" = "Maximum Telegram operations per hour: ";
 "ayu_JellyEnable" = "Enable";
 "ayu_JellyDisable" = "Disable and revoke permissions";
 "ayu_JellyStopAll" = "Stop all plugins";
 "ayu_JellyConfiguration" = "Plugin settings";
 "ayu_JellyConfigurationNotice" = "Enter the JSON settings described by the plugin author. Saving stops the plugin; enable it again to apply changes.";
 "ayu_JellyLog" = "Activity log";
-"ayu_JellyEmpty" = "No plugins installed. Import a .jellyplugin package to get started.";
+"ayu_JellyEmpty" = "No JellyPlugins installed. Use Install JellyPlugin to choose a .jelly file.";
 "ayu_JellyInvalidPackage" = "Cannot read plugin package (maximum 1 MiB).";
 "ayu_JellyRunning" = "Running";
 "ayu_JellyDisabled" = "Disabled";
@@ -9661,3 +9661,21 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "ayu_ChannelPromoText" = "Subscribe to our official Telegram channel for updates and announcements!";
 "ayu_ChannelPromoSubscribe" = "Subscribe";
 "ayu_ChannelPromoLater" = "Later";
+
+"ayu_JellyDocumentation" = "JellyPlugins documentation";
+
+"ayu_JellyViewCode" = "View code";
+
+"ayu_JellyCodeNotice" = "Installed JavaScript. Read-only; TypeScript source may differ from this bundle.";
+
+"ayu_JellyJoinChannels" = "Join these channels";
+
+"ayu_JellyBotChats" = "Press callback buttons in these chats";
+
+"ayu_JellyAttachmentChats" = "Copy attachments from these chats";
+
+"ayu_JellyEditChats" = "Edit outgoing messages in these chats";
+
+"ayu_JellyReactionChats" = "Set reactions in these chats";
+
+"ayu_JellyHistoryChats" = "Read history in these chats";

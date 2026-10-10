@@ -5,7 +5,7 @@
 #include <QJsonDocument>
 #include <QRegularExpression>
 
-namespace GummyPlugins {
+namespace JellyPlugins {
 namespace {
 
 bool ParseList(const QJsonObject &json, const QString &key, QStringList &out, bool hosts) {
@@ -48,6 +48,8 @@ bool ListSubset(const QStringList &subset, const QStringList &set) {
 bool ParsePermissions(const QJsonObject &json, Permissions &result, QString &error) {
 	const auto allowed = QStringList{
 		u"readChats"_q, u"sendChats"_q, u"httpHosts"_q,
+		u"joinChannels"_q, u"botChats"_q, u"attachmentChats"_q,
+		u"editChats"_q, u"reactionChats"_q, u"historyChats"_q,
 		u"storage"_q, u"timers"_q, u"ui"_q, u"maxMessagesPerHour"_q,
 	};
 	for (auto i = json.begin(); i != json.end(); ++i) {
@@ -59,6 +61,12 @@ bool ParsePermissions(const QJsonObject &json, Permissions &result, QString &err
 	auto parsed = Permissions();
 	if (!ParseList(json, u"readChats"_q, parsed.readChats, false)
 		|| !ParseList(json, u"sendChats"_q, parsed.sendChats, false)
+		|| !ParseList(json, u"joinChannels"_q, parsed.joinChannels, false)
+		|| !ParseList(json, u"botChats"_q, parsed.botChats, false)
+		|| !ParseList(json, u"attachmentChats"_q, parsed.attachmentChats, false)
+		|| !ParseList(json, u"editChats"_q, parsed.editChats, false)
+		|| !ParseList(json, u"reactionChats"_q, parsed.reactionChats, false)
+		|| !ParseList(json, u"historyChats"_q, parsed.historyChats, false)
 		|| !ParseList(json, u"httpHosts"_q, parsed.httpHosts, true)) {
 		error = u"Invalid chat or HTTPS host scope."_q;
 		return false;
@@ -87,6 +95,12 @@ QJsonObject PermissionsJson(const Permissions &permissions) {
 	return {
 		{ u"readChats"_q, QJsonArray::fromStringList(permissions.readChats) },
 		{ u"sendChats"_q, QJsonArray::fromStringList(permissions.sendChats) },
+		{ u"joinChannels"_q, QJsonArray::fromStringList(permissions.joinChannels) },
+		{ u"botChats"_q, QJsonArray::fromStringList(permissions.botChats) },
+		{ u"attachmentChats"_q, QJsonArray::fromStringList(permissions.attachmentChats) },
+		{ u"editChats"_q, QJsonArray::fromStringList(permissions.editChats) },
+		{ u"reactionChats"_q, QJsonArray::fromStringList(permissions.reactionChats) },
+		{ u"historyChats"_q, QJsonArray::fromStringList(permissions.historyChats) },
 		{ u"httpHosts"_q, QJsonArray::fromStringList(permissions.httpHosts) },
 		{ u"storage"_q, permissions.storage },
 		{ u"timers"_q, permissions.timers },
@@ -98,6 +112,12 @@ QJsonObject PermissionsJson(const Permissions &permissions) {
 bool IsSubset(const Permissions &grant, const Permissions &requested) {
 	return ListSubset(grant.readChats, requested.readChats)
 		&& ListSubset(grant.sendChats, requested.sendChats)
+		&& ListSubset(grant.joinChannels, requested.joinChannels)
+		&& ListSubset(grant.botChats, requested.botChats)
+		&& ListSubset(grant.attachmentChats, requested.attachmentChats)
+		&& ListSubset(grant.editChats, requested.editChats)
+		&& ListSubset(grant.reactionChats, requested.reactionChats)
+		&& ListSubset(grant.historyChats, requested.historyChats)
 		&& ListSubset(grant.httpHosts, requested.httpHosts)
 		&& (!grant.storage || requested.storage)
 		&& (!grant.timers || requested.timers)
@@ -123,7 +143,7 @@ bool ParsePackage(const QByteArray &data, Package &result, QString &error) {
 		|| !versionPattern.match(manifest[u"version"_q].toString()).hasMatch()
 		|| !manifest[u"permissions"_q].isObject()
 		|| !json[u"code"_q].isString()) {
-		error = u"Invalid GummyGram plugin manifest or API version."_q;
+		error = u"Invalid JellyPlugin manifest or API version."_q;
 		return false;
 	}
 	auto parsed = Package();
@@ -152,4 +172,4 @@ bool ParsePackage(const QByteArray &data, Package &result, QString &error) {
 	return true;
 }
 
-} // namespace GummyPlugins
+} // namespace JellyPlugins

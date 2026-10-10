@@ -168,10 +168,10 @@ void BuildLinks(SectionBuilder &builder) {
 		.id = u"ayu/website"_q,
 		.title = tr::ayu_LinksDocumentation(),
 		.icon = { &st::menuIconIpAddress },
-		.label = rpl::single(QString("GummyGram documentation")),
+		.label = rpl::single(QString("JellyPlugins documentation")),
 		.onClick = [=] {
 			QDesktopServices::openUrl(
-				QString("https://github.com/PH4N7OMx/Gdesktop/tree/HEAD/docs/GummyGram-documentation"));
+				QString("https://github.com/PH4N7OMx/Gdesktop/tree/HEAD/docs/JellyPlugins-documentation"));
 		},
 	});
 

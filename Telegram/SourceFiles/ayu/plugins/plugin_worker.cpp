@@ -22,7 +22,7 @@
 #include <io.h>
 #endif
 
-namespace GummyPlugins {
+namespace JellyPlugins {
 namespace {
 
 FILE *Input = nullptr;
@@ -160,4 +160,4 @@ int RunWorker(int argc, char *argv[]) {
 	return 0;
 }
 
-} // namespace GummyPlugins
+} // namespace JellyPlugins

@@ -13,9 +13,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 class ApiWrap;
 
-namespace GummyPlugins {
+namespace JellyPlugins {
 class Manager;
-} // namespace GummyPlugins
+} // namespace JellyPlugins
 
 namespace Api {
 class Updates;
@@ -121,7 +121,7 @@ public:
 		const MTPUser &user,
 		std::unique_ptr<SessionSettings> settings);
 	~Session();
-	[[nodiscard]] GummyPlugins::Manager &plugins() const {
+	[[nodiscard]] JellyPlugins::Manager &plugins() const {
 		return *_plugins;
 	}
 
@@ -388,7 +388,7 @@ private:
 	TimeId _tmpPasswordValidUntil = 0;
 
 	rpl::lifetime _lifetime;
-	std::unique_ptr<GummyPlugins::Manager> _plugins;
+	std::unique_ptr<JellyPlugins::Manager> _plugins;
 
 };
 

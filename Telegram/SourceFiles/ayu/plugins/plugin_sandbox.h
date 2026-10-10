@@ -4,7 +4,7 @@
 #include <QString>
 #include <memory>
 
-namespace GummyPlugins {
+namespace JellyPlugins {
 
 [[nodiscard]] std::shared_ptr<void> PrepareSandbox(
 	QProcess &process,
@@ -12,4 +12,4 @@ namespace GummyPlugins {
 	QString &error);
 [[nodiscard]] bool IsSandboxWorker();
 
-} // namespace GummyPlugins
+} // namespace JellyPlugins

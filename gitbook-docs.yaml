@@ -1,12 +1,18 @@
 $schema: https://api.gitbook.com/openapi.yaml#/components/schemas/GitSyncSiteConfig
 version: 1
 site:
-  title: GummyGram Documentation
+  title: JellyPlugins Documentation
   structure:
     - type: space
       key: gummygram-documentation
-      title: Документация плагинов
+      title: Русский
       path: documentation
       default: true
       content:
-        directory: ./docs/GummyGram-documentation
+        directory: ./docs/JellyPlugins-documentation/ru
+    - type: space
+      key: jellyplugins-en
+      title: English
+      path: en
+      content:
+        directory: ./docs/JellyPlugins-documentation/en

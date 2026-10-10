@@ -3,7 +3,7 @@
 #include <QJsonObject>
 #include <QStringList>
 
-namespace GummyPlugins {
+namespace JellyPlugins {
 
 inline constexpr auto kApiVersion = 1;
 inline constexpr auto kPackageLimit = 1024 * 1024;
@@ -13,6 +13,12 @@ inline constexpr auto kStorageLimit = 64 * 1024;
 struct Permissions {
 	QStringList readChats;
 	QStringList sendChats;
+	QStringList joinChannels;
+	QStringList botChats;
+	QStringList attachmentChats;
+	QStringList editChats;
+	QStringList reactionChats;
+	QStringList historyChats;
 	QStringList httpHosts;
 	bool storage = false;
 	bool timers = false;
@@ -37,4 +43,4 @@ struct Package {
 [[nodiscard]] QJsonObject PermissionsJson(const Permissions &permissions);
 [[nodiscard]] bool IsSubset(const Permissions &grant, const Permissions &requested);
 
-} // namespace GummyPlugins
+} // namespace JellyPlugins

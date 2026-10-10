@@ -59,3 +59,5 @@ All Telegram calls share rate limits, including history. Leave at least 3 second
 ## Files, balance and Mini Apps
 
 See the [dedicated guide](account-and-files.md): `files.readText`, `files.writeText`, `money.getBalance`, `miniApps.open`.
+
+See [message menus, dialogs and settings](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` and the Message Tools example.

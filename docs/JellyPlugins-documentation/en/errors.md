@@ -41,7 +41,7 @@ Use timers instead of busy loops. Handle unknown outcomes before retrying sends 
 | Code | Meaning |
 |---|---|
 | `USER_CANCELLED` | User cancelled file selection |
-| `INTERACTION_BUSY` | Another file picker is open |
+| `INTERACTION_BUSY` | A file picker or plugin dialog is already open |
 | `INVALID_FILE_CONTENT_OR_NAME` | Invalid content type, size or suggested name |
 | `FILE_UNAVAILABLE` | Blocked or unavailable path |
 | `FILE_UNAVAILABLE_OR_TOO_LARGE`, `FILE_NOT_UTF8_OR_TOO_LARGE` | File unavailable, exceeds 1 MiB or contains invalid UTF-8 |
@@ -50,3 +50,5 @@ Use timers instead of busy loops. Handle unknown outcomes before retrying sends 
 | `MINI_APP_UNAVAILABLE_OR_INVALID_PARAMETER` | Bot/main app/client window unavailable or invalid startParam |
 
 File selection has no operation timeout. Opening UI requires 30 seconds between requests per account; `RATE_LIMIT` includes `retryAfter`.
+
+UI: `UI_UNAVAILABLE_OR_INVALID_TEXT` and `INVALID_DIALOG_TITLE` indicate an unavailable window or malformed text/title. A plugin confirmation dialog suspends the operation timeout while the user chooses. Toasts are limited to one per five seconds per account; interactive dialogs share the 30-second interval.

@@ -14,3 +14,5 @@ JellyPlugins uses TypeScript/JavaScript and `.jelly` packages. Legacy `.jellyplu
 Python plugins for ExteraGram are not compatible. Pack TypeScript with the SDK before installing.
 
 File pickers for text/binary reads and saves, Stars/Telegram TON balance reads, and main Mini Apps use separate opt-in grants. These additions require a client version that implements them; older clients reject unknown permissions.
+
+See [message menus, dialogs and settings](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` and the Message Tools example.

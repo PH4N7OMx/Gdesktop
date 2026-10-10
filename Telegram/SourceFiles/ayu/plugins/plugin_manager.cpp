@@ -9,6 +9,9 @@
 #include "inline_bots/bot_attach_web_view.h"
 #include "window/window_session_controller.h"
 #include "lang_auto.h"
+#include "ui/layers/generic_box.h"
+#include "ui/widgets/labels.h"
+#include "styles/style_boxes.h"
 #include "data/data_chat_participant_status.h"
 #include "data/data_channel.h"
 #include "data/data_peer.h"
@@ -137,6 +140,7 @@ struct Manager::Entry {
 	std::unique_ptr<QNetworkAccessManager> network;
 	QByteArray input;
 	QPointer<QFileDialog> fileDialog;
+	QPointer<Ui::GenericBox> confirmBox;
 	std::map<int, mtpRequestId> telegramRequests;
 	std::set<int> pending;
 	std::map<int, qint64> pendingDeadlines;
@@ -152,7 +156,7 @@ struct Manager::Entry {
 	int frames = 0;
 	int awaitingAck = 0;
 	int lastRequestId = 0;
-	uint64 generation = 0;
+	uint64 generation = base::RandomValue<uint64>();
 };
 
 Manager::Manager(not_null<Main::Session*> session) : _session(session) {
@@ -230,7 +234,7 @@ void Manager::load() {
 		}
 		const auto state = QJsonDocument::fromJson(ReadBounded(
 			entry->path + u"state.json"_q, kStorageLimit)).object();
-		entry->info.settings = state[u"settings"_q].toObject();
+		entry->info.settings = SettingsWithDefaults(entry->info.package, state[u"settings"_q].toObject());
 		entry->info.approved = state[u"approvedDigest"_q].toString() == entry->info.package.digest
 			&& ParsePermissions(state[u"granted"_q].toObject(), entry->info.granted, error)
 			&& IsSubset(entry->info.granted, entry->info.package.permissions);
@@ -302,6 +306,7 @@ bool Manager::install(const QByteArray &data, QString &error) {
 		entry->sends = existing->second->sends;
 		entry->blockedUntil = existing->second->blockedUntil;
 	}
+	entry->info.settings = SettingsWithDefaults(entry->info.package, entry->info.settings);
 	if (!SaveJson(entry->path + u"package.json"_q, entry->info.package.json)
 		|| !saveState(entry, error)) {
 		error = u"Cannot save plugin package or state."_q;
@@ -356,8 +361,10 @@ bool Manager::configure(const QString &id, const QJsonObject &settings, QString 
 		return false;
 	}
 	const auto entry = found->second;
+	const auto effective = SettingsWithDefaults(entry->info.package, settings);
+	if (!ValidateSettings(entry->info.package, effective, error)) return false;
 	stop(entry);
-	entry->info.settings = settings;
+	entry->info.settings = effective;
 	const auto saved = saveState(entry, error);
 	_changes.fire({});
 	return saved;
@@ -403,7 +410,43 @@ void Manager::runAction(const QString &id, const QString &action) {
 	}
 }
 
+std::vector<MessageAction> Manager::messageActions(not_null<HistoryItem*> item) const {
+	auto result = std::vector<MessageAction>();
+	if (item->id <= 0 || item->isService()) return result;
+	const auto chat = SerializeChatId(item->history()->peer->id);
+	for (const auto &[id, entry] : _entries) {
+		if (!entry->info.enabled || !entry->info.granted.menuChats.contains(chat)) continue;
+		for (auto i = entry->info.messageActions.begin(); i != entry->info.messageActions.end(); ++i) {
+			result.push_back({ id, i.key(), entry->info.package.name + u" · "_q + i.value().toString(),
+				entry->info.package.digest, entry->generation });
+			if (result.size() >= 16) return result;
+		}
+	}
+	return result;
+}
+
+void Manager::runMessageAction(const MessageAction &action, FullMsgId message) {
+	const auto found = _entries.find(action.pluginId);
+	const auto item = _session->data().message(message);
+	if (found == _entries.end() || !item || item->id <= 0 || item->isService()) return;
+	const auto entry = found->second;
+	const auto chat = SerializeChatId(item->history()->peer->id);
+	if (!entry->info.enabled || !entry->info.granted.menuChats.contains(chat)
+		|| entry->info.package.digest != action.digest || entry->generation != action.generation
+		|| !entry->info.messageActions.contains(action.id)) return;
+	const auto sender = item->from() ? item->from()->id : item->history()->peer->id;
+	write(entry, { { u"type"_q, u"event"_q }, { u"event"_q, u"message.action"_q },
+		{ u"data"_q, QJsonObject{ { u"id"_q, action.id }, { u"message"_q, QJsonObject{
+			{ u"chatId"_q, chat }, { u"messageId"_q, QJsonValue(qint64(item->id.bare)) },
+			{ u"senderId"_q, SerializeChatId(sender) },
+			{ u"text"_q, item->originalText().text.left(16384) },
+			{ u"date"_q, QJsonValue(qint64(item->date())) },
+			{ u"outgoing"_q, item->out() }, { u"hasAttachment"_q, item->media() != nullptr },
+		} } } } });
+}
+
 bool Manager::start(const EntryPtr &entry, QString &error) {
+	if (!ValidateSettings(entry->info.package, entry->info.settings, error)) return false;
 	if (!SaveJson(_root + u"active.json"_q, { { u"active"_q, true } })) {
 		error = u"Cannot save plugin recovery marker."_q;
 		return false;
@@ -469,7 +512,10 @@ void Manager::stop(const EntryPtr &entry) {
 		entry->fileDialog = nullptr;
 	}
 	entry->timers.clear();
+	if (entry->confirmBox) entry->confirmBox->closeBox();
+	entry->confirmBox = nullptr;
 	entry->info.actions = {};
+	entry->info.messageActions = {};
 	for (const auto &[id, requestId] : entry->telegramRequests) {
 		_session->api().request(requestId).cancel();
 	}
@@ -613,6 +659,8 @@ void Manager::request(const EntryPtr &entry, const QJsonObject &frame) {
 		sendMessage(entry, id, params);
 	} else if (method.startsWith(u"telegram."_q)) {
 		telegramAction(entry, id, method, params);
+	} else if (method == u"ui.showToast"_q || method == u"ui.confirm"_q) {
+		uiAction(entry, id, method, params);
 	} else if (method == u"files.readText"_q || method == u"files.writeText"_q
 		|| method == u"files.readFile"_q || method == u"files.writeFile"_q) {
 		fileAction(entry, id, method, params);
@@ -664,6 +712,31 @@ void Manager::request(const EntryPtr &entry, const QJsonObject &frame) {
 		} else {
 			entry->timers[name] = { QDateTime::currentSecsSinceEpoch() + seconds, seconds };
 			reply(entry, id, true);
+		}
+	} else if ((method == u"ui.addMessageAction"_q || method == u"ui.removeMessageAction"_q)
+		&& !grant.menuChats.isEmpty()) {
+		const auto action = params[u"id"_q].toString();
+		const auto title = params[u"title"_q].toString();
+		if (action.isEmpty() || action.size() > 64) {
+			reply(entry, id, {}, u"INVALID_ACTION"_q);
+		} else if (method == u"ui.removeMessageAction"_q) {
+			entry->info.messageActions.remove(action);
+			reply(entry, id, true);
+		} else if (title.isEmpty() || title.size() > 80
+			|| (!entry->info.messageActions.contains(action) && entry->info.messageActions.size() >= 8)) {
+			reply(entry, id, {}, u"INVALID_ACTION"_q);
+		} else {
+			entry->info.messageActions[action] = title;
+			reply(entry, id, true);
+		}
+	} else if (method == u"ui.removeAction"_q && grant.ui) {
+		const auto action = params[u"id"_q].toString();
+		if (action.isEmpty() || action.size() > 64) {
+			reply(entry, id, {}, u"INVALID_ACTION"_q);
+		} else {
+			entry->info.actions.remove(action);
+			reply(entry, id, true);
+			_changes.fire({});
 		}
 	} else if (method == u"ui.addAction"_q && grant.ui) {
 		const auto action = params[u"id"_q].toString();
@@ -1018,7 +1091,7 @@ void Manager::telegramAction(const EntryPtr &entry, int id,
 bool Manager::reserveInteraction(const EntryPtr &entry, int id) {
 	const auto now = QDateTime::currentSecsSinceEpoch();
 	for (const auto &[key, other] : _entries) {
-		if (other->fileDialog) {
+		if (other->fileDialog || other->confirmBox) {
 			reply(entry, id, {}, u"INTERACTION_BUSY"_q);
 			return false;
 		}
@@ -1029,6 +1102,56 @@ bool Manager::reserveInteraction(const EntryPtr &entry, int id) {
 	}
 	_interactionBlockedUntil = now + 30;
 	return true;
+}
+
+void Manager::uiAction(const EntryPtr &entry, int id, const QString &method, const QJsonObject &params) {
+	if (!entry->info.granted.uiDialogs) {
+		reply(entry, id, {}, u"PERMISSION_DENIED"_q);
+		return;
+	}
+	const auto controller = _session->tryResolveWindow();
+	const auto text = params[u"text"_q].toString();
+	if (!controller || !params[u"text"_q].isString() || text.isEmpty() || text.size() > 2000) {
+		reply(entry, id, {}, u"UI_UNAVAILABLE_OR_INVALID_TEXT"_q);
+		return;
+	}
+	if (method == u"ui.showToast"_q) {
+		const auto now = QDateTime::currentSecsSinceEpoch();
+		if (now < _notificationBlockedUntil) {
+			reply(entry, id, {}, u"RATE_LIMIT"_q, int(_notificationBlockedUntil - now));
+			return;
+		}
+		_notificationBlockedUntil = now + 5;
+		controller->showToast(entry->info.package.name + u": "_q + text.left(500));
+		reply(entry, id, true);
+		return;
+	}
+	const auto title = params[u"title"_q].toString();
+	if (!params[u"title"_q].isString() || title.isEmpty() || title.size() > 80) {
+		reply(entry, id, {}, u"INVALID_DIALOG_TITLE"_q);
+		return;
+	}
+	if (!reserveInteraction(entry, id)) return;
+	entry->pendingDeadlines.erase(id);
+	const auto generation = entry->generation;
+	const auto guard = QPointer<Manager>(this);
+	const auto finish = [=](bool confirmed) {
+		if (guard && entry->info.enabled && generation == entry->generation && entry->pending.contains(id)) {
+			reply(entry, id, confirmed);
+		}
+	};
+	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
+		entry->confirmBox = box.get();
+		box->setTitle(rpl::single(entry->info.package.name + u" · "_q + title));
+		box->setWidth(st::boxWideWidth);
+		box->addRow(object_ptr<Ui::FlatLabel>(box, rpl::single(text), st::boxLabel));
+		box->addButton(tr::lng_box_ok(), [=] { finish(true); box->closeBox(); });
+		box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
+		box->boxClosing() | rpl::on_next([=] {
+			if (generation == entry->generation) entry->confirmBox = nullptr;
+			finish(false);
+		}, box->lifetime());
+	}));
 }
 
 void Manager::fileAction(const EntryPtr &entry, int id, const QString &method, const QJsonObject &params) {

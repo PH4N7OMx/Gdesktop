@@ -14,3 +14,5 @@ JellyPlugins поддерживает TypeScript/JavaScript и пакеты `.je
 API не совместим с Python-плагинами ExteraGram. TypeScript нужно упаковать SDK перед установкой.
 
 Чтение и сохранение выбранных текстовых/двоичных файлов, баланс Stars/Telegram TON и главные Mini Apps имеют отдельные разрешения. Нужна версия клиента с этими API; старые клиенты отклоняют неизвестные разрешения.
+
+См. [меню сообщений, диалоги и настройки](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` и пример Message Tools.

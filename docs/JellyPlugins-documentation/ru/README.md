@@ -49,3 +49,5 @@
 | Выбранные текстовые и двоичные файлы | Чтение/сохранение через выбор файла, отдельные разрешения |
 | Stars / Telegram TON | Чтение баланса |
 | Telegram Mini Apps | Открытие разрешённых ботов с подтверждением Telegram |
+
+См. [меню сообщений, диалоги и настройки](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` и пример Message Tools.

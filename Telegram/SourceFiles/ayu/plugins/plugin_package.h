@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QStringList>
 
 namespace JellyPlugins {
@@ -21,6 +22,8 @@ struct Permissions {
 	QStringList historyChats;
 	QStringList httpHosts;
 	QStringList webviewBots;
+	QStringList menuChats;
+	bool uiDialogs = false;
 	bool fileRead = false;
 	bool fileWrite = false;
 	bool moneyRead = false;
@@ -40,8 +43,11 @@ struct Package {
 	QString digest;
 	Permissions permissions;
 	QJsonObject json;
+	QJsonArray settingsSchema;
 };
 
+[[nodiscard]] QJsonObject SettingsWithDefaults(const Package &package, QJsonObject settings);
+[[nodiscard]] bool ValidateSettings(const Package &package, const QJsonObject &settings, QString &error);
 [[nodiscard]] bool ParsePackage(const QByteArray &data, Package &result, QString &error);
 [[nodiscard]] bool ParsePermissions(const QJsonObject &json, Permissions &result, QString &error);
 [[nodiscard]] QJsonObject PermissionsJson(const Permissions &permissions);

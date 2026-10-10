@@ -30,6 +30,7 @@
 #include <QTimer>
 #include <QTextEdit>
 #include <tuple>
+#include <cmath>
 
 namespace Settings {
 namespace {
@@ -50,7 +51,8 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 		AddLabel(box, tr::ayu_JellyPermissionNotice(tr::now));
 		if ((!info.package.permissions.readChats.isEmpty()
 			|| !info.package.permissions.historyChats.isEmpty()
-			|| info.package.permissions.fileRead || info.package.permissions.moneyRead)
+			|| info.package.permissions.fileRead || info.package.permissions.moneyRead
+			|| !info.package.permissions.menuChats.isEmpty())
 			&& !info.package.permissions.httpHosts.isEmpty()) {
 			AddLabel(box, tr::ayu_JellyCombinedRisk(tr::now));
 		}
@@ -65,6 +67,7 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 				(*checks)[key].push_back(check);
 			}
 		};
+		addScopes(tr::ayu_JellyMenuChats(tr::now), u"menuChats"_q, info.package.permissions.menuChats, false);
 		addScopes(tr::ayu_JellyReadChats(tr::now), u"readChats"_q, info.package.permissions.readChats);
 		addScopes(tr::ayu_JellySendChats(tr::now), u"sendChats"_q, info.package.permissions.sendChats);
 		addScopes(tr::ayu_JellyJoinChannels(tr::now), u"joinChannels"_q, info.package.permissions.joinChannels);
@@ -88,6 +91,7 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 			std::tuple(u"fileRead"_q, info.package.permissions.fileRead, tr::ayu_JellyFileRead(tr::now)),
 			std::tuple(u"fileWrite"_q, info.package.permissions.fileWrite, tr::ayu_JellyFileWrite(tr::now)),
 			std::tuple(u"moneyRead"_q, info.package.permissions.moneyRead, tr::ayu_JellyMoneyRead(tr::now)),
+			std::tuple(u"uiDialogs"_q, info.package.permissions.uiDialogs, tr::ayu_JellyDialogs(tr::now)),
 		}) {
 			if (!allowed) continue;
 			const auto check = box->addRow(object_ptr<Ui::Checkbox>(box, title, true, st::defaultCheckbox));
@@ -114,6 +118,8 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 			grant.editChats = selected(u"editChats"_q, grant.editChats);
 			grant.reactionChats = selected(u"reactionChats"_q, grant.reactionChats);
 			grant.historyChats = selected(u"historyChats"_q, grant.historyChats);
+			grant.menuChats = selected(u"menuChats"_q, grant.menuChats);
+			grant.uiDialogs = grant.uiDialogs && (*checks)[u"uiDialogs"_q][0]->checked();
 			grant.webviewBots = selected(u"webviewBots"_q, grant.webviewBots);
 			grant.fileRead = grant.fileRead && (*checks)[u"fileRead"_q][0]->checked();
 			grant.fileWrite = grant.fileWrite && (*checks)[u"fileWrite"_q][0]->checked();
@@ -133,7 +139,7 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 	}));
 }
 
-void ShowConfiguration(not_null<Window::SessionController*> controller, PluginInfo info) {
+void ShowJsonConfiguration(not_null<Window::SessionController*> controller, PluginInfo info) {
 	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
 	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
 		box->setTitle(tr::ayu_JellyConfiguration());
@@ -161,6 +167,88 @@ void ShowConfiguration(not_null<Window::SessionController*> controller, PluginIn
 	}));
 }
 
+void ShowConfiguration(not_null<Window::SessionController*> controller, PluginInfo info) {
+	if (info.package.settingsSchema.isEmpty()) {
+		ShowJsonConfiguration(controller, info);
+		return;
+	}
+	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
+	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
+		box->setTitle(tr::ayu_JellyConfiguration());
+		box->setWidth(st::boxWideWidth);
+		AddLabel(box, tr::ayu_JellySettingsNotice(tr::now));
+		const auto values = std::make_shared<std::vector<std::pair<QString, Fn<QJsonValue()>>>>();
+		for (const auto &row : info.package.settingsSchema) {
+			const auto definition = row.toObject();
+			const auto key = definition[u"key"_q].toString();
+			const auto label = definition[u"label"_q].toString();
+			const auto type = definition[u"type"_q].toString();
+			const auto initial = info.settings.contains(key) ? info.settings.value(key) : definition[u"default"_q];
+			if (type == u"boolean"_q) {
+				const auto check = box->addRow(object_ptr<Ui::Checkbox>(
+					box, label, initial.toBool(definition[u"default"_q].toBool()), st::defaultCheckbox));
+				values->emplace_back(key, [=] { return QJsonValue(check->checked()); });
+			} else if (type == u"select"_q) {
+				AddLabel(box, label);
+				const auto options = definition[u"options"_q].toArray();
+				auto index = 0;
+				for (auto i = 0; i < options.size(); ++i) {
+					if (options[i] == initial) index = i;
+				}
+				const auto group = std::make_shared<Ui::RadiobuttonGroup>(index);
+				for (auto i = 0; i < options.size(); ++i) {
+					box->addRow(object_ptr<Ui::Radiobutton>(
+						box, group, i, options[i].toString(), st::defaultCheckbox));
+				}
+				values->emplace_back(key, [=] { return options[group->current()]; });
+			} else {
+				AddLabel(box, label);
+				const auto number = (type == u"number"_q);
+				const auto initialText = number
+					? QString::number(initial.toDouble(definition[u"default"_q].toDouble()), 'g', 17)
+					: initial.toString(definition[u"default"_q].toString());
+				const auto field = box->addRow(object_ptr<Ui::InputField>(
+					box, st::defaultInputField, Ui::InputField::Mode::SingleLine,
+					rpl::single(label), initialText));
+				values->emplace_back(key, [=]() -> QJsonValue {
+					const auto text = field->getLastText();
+					if (!number) {
+						if (text.size() <= definition[u"maxLength"_q].toInt(512)) return text;
+					} else {
+						auto valid = false;
+						const auto value = text.toDouble(&valid);
+						if (valid && std::isfinite(value)
+							&& value >= definition[u"min"_q].toDouble(-1e9)
+							&& value <= definition[u"max"_q].toDouble(1e9)) return value;
+					}
+					field->showError();
+					return QJsonValue(QJsonValue::Undefined);
+				});
+			}
+		}
+		box->addButton(tr::lng_settings_save(), [=] {
+			if (!manager) return;
+			auto settings = info.settings;
+			for (const auto &[key, get] : *values) {
+				const auto value = get();
+				if (value.isUndefined()) {
+					controller->showToast(tr::ayu_JellyInvalidSettings(tr::now));
+					return;
+				}
+				settings[key] = value;
+			}
+			auto error = QString();
+			if (manager->configure(info.package.id, settings, error)) box->closeBox();
+			else controller->showToast(error);
+		});
+		box->addLeftButton(tr::ayu_JellyEditJson(), [=] {
+			box->closeBox();
+			ShowJsonConfiguration(controller, info);
+		});
+		box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
+	}));
+}
+
 void ShowDetails(not_null<Window::SessionController*> controller, PluginInfo info) {
 	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
 	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
@@ -179,6 +267,8 @@ void ShowDetails(not_null<Window::SessionController*> controller, PluginInfo inf
 			AddLabel(box, tr::ayu_JellyEditChats(tr::now) + u": "_q + info.granted.editChats.join(u", "_q));
 			AddLabel(box, tr::ayu_JellyReactionChats(tr::now) + u": "_q + info.granted.reactionChats.join(u", "_q));
 			AddLabel(box, tr::ayu_JellyHistoryChats(tr::now) + u": "_q + info.granted.historyChats.join(u", "_q));
+			if (info.granted.uiDialogs) AddLabel(box, tr::ayu_JellyDialogs(tr::now));
+			AddLabel(box, tr::ayu_JellyMenuChats(tr::now) + u": "_q + info.granted.menuChats.join(u", "_q));
 			if (info.granted.fileRead) AddLabel(box, tr::ayu_JellyFileRead(tr::now));
 			if (info.granted.fileWrite) AddLabel(box, tr::ayu_JellyFileWrite(tr::now));
 			if (info.granted.moneyRead) AddLabel(box, tr::ayu_JellyMoneyRead(tr::now));

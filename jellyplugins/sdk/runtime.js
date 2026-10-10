@@ -23,7 +23,7 @@
   };
   const report = error => post({ type: "log", text: String(error).slice(0, 500) });
   const subscribe = (event, handler) => {
-    if (!["message.new", "timer", "action"].includes(event) || typeof handler !== "function")
+    if (!["message.new", "message.action", "timer", "action"].includes(event) || typeof handler !== "function")
       throw new Error("INVALID_EVENT");
     const list = handlers.get(event) || [];
     if (list.length >= 32) throw new Error("TOO_MANY_HANDLERS");
@@ -69,6 +69,11 @@
     }),
     ui: Object.freeze({
       addAction: (id, title) => request("ui.addAction", { id, title }),
+      removeAction: id => request("ui.removeAction", { id }),
+      addMessageAction: (id, title) => request("ui.addMessageAction", { id, title }),
+      removeMessageAction: id => request("ui.removeMessageAction", { id }),
+      showToast: text => request("ui.showToast", { text }),
+      confirm: (title, text) => request("ui.confirm", { title, text }),
     }),
   });
   Object.defineProperty(global, "__jellyStart", { value: (activate, settings) => {

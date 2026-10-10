@@ -9,7 +9,8 @@
     "test": "node --test tests/runtime.test.mjs tests/package.test.mjs tests/examples.test.mjs",
     "pack:hello": "node scripts/pack.mjs examples/hello",
     "pack:feed": "node scripts/pack.mjs examples/feed-to-chat",
-    "pack:giveaways": "node scripts/pack.mjs examples/giveaway-watch"
+    "pack:giveaways": "node scripts/pack.mjs examples/giveaway-watch",
+    "pack:tools": "node scripts/pack.mjs examples/message-tools"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

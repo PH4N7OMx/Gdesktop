@@ -145,3 +145,5 @@ if (message) {
 ## Файлы, баланс и Mini Apps
 
 См. [отдельную страницу](account-and-files.md): `files.readText`, `files.writeText`, `money.getBalance`, `miniApps.open`.
+
+См. [меню сообщений, диалоги и настройки](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` и пример Message Tools.

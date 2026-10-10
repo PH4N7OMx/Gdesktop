@@ -34,3 +34,5 @@ The table omits the `jelly.` prefix for brevity: `telegram.sendMessage` means `j
 For complete parameters, return values and restrictions, see the [API reference](api.md). For startup problems, see [debugging](debugging.md).
 
 [Additional APIs](account-and-files.md): selected text files, Stars/Telegram TON balance and Mini App opening.
+
+See [message menus, dialogs and settings](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` and the Message Tools example.

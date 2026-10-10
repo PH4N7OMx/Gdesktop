@@ -1,0 +1,47 @@
+{
+  "apiVersion": 1,
+  "id": "jelly.message-tools",
+  "name": "Message Tools",
+  "version": "1.0.0",
+  "description": "Inspect a message from its context menu. No messages are sent and no external requests are made.",
+  "permissions": {
+    "menuChats": [
+      "123456789"
+    ],
+    "uiDialogs": true,
+    "ui": true
+  },
+  "settingsSchema": [
+    {
+      "key": "enabled",
+      "label": "Enable the message action",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "key": "prefix",
+      "label": "Preview prefix",
+      "type": "string",
+      "default": "Preview",
+      "maxLength": 40
+    },
+    {
+      "key": "maxChars",
+      "label": "Maximum preview length",
+      "type": "number",
+      "default": 120,
+      "min": 1,
+      "max": 500
+    },
+    {
+      "key": "mode",
+      "label": "Output",
+      "type": "select",
+      "default": "Preview",
+      "options": [
+        "Preview",
+        "Log"
+      ]
+    }
+  ]
+}

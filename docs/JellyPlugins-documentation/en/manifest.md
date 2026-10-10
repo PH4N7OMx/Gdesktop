@@ -44,3 +44,5 @@ Approval is bound to the package SHA-256 hash. This is integrity checking, not a
 | `webviewBots` | Up to 32 positive bot IDs for Mini Apps |
 
 Details: [files, balance and Mini Apps](account-and-files.md).
+
+See [message menus, dialogs and settings](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` and the Message Tools example.

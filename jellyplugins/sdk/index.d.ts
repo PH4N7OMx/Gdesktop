@@ -10,6 +10,7 @@ export interface MessageEvent {
 
 export interface PluginEvents {
   "message.new": MessageEvent;
+  "message.action": { id: string; message: MessageEvent & { outgoing: boolean; hasAttachment: boolean } };
   timer: { name: string; timestamp: number };
   action: { id: string };
 }
@@ -69,6 +70,11 @@ export interface JellyAPI {
   };
   readonly ui: {
     addAction(id: string, title: string): Promise<boolean>;
+    removeAction(id: string): Promise<boolean>;
+    addMessageAction(id: string, title: string): Promise<boolean>;
+    removeMessageAction(id: string): Promise<boolean>;
+    showToast(text: string): Promise<boolean>;
+    confirm(title: string, text: string): Promise<boolean>;
   };
 }
 
@@ -86,6 +92,8 @@ export interface Permissions {
   historyChats?: string[];
   httpHosts?: string[];
   webviewBots?: string[];
+  menuChats?: string[];
+  uiDialogs?: boolean;
   fileRead?: boolean;
   fileWrite?: boolean;
   moneyRead?: boolean;
@@ -95,6 +103,12 @@ export interface Permissions {
   maxMessagesPerHour?: number;
 }
 
+export type SettingDefinition =
+  | { key: string; label: string; type: "boolean"; default: boolean }
+  | { key: string; label: string; type: "string"; default: string; maxLength?: number }
+  | { key: string; label: string; type: "number"; default: number; min?: number; max?: number }
+  | { key: string; label: string; type: "select"; default: string; options: string[] };
+
 export interface Manifest {
   apiVersion: 1;
   id: string;
@@ -103,6 +117,7 @@ export interface Manifest {
   description?: string;
   version: string;
   permissions: Permissions;
+  settingsSchema?: SettingDefinition[];
 }
 
 export type GummyAPI = JellyAPI;

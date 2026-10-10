@@ -34,3 +34,5 @@
 Параметры, результаты и ограничения: [справочник API](api.md). Для проблем с запуском: [отладка](debugging.md).
 
 [Дополнительные API](account-and-files.md): чтение и запись выбранных файлов, баланс Stars/Telegram TON, открытие Mini Apps.
+
+См. [меню сообщений, диалоги и настройки](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` и пример Message Tools.

@@ -154,3 +154,27 @@ test("binary file API uses base64 with user-selected output names", async () => 
   assert.deepEqual(await read, { name: "selected.bin", base64: "AAEC/w==" });
   assert.deepEqual(await write, { name: "user-renamed.bin" });
 });
+
+
+test("message-menu actions preserve clicked context, unsubscribe, and dialog cancellation", async () => {
+  let api, selected, calls = 0;
+  const env = await environment(jelly => {
+    api = jelly;
+    const off = jelly.on("message.action", () => { calls++; });
+    off();
+    jelly.on("message.action", data => { selected = data; });
+  });
+  const outcomes = [api.ui.addMessageAction("inspect", "Inspect"), api.ui.removeMessageAction("old"),
+    api.ui.showToast("Status"), api.ui.confirm("Title", "Text"), api.ui.removeAction("old")]
+    .map(p => p.catch(e => ({ code: e.code, retryAfter: e.retryAfter })));
+  assert.deepEqual(env.frames.map(f => f.method), ["ui.addMessageAction", "ui.removeMessageAction", "ui.showToast", "ui.confirm", "ui.removeAction"]);
+  assert.deepEqual(env.frames[3].params, { title: "Title", text: "Text" });
+  const message = { chatId: "123", messageId: 7, senderId: "456", text: "Selected", date: 1, outgoing: false, hasAttachment: true };
+  await env.dispatch({ type: "event", event: "message.action", data: { id: "inspect", message } });
+  assert.deepEqual(selected, { id: "inspect", message });
+  assert.equal(calls, 0);
+  await env.dispatch({ type: "result", id: 4, value: false });
+  await env.dispatch({ type: "result", id: 3, error: "RATE_LIMIT", retryAfter: 5 });
+  for (const id of [1, 2, 5]) await env.dispatch({ type: "result", id, value: true });
+  assert.deepEqual(await Promise.all(outcomes), [true, true, { code: "RATE_LIMIT", retryAfter: 5 }, false, true]);
+});

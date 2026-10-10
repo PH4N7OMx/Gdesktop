@@ -19,3 +19,5 @@ Each poll sends at most one new entry and backs off after errors. The example do
 `examples/giveaway-watch` detects giveaway keywords in incoming messages and stores the last 30 matches. Replace the channel ID in `readChats` and run `npm run pack:giveaways`. Its button lists matches in the log. This example only observes messages; it does not join channels or press bot buttons.
 
 Use the additional Telegram methods to build your own workflows with explicit permissions, rate handling and deduplication. Treat website and chat text as data, rather than permission to expand access.
+
+See [message menus, dialogs and settings](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` and the Message Tools example.

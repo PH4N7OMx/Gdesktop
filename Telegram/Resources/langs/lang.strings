@@ -9686,3 +9686,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "ayu_JellyWebviewBots" = "Open Mini Apps of these bots";
 "ayu_JellyFileNotice" = "You choose a file for each read or save. The plugin receives its contents, but not its full path. Saved files may replace existing files.";
 "ayu_JellyMiniAppsNotice" = "Mini Apps receive your Telegram profile through Telegram. The plugin cannot read the app, sign in to it or approve payments.";
+"ayu_JellyMenuChats" = "Add menu actions and read messages I click in these chats";
+"ayu_JellyDialogs" = "Show notifications and confirmation dialogs";
+"ayu_JellySettingsNotice" = "Change the settings below. Saving stops the plugin; enable it again to apply changes.";
+"ayu_JellyInvalidSettings" = "Check the highlighted settings and allowed ranges.";
+"ayu_JellyEditJson" = "Edit JSON";

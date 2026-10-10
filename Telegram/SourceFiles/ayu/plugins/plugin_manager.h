@@ -19,6 +19,9 @@ namespace MTP {
 class Error;
 } // namespace MTP
 
+class HistoryItem;
+struct FullMsgId;
+
 namespace JellyPlugins {
 
 struct PluginInfo {
@@ -30,6 +33,15 @@ struct PluginInfo {
 	QStringList log;
 	QJsonObject settings;
 	QJsonObject actions;
+	QJsonObject messageActions;
+};
+
+struct MessageAction {
+	QString pluginId;
+	QString id;
+	QString title;
+	QString digest;
+	quint64 generation = 0;
 };
 
 class Manager final : public QObject {
@@ -45,6 +57,8 @@ public:
 	[[nodiscard]] bool uninstall(const QString &id, QString &error);
 	void stopAll();
 	void runAction(const QString &id, const QString &action);
+	[[nodiscard]] std::vector<MessageAction> messageActions(not_null<HistoryItem*> item) const;
+	void runMessageAction(const MessageAction &action, FullMsgId message);
 
 private:
 	struct Entry;
@@ -65,6 +79,7 @@ private:
 	void telegramAction(const EntryPtr &entry, int id, const QString &method, const QJsonObject &params);
 	[[nodiscard]] bool reserveTelegram(const EntryPtr &entry, int id);
 	void telegramFailure(const EntryPtr &entry, int id, const MTP::Error &failure);
+	void uiAction(const EntryPtr &entry, int id, const QString &method, const QJsonObject &params);
 	void fileAction(const EntryPtr &entry, int id, const QString &method, const QJsonObject &params);
 	void moneyBalance(const EntryPtr &entry, int id, const QJsonObject &params);
 	void openMiniApp(const EntryPtr &entry, int id, const QJsonObject &params);
@@ -78,6 +93,7 @@ private:
 	std::deque<qint64> _accountSends;
 	qint64 _accountBlockedUntil = 0;
 	qint64 _interactionBlockedUntil = 0;
+	qint64 _notificationBlockedUntil = 0;
 	std::map<QString, EntryPtr> _entries;
 	QTimer _timer;
 	rpl::event_stream<> _changes;

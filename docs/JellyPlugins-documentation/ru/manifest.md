@@ -66,3 +66,5 @@
 | `webviewBots` | До 32 положительных ID ботов для Mini Apps |
 
 Подробности: [файлы, баланс и Mini Apps](account-and-files.md).
+
+См. [меню сообщений, диалоги и настройки](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` и пример Message Tools.

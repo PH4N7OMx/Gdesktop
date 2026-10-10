@@ -24,7 +24,7 @@ This exposes the Telegram Stars balance and Telegram's own TON balance when avai
 
 The client uses its regular Telegram Mini App flow and confirmation. The Mini App receives the normal Telegram profile data. Plugins do not receive initData, cookies, page contents, scripts or payment controls. The result `{ requested: true }` means opening was requested; it does not confirm loading, login or payment. The Mini App remains an independent client window after the plugin stops.
 
-File pickers and Mini App openings share one interaction slot per account and at least 30 seconds between requests. Another open file picker rejects with `INTERACTION_BUSY`. Otherwise `RATE_LIMIT` includes `retryAfter`. Mini App openings also use the Telegram operation budget.
+File pickers and Mini App openings share one interaction slot per account and at least 30 seconds between requests. Another open file picker or plugin confirmation dialog rejects with `INTERACTION_BUSY`. Otherwise `RATE_LIMIT` includes `retryAfter`. Mini App openings also use the Telegram operation budget.
 
 ## Example permissions
 

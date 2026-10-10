@@ -35,3 +35,5 @@ Execution currently requires Windows AppContainer. Other platforms can store a p
 | Selected text/binary files | Read/save through a picker, separate grants |
 | Stars / Telegram TON | Balance reads |
 | Telegram Mini Apps | Open approved bots through Telegram confirmation |
+
+See [message menus, dialogs and settings](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` and the Message Tools example.

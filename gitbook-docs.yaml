@@ -1,0 +1,12 @@
+$schema: https://api.gitbook.com/openapi.yaml#/components/schemas/GitSyncSiteConfig
+version: 1
+site:
+  title: GummyGram Documentation
+  structure:
+    - type: space
+      key: gummygram-documentation
+      title: Документация плагинов
+      path: documentation
+      default: true
+      content:
+        directory: ./docs/GummyGram-documentation

@@ -35,3 +35,12 @@ Chat scopes use strings in Bot API ID format: positive for users, negative for g
 Permissions do not imply each other. Attachment copying needs both the source scope and `sendChats` for the destination. `httpHosts` does not accept paths, ports or wildcards; `example.com` does not permit `api.example.com`.
 
 Approval is bound to the package SHA-256 hash. This is integrity checking, not an author signature or malware verdict.
+
+| Additional permission | Access |
+|---|---|
+| `fileRead` | Read a selected file |
+| `fileWrite` | Save a file through a picker |
+| `moneyRead` | Read Stars / Telegram TON balance |
+| `webviewBots` | Up to 32 positive bot IDs for Mini Apps |
+
+Details: [files, balance and Mini Apps](account-and-files.md).

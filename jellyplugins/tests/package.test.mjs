@@ -43,3 +43,14 @@ test("system imports cannot enter a package", async () => {
   await writeFile(join(folder, "index.ts"), "import fs from 'node:fs'; export default () => fs.readFileSync('/x');");
   await assert.rejects(() => pack(folder), /Unavailable plugin import/);
 });
+
+
+test("file and balance grants are booleans and Mini Apps require positive bot IDs", () => {
+  for (const key of ["fileRead", "fileWrite", "moneyRead"]) {
+    for (const value of [true, false]) assert.doesNotThrow(() => validateManifest({ ...manifest, permissions: { [key]: value } }));
+    for (const value of [1, "yes", [], null]) assert.throws(() => validateManifest({ ...manifest, permissions: { [key]: value } }));
+  }
+  assert.doesNotThrow(() => validateManifest({ ...manifest, permissions: { webviewBots: ["123456789", "9007199254740993"] } }));
+  for (const value of [["-1001234567890"], ["0"], ["*"], [123], ["00123"], Array(33).fill("123")])
+    assert.throws(() => validateManifest({ ...manifest, permissions: { webviewBots: value } }));
+});

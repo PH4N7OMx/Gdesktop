@@ -35,3 +35,18 @@ Other Telegram server error codes are passed through unchanged. No method automa
 All Telegram operations use the plugin's `maxMessagesPerHour` budget and a shared 60/hour account budget, with at least 3 seconds between operations. Attempts count even when the server rejects them. Limits and FloodWait persist across restarts. Deleting a plugin does not clear the account budget.
 
 Use timers instead of busy loops. Handle unknown outcomes before retrying sends or callback actions.
+
+## Files and interaction
+
+| Code | Meaning |
+|---|---|
+| `USER_CANCELLED` | User cancelled file selection |
+| `INTERACTION_BUSY` | Another file picker is open |
+| `INVALID_FILE_CONTENT_OR_NAME` | Invalid content type, size or suggested name |
+| `FILE_UNAVAILABLE` | Blocked or unavailable path |
+| `FILE_UNAVAILABLE_OR_TOO_LARGE`, `FILE_NOT_UTF8_OR_TOO_LARGE` | File unavailable, exceeds 1 MiB or contains invalid UTF-8 |
+| `FILE_WRITE_FAILED` | Write did not complete |
+| `INVALID_CURRENCY` | Use stars or ton |
+| `MINI_APP_UNAVAILABLE_OR_INVALID_PARAMETER` | Bot/main app/client window unavailable or invalid startParam |
+
+File selection has no operation timeout. Opening UI requires 30 seconds between requests per account; `RATE_LIMIT` includes `retryAfter`.

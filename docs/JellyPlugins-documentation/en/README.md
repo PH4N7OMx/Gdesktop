@@ -20,3 +20,18 @@ Start with [installation](installation.md) or [your first plugin](quickstart.md)
 Execution currently requires Windows AppContainer. Other platforms can store a package but cannot enable it. Users do not need Node.js or npm; developers use them to build packages.
 
 [Русская версия](../ru/README.md)
+
+## Quick navigation
+
+- [First run and SDK commands](quickstart.md)
+- [Methods and permissions at a glance](cheat-sheet.md)
+- [Activation and persistent state](lifecycle.md)
+- [Fix a plugin that does not work](debugging.md)
+
+[Files, balance and Mini Apps](account-and-files.md) — separate permissions and user confirmation.
+
+| Additional feature | Support |
+|---|---|
+| Selected text/binary files | Read/save through a picker, separate grants |
+| Stars / Telegram TON | Balance reads |
+| Telegram Mini Apps | Open approved bots through Telegram confirmation |

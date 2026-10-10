@@ -55,3 +55,7 @@ All Telegram calls share rate limits, including history. Leave at least 3 second
 `ui.addAction(id, title)` requires `ui` and returns true. Up to 8 actions; ID 1–64 characters, title 1–80. Reusing an ID updates the title. Actions appear on the JellyPlugins page.
 
 `jelly.log(text)` requires no permission. At most 500 characters per entry; the last 100 remain in memory. Avoid logging secrets or complete conversations.
+
+## Files, balance and Mini Apps
+
+See the [dedicated guide](account-and-files.md): `files.readText`, `files.writeText`, `money.getBalance`, `miniApps.open`.

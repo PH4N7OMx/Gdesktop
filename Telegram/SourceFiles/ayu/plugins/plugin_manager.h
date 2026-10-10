@@ -65,6 +65,10 @@ private:
 	void telegramAction(const EntryPtr &entry, int id, const QString &method, const QJsonObject &params);
 	[[nodiscard]] bool reserveTelegram(const EntryPtr &entry, int id);
 	void telegramFailure(const EntryPtr &entry, int id, const MTP::Error &failure);
+	void fileAction(const EntryPtr &entry, int id, const QString &method, const QJsonObject &params);
+	void moneyBalance(const EntryPtr &entry, int id, const QJsonObject &params);
+	void openMiniApp(const EntryPtr &entry, int id, const QJsonObject &params);
+	[[nodiscard]] bool reserveInteraction(const EntryPtr &entry, int id);
 	void getHttp(const EntryPtr &entry, int id, const QJsonObject &params);
 	void tick();
 
@@ -73,6 +77,7 @@ private:
 	bool _recovering = false;
 	std::deque<qint64> _accountSends;
 	qint64 _accountBlockedUntil = 0;
+	qint64 _interactionBlockedUntil = 0;
 	std::map<QString, EntryPtr> _entries;
 	QTimer _timer;
 	rpl::event_stream<> _changes;

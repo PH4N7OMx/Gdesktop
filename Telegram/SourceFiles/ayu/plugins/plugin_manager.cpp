@@ -4,6 +4,11 @@
 #include "api/api_sending.h"
 #include "ayu/plugins/plugin_sandbox.h"
 #include "base/random.h"
+#include "core/credits_amount.h"
+#include "data/data_user.h"
+#include "inline_bots/bot_attach_web_view.h"
+#include "window/window_session_controller.h"
+#include "lang_auto.h"
 #include "data/data_chat_participant_status.h"
 #include "data/data_channel.h"
 #include "data/data_peer.h"
@@ -20,6 +25,8 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QFileDialog>
+#include <QStringDecoder>
 #include <QHostAddress>
 #include <QHostInfo>
 #include <QJsonArray>
@@ -129,6 +136,7 @@ struct Manager::Entry {
 	std::shared_ptr<void> sandbox;
 	std::unique_ptr<QNetworkAccessManager> network;
 	QByteArray input;
+	QPointer<QFileDialog> fileDialog;
 	std::map<int, mtpRequestId> telegramRequests;
 	std::set<int> pending;
 	std::map<int, qint64> pendingDeadlines;
@@ -454,6 +462,12 @@ bool Manager::start(const EntryPtr &entry, QString &error) {
 void Manager::stop(const EntryPtr &entry) {
 	entry->info.enabled = false;
 	++entry->generation;
+	if (entry->fileDialog) {
+		entry->fileDialog->disconnect(this);
+		entry->fileDialog->close();
+		entry->fileDialog->deleteLater();
+		entry->fileDialog = nullptr;
+	}
 	entry->timers.clear();
 	entry->info.actions = {};
 	for (const auto &[id, requestId] : entry->telegramRequests) {
@@ -599,6 +613,13 @@ void Manager::request(const EntryPtr &entry, const QJsonObject &frame) {
 		sendMessage(entry, id, params);
 	} else if (method.startsWith(u"telegram."_q)) {
 		telegramAction(entry, id, method, params);
+	} else if (method == u"files.readText"_q || method == u"files.writeText"_q
+		|| method == u"files.readFile"_q || method == u"files.writeFile"_q) {
+		fileAction(entry, id, method, params);
+	} else if (method == u"money.getBalance"_q) {
+		moneyBalance(entry, id, params);
+	} else if (method == u"miniApps.open"_q) {
+		openMiniApp(entry, id, params);
 	} else if (method == u"http.get"_q) {
 		getHttp(entry, id, params);
 	} else if (method.startsWith(u"storage."_q) && grant.storage) {
@@ -992,6 +1013,172 @@ void Manager::telegramAction(const EntryPtr &entry, int id,
 			peer->input(), MTP_int(messageId), MTP_vector<MTPReaction>(reactions)
 		)).done(done).fail(failed).handleFloodErrors().send();
 	}
+}
+
+bool Manager::reserveInteraction(const EntryPtr &entry, int id) {
+	const auto now = QDateTime::currentSecsSinceEpoch();
+	for (const auto &[key, other] : _entries) {
+		if (other->fileDialog) {
+			reply(entry, id, {}, u"INTERACTION_BUSY"_q);
+			return false;
+		}
+	}
+	if (now < _interactionBlockedUntil) {
+		reply(entry, id, {}, u"RATE_LIMIT"_q, int(_interactionBlockedUntil - now));
+		return false;
+	}
+	_interactionBlockedUntil = now + 30;
+	return true;
+}
+
+void Manager::fileAction(const EntryPtr &entry, int id, const QString &method, const QJsonObject &params) {
+	const auto binary = (method == u"files.readFile"_q || method == u"files.writeFile"_q);
+	const auto writing = (method == u"files.writeText"_q || method == u"files.writeFile"_q);
+	if (!(writing ? entry->info.granted.fileWrite : entry->info.granted.fileRead)) {
+		reply(entry, id, {}, u"PERMISSION_DENIED"_q);
+		return;
+	}
+	constexpr auto kTextLimit = 1024 * 1024;
+	const auto contentKey = binary ? u"base64"_q : u"text"_q;
+	const auto content = params[contentKey].toString();
+	const auto bytes = !writing ? QByteArray() : binary
+		? QByteArray::fromBase64(content.toLatin1()) : content.toUtf8();
+	const auto name = params[u"suggestedName"_q].toString(binary ? u"export.bin"_q : u"export.txt"_q);
+	static const auto safeName = QRegularExpression(u"^[^/\\\\:*?\"<>|\\x00-\\x1f]{1,120}$"_q);
+	if (writing && (!params[contentKey].isString() || bytes.size() > kTextLimit
+		|| (binary && QString::fromLatin1(bytes.toBase64()) != content)
+		|| (params.contains(u"suggestedName"_q) && !params[u"suggestedName"_q].isString())
+		|| name.isEmpty() || (safeName.match(name).capturedLength() != name.size()) || name == u"."_q || name == u".."_q)) {
+		reply(entry, id, {}, u"INVALID_FILE_CONTENT_OR_NAME"_q);
+		return;
+	}
+	if (!reserveInteraction(entry, id)) return;
+	const auto title = (writing ? tr::ayu_JellyFileWrite(tr::now) : tr::ayu_JellyFileRead(tr::now))
+		+ u" — "_q + entry->info.package.name;
+	const auto dialog = new QFileDialog(nullptr, title);
+	dialog->setAttribute(Qt::WA_DeleteOnClose);
+	dialog->setAcceptMode(writing ? QFileDialog::AcceptSave : QFileDialog::AcceptOpen);
+	dialog->setFileMode(writing ? QFileDialog::AnyFile : QFileDialog::ExistingFile);
+	if (writing) dialog->selectFile(name);
+	entry->fileDialog = dialog;
+	// Choosing a file is a user interaction, not a timed plugin operation.
+	entry->pendingDeadlines.erase(id);
+	const auto generation = entry->generation;
+	connect(dialog, &QDialog::finished, this, [=](int result) {
+		entry->fileDialog = nullptr;
+		if (!entry->info.enabled || generation != entry->generation) return;
+		const auto paths = dialog->selectedFiles();
+		if (result != QDialog::Accepted || paths.size() != 1) {
+			reply(entry, id, {}, u"USER_CANCELLED"_q);
+			return;
+		}
+		const auto info = QFileInfo(paths.front());
+		const auto parent = QFileInfo(info.absolutePath()).canonicalFilePath();
+		const auto path = info.exists() ? info.canonicalFilePath() : parent + '/' + info.fileName();
+		const auto privateRoot = QFileInfo(cWorkingDir() + u"tdata"_q).canonicalFilePath();
+		if (parent.isEmpty() || path.isEmpty() || info.isSymLink()
+			|| (!privateRoot.isEmpty() && (path.compare(privateRoot, Qt::CaseInsensitive) == 0
+				|| path.startsWith(privateRoot + '/', Qt::CaseInsensitive)))) {
+			reply(entry, id, {}, u"FILE_UNAVAILABLE"_q);
+			return;
+		}
+		if (writing) {
+			auto file = QSaveFile(path);
+			if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit()) {
+				reply(entry, id, {}, u"FILE_WRITE_FAILED"_q);
+				return;
+			}
+			reply(entry, id, QJsonObject{ { u"name"_q, info.fileName() } });
+		} else {
+			auto file = QFile(path);
+			if (!info.isFile() || !file.open(QIODevice::ReadOnly) || file.size() > kTextLimit) {
+				reply(entry, id, {}, u"FILE_UNAVAILABLE_OR_TOO_LARGE"_q);
+				return;
+			}
+			const auto content = file.read(kTextLimit + 1);
+			if (content.size() > kTextLimit || file.error() != QFileDevice::NoError) {
+				reply(entry, id, {}, u"FILE_UNAVAILABLE_OR_TOO_LARGE"_q);
+				return;
+			}
+			if (binary) {
+				reply(entry, id, QJsonObject{
+					{ u"name"_q, info.fileName() },
+					{ u"base64"_q, QString::fromLatin1(content.toBase64()) },
+				});
+				return;
+			}
+			auto decoder = QStringDecoder(QStringDecoder::Utf8, QStringConverter::Flag::Stateless);
+			const auto text = QString(decoder(content));
+			if (decoder.hasError()) {
+				reply(entry, id, {}, u"FILE_NOT_UTF8_OR_TOO_LARGE"_q);
+				return;
+			}
+			reply(entry, id, QJsonObject{ { u"name"_q, info.fileName() }, { u"text"_q, text } });
+		}
+	});
+	dialog->show();
+}
+
+void Manager::moneyBalance(const EntryPtr &entry, int id, const QJsonObject &params) {
+	if (!entry->info.granted.moneyRead) {
+		reply(entry, id, {}, u"PERMISSION_DENIED"_q);
+		return;
+	}
+	const auto currency = params[u"currency"_q].toString(u"stars"_q);
+	if ((params.contains(u"currency"_q) && !params[u"currency"_q].isString())
+		|| (currency != u"stars"_q && currency != u"ton"_q)) {
+		reply(entry, id, {}, u"INVALID_CURRENCY"_q);
+		return;
+	}
+	if (!reserveTelegram(entry, id)) return;
+	const auto generation = entry->generation;
+	const auto guard = QPointer<Manager>(this);
+	using Flag = MTPpayments_GetStarsStatus::Flag;
+	entry->telegramRequests[id] = _session->api().request(MTPpayments_GetStarsStatus(
+		MTP_flags(currency == u"ton"_q
+			? MTPpayments_GetStarsStatus::Flags(Flag::f_ton)
+			: MTPpayments_GetStarsStatus::Flags()),
+		MTP_inputPeerSelf()
+	)).done([=](const MTPpayments_StarsStatus &result) {
+		if (!guard || !entry->info.enabled || generation != entry->generation) return;
+		entry->telegramRequests.erase(id);
+		const auto amount = CreditsAmountFromTL(result.data().vbalance());
+		reply(entry, id, QJsonObject{
+			{ u"currency"_q, currency }, { u"whole"_q, QString::number(amount.whole()) },
+			{ u"nanos"_q, QJsonValue(qint64(amount.nano())) },
+		});
+	}).fail([=](const MTP::Error &error) {
+		if (!guard || !entry->info.enabled || generation != entry->generation) return;
+		telegramFailure(entry, id, error);
+	}).send();
+}
+
+void Manager::openMiniApp(const EntryPtr &entry, int id, const QJsonObject &params) {
+	const auto botId = params[u"botId"_q].toString();
+	if (!entry->info.granted.webviewBots.contains(botId)) {
+		reply(entry, id, {}, u"PERMISSION_DENIED"_q);
+		return;
+	}
+	const auto peer = PeerFromChatId(botId);
+	const auto bot = peerIsUser(peer) ? _session->data().userLoaded(peerToUser(peer)) : nullptr;
+	const auto start = params[u"startParam"_q].toString();
+	static const auto token = QRegularExpression(u"^[A-Za-z0-9_-]{0,512}$"_q);
+	const auto controller = _session->tryResolveWindow();
+	if (!bot || !bot->botInfo || !bot->botInfo->hasMainApp || !controller
+		|| (params.contains(u"startParam"_q) && !params[u"startParam"_q].isString())
+		|| (!token.match(start).hasMatch() || token.match(start).capturedLength() != start.size())) {
+		reply(entry, id, {}, u"MINI_APP_UNAVAILABLE_OR_INVALID_PARAMETER"_q);
+		return;
+	}
+	if (!reserveInteraction(entry, id) || !reserveTelegram(entry, id)) return;
+	_session->attachWebView().open({
+		.bot = bot,
+		.context = { .controller = controller, .maySkipConfirmation = false },
+		.button = { .startCommand = start },
+		.source = InlineBots::WebViewSourceLinkBotProfile{ .token = start },
+	});
+	// This acknowledges the UI request, not the app's loading or payment result.
+	reply(entry, id, QJsonObject{ { u"requested"_q, true } });
 }
 
 void Manager::getHttp(const EntryPtr &entry, int id, const QJsonObject &params) {

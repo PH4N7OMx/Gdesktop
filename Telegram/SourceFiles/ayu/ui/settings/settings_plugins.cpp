@@ -49,18 +49,19 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 		AddLabel(box, info.package.name + u" · "_q + info.package.version);
 		AddLabel(box, tr::ayu_JellyPermissionNotice(tr::now));
 		if ((!info.package.permissions.readChats.isEmpty()
-			|| !info.package.permissions.historyChats.isEmpty())
+			|| !info.package.permissions.historyChats.isEmpty()
+			|| info.package.permissions.fileRead || info.package.permissions.moneyRead)
 			&& !info.package.permissions.httpHosts.isEmpty()) {
 			AddLabel(box, tr::ayu_JellyCombinedRisk(tr::now));
 		}
 		const auto checks = std::make_shared<std::map<QString, std::vector<Ui::Checkbox*>>>();
-		const auto addScopes = [&](const QString &title, const QString &key, const QStringList &values) {
+		const auto addScopes = [&](const QString &title, const QString &key, const QStringList &values, bool checked = true) {
 			if (values.isEmpty()) return;
 			AddLabel(box, title);
 			for (const auto &value : values) {
 				const auto check = box->addRow(object_ptr<Ui::Checkbox>(
-					box, value, true, st::defaultCheckbox));
-				check->setChecked(true);
+					box, value, checked, st::defaultCheckbox));
+				check->setChecked(checked);
 				(*checks)[key].push_back(check);
 			}
 		};
@@ -72,15 +73,25 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 		addScopes(tr::ayu_JellyEditChats(tr::now), u"editChats"_q, info.package.permissions.editChats);
 		addScopes(tr::ayu_JellyReactionChats(tr::now), u"reactionChats"_q, info.package.permissions.reactionChats);
 		addScopes(tr::ayu_JellyHistoryChats(tr::now), u"historyChats"_q, info.package.permissions.historyChats);
+		if (info.package.permissions.fileRead || info.package.permissions.fileWrite) {
+			AddLabel(box, tr::ayu_JellyFileNotice(tr::now));
+		}
+		if (!info.package.permissions.webviewBots.isEmpty()) {
+			AddLabel(box, tr::ayu_JellyMiniAppsNotice(tr::now));
+		}
+		addScopes(tr::ayu_JellyWebviewBots(tr::now), u"webviewBots"_q, info.package.permissions.webviewBots, false);
 		addScopes(tr::ayu_JellyHttpHosts(tr::now), u"httpHosts"_q, info.package.permissions.httpHosts);
 		for (const auto &[key, allowed, title] : {
 			std::tuple(u"storage"_q, info.package.permissions.storage, tr::ayu_JellyStorage(tr::now)),
 			std::tuple(u"timers"_q, info.package.permissions.timers, tr::ayu_JellyTimers(tr::now)),
 			std::tuple(u"ui"_q, info.package.permissions.ui, tr::ayu_JellyActions(tr::now)),
+			std::tuple(u"fileRead"_q, info.package.permissions.fileRead, tr::ayu_JellyFileRead(tr::now)),
+			std::tuple(u"fileWrite"_q, info.package.permissions.fileWrite, tr::ayu_JellyFileWrite(tr::now)),
+			std::tuple(u"moneyRead"_q, info.package.permissions.moneyRead, tr::ayu_JellyMoneyRead(tr::now)),
 		}) {
 			if (!allowed) continue;
 			const auto check = box->addRow(object_ptr<Ui::Checkbox>(box, title, true, st::defaultCheckbox));
-			check->setChecked(true);
+			check->setChecked(key == u"storage"_q || key == u"timers"_q || key == u"ui"_q);
 			(*checks)[key].push_back(check);
 		}
 		AddLabel(box, tr::ayu_JellyMessageLimit(tr::now)
@@ -103,6 +114,10 @@ void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo
 			grant.editChats = selected(u"editChats"_q, grant.editChats);
 			grant.reactionChats = selected(u"reactionChats"_q, grant.reactionChats);
 			grant.historyChats = selected(u"historyChats"_q, grant.historyChats);
+			grant.webviewBots = selected(u"webviewBots"_q, grant.webviewBots);
+			grant.fileRead = grant.fileRead && (*checks)[u"fileRead"_q][0]->checked();
+			grant.fileWrite = grant.fileWrite && (*checks)[u"fileWrite"_q][0]->checked();
+			grant.moneyRead = grant.moneyRead && (*checks)[u"moneyRead"_q][0]->checked();
 			grant.httpHosts = selected(u"httpHosts"_q, grant.httpHosts);
 			grant.storage = grant.storage && (*checks)[u"storage"_q][0]->checked();
 			grant.timers = grant.timers && (*checks)[u"timers"_q][0]->checked();
@@ -164,6 +179,10 @@ void ShowDetails(not_null<Window::SessionController*> controller, PluginInfo inf
 			AddLabel(box, tr::ayu_JellyEditChats(tr::now) + u": "_q + info.granted.editChats.join(u", "_q));
 			AddLabel(box, tr::ayu_JellyReactionChats(tr::now) + u": "_q + info.granted.reactionChats.join(u", "_q));
 			AddLabel(box, tr::ayu_JellyHistoryChats(tr::now) + u": "_q + info.granted.historyChats.join(u", "_q));
+			if (info.granted.fileRead) AddLabel(box, tr::ayu_JellyFileRead(tr::now));
+			if (info.granted.fileWrite) AddLabel(box, tr::ayu_JellyFileWrite(tr::now));
+			if (info.granted.moneyRead) AddLabel(box, tr::ayu_JellyMoneyRead(tr::now));
+			AddLabel(box, tr::ayu_JellyWebviewBots(tr::now) + u": "_q + info.granted.webviewBots.join(u", "_q));
 			AddLabel(box, tr::ayu_JellyHttpHosts(tr::now) + u": "_q + info.granted.httpHosts.join(u", "_q));
 		}
 		box->addButton(info.enabled ? tr::ayu_JellyDisable() : tr::ayu_JellyEnable(), [=] {

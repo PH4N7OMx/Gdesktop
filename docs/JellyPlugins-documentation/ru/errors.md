@@ -72,3 +72,18 @@ try {
 - `RESPONSE_LIMIT` — ответ истории не помещается в лимит кадра 2 МиБ; уменьши `limit`.
 
 Другие коды ошибок Telegram передаются без изменения. Все вызовы Telegram расходуют лимит `maxMessagesPerHour`, включая чтение истории.
+
+## Файлы и взаимодействие
+
+| Код | Значение |
+|---|---|
+| `USER_CANCELLED` | Пользователь отменил выбор файла |
+| `INTERACTION_BUSY` | Уже открыто окно выбора файла |
+| `INVALID_FILE_CONTENT_OR_NAME` | Неверный тип, размер или имя файла |
+| `FILE_UNAVAILABLE` | Запрещённый или недоступный путь |
+| `FILE_UNAVAILABLE_OR_TOO_LARGE`, `FILE_NOT_UTF8_OR_TOO_LARGE` | Файл недоступен, превышает 1 МиБ или содержит неверный UTF-8 |
+| `FILE_WRITE_FAILED` | Запись не завершена |
+| `INVALID_CURRENCY` | Нужны stars или ton |
+| `MINI_APP_UNAVAILABLE_OR_INVALID_PARAMETER` | Бот не загружен, нет главного Mini App, окна клиента или неверный startParam |
+
+Для выбора файлов тайм-аут операции не действует. Открытие окна ограничено паузой 30 секунд на аккаунт; `RATE_LIMIT` содержит `retryAfter`.

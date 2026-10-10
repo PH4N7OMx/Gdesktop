@@ -9592,8 +9592,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "ayu_JellyInstall" = "Install JellyPlugin";
 "ayu_JellyInstallNotice" = "The package will be saved without running. Replacing a plugin stops it and requires new permission approval.";
 "ayu_JellyPermissions" = "Plugin permissions";
-"ayu_JellyPermissionNotice" = "Allow only the capabilities you need. Device files, account keys and system commands are unavailable.";
-"ayu_JellyCombinedRisk" = "Reading chats together with access to websites allows the plugin to send message contents to those websites.";
+"ayu_JellyPermissionNotice" = "Allow only the capabilities you need. Account keys and system commands are unavailable.";
+"ayu_JellyCombinedRisk" = "Reading chats, files or balances together with HTTPS access allows the plugin to send those data to permitted websites.";
 "ayu_JellyReadChats" = "Read new messages in these chats";
 "ayu_JellySendChats" = "Send messages to these chats";
 "ayu_JellyHttpHosts" = "Access these HTTPS websites";
@@ -9679,3 +9679,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "ayu_JellyReactionChats" = "Set reactions in these chats";
 
 "ayu_JellyHistoryChats" = "Read history in these chats";
+
+"ayu_JellyFileRead" = "Read files I choose";
+"ayu_JellyFileWrite" = "Save files where I choose";
+"ayu_JellyMoneyRead" = "Read my Stars / Telegram TON balance";
+"ayu_JellyWebviewBots" = "Open Mini Apps of these bots";
+"ayu_JellyFileNotice" = "You choose a file for each read or save. The plugin receives its contents, but not its full path. Saved files may replace existing files.";
+"ayu_JellyMiniAppsNotice" = "Mini Apps receive your Telegram profile through Telegram. The plugin cannot read the app, sign in to it or approve payments.";

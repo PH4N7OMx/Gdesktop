@@ -141,3 +141,7 @@ if (message) {
 ```
 
 В примере нужны и `historyChats`, и `botChats`. Между запросами требуется пауза не меньше 3 секунд; обработай `RATE_LIMIT` и `retryAfter`. Все операции Telegram расходуют общий лимит аккаунта и лимит `maxMessagesPerHour` плагина, включая чтение истории.
+
+## Файлы, баланс и Mini Apps
+
+См. [отдельную страницу](account-and-files.md): `files.readText`, `files.writeText`, `money.getBalance`, `miniApps.open`.

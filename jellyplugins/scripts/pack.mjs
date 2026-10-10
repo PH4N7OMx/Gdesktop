@@ -4,7 +4,7 @@ import { resolve, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const allowedPermissions = new Set([
-  "readChats", "sendChats", "httpHosts", "joinChannels", "botChats", "attachmentChats", "editChats", "reactionChats", "historyChats", "storage", "timers", "ui", "maxMessagesPerHour",
+  "readChats", "sendChats", "httpHosts", "joinChannels", "botChats", "attachmentChats", "editChats", "reactionChats", "historyChats", "storage", "timers", "ui", "maxMessagesPerHour", "fileRead", "fileWrite", "moneyRead", "webviewBots",
 ]);
 
 export function validateManifest(manifest) {
@@ -15,11 +15,11 @@ export function validateManifest(manifest) {
     || typeof manifest.permissions !== "object") throw new Error("Invalid manifest");
   for (const [key, value] of Object.entries(manifest.permissions)) {
     if (!allowedPermissions.has(key)) throw new Error(`Unknown permission: ${key}`);
-    if (["readChats", "sendChats", "httpHosts", "joinChannels", "botChats", "attachmentChats", "editChats", "reactionChats", "historyChats"].includes(key)) {
+    if (["readChats", "sendChats", "httpHosts", "joinChannels", "botChats", "attachmentChats", "editChats", "reactionChats", "historyChats", "webviewBots"].includes(key)) {
       if (!Array.isArray(value) || value.length > 32) throw new Error(`Invalid scope: ${key}`);
       const pattern = key === "httpHosts"
         ? /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/
-        : /^-?[1-9][0-9]{0,15}$/;
+        : key === "webviewBots" ? /^[1-9][0-9]{0,15}$/ : /^-?[1-9][0-9]{0,15}$/;
       if (value.some(item => typeof item !== "string" || !pattern.test(item)
         || (key === "httpHosts" && /\.(localhost|local|internal)$/.test(item))))
         throw new Error(`Invalid scope: ${key}`);

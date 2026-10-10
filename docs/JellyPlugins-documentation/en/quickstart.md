@@ -4,12 +4,17 @@ Get the `jellyplugins` folder from the repository or `JellyPlugins-sdk.zip`. Ins
 
 ```powershell
 npm ci --ignore-scripts
-npm run check
-npm test
 npm run pack:hello
 ```
 
 Install `examples/hello/dist/jelly.hello.jelly` through GummyGram → JellyPlugins. The example adds an action button, stores a counter and logs its value.
+
+
+## Check the result
+
+Enable the installed example and approve `ui` and `storage`. The supplied sample adds a button labeled `Проверить плагин` (Check plugin). Press it and open the action log: expect `Кнопка нажата 1 раз` (Button pressed once). Further presses increase the persisted counter.
+
+If nothing appears, open [troubleshooting](debugging.md).
 
 ## Create a plugin
 
@@ -41,3 +46,32 @@ node scripts/pack.mjs examples/my-plugin
 Use relative imports for additional files. All dependencies must bundle into plain JavaScript. Node.js, DOM and native modules are unavailable in plugins. The client executes packaged JavaScript rather than TypeScript source.
 
 Catch asynchronous errors and inspect `jelly.log()` in the plugin card. Register handlers inside activation rather than sending messages at module load time.
+
+## Project layout
+
+```text
+jellyplugins/
+├── sdk/index.d.ts          API types
+├── scripts/pack.mjs        packer
+└── examples/
+    ├── sdk-types.ts        types import for examples
+    └── my-plugin/
+        ├── manifest.json  name, version and permissions
+        ├── index.ts       source
+        └── dist/*.jelly    installable package
+```
+
+## SDK commands
+
+| Command | Result |
+|---|---|
+| `npm run check` | Type checking without creating a package |
+| `node scripts/pack.mjs examples/my-plugin` | Pack your plugin |
+| `npm run pack:hello` | Button example |
+| `npm run pack:feed` | RSS → Telegram example |
+| `npm run pack:giveaways` | Message observation example |
+| `npm test` | SDK and example checks |
+
+Run `npm run check` separately before installing your plugin: the packer transpiles TypeScript but does not replace type checking. Repack and reinstall after code changes. There is currently no hot reload or watch command.
+
+Next: [cheat sheet](cheat-sheet.md), [lifecycle](lifecycle.md), [API reference](api.md).

@@ -20,6 +20,10 @@ struct Permissions {
 	QStringList reactionChats;
 	QStringList historyChats;
 	QStringList httpHosts;
+	QStringList webviewBots;
+	bool fileRead = false;
+	bool fileWrite = false;
+	bool moneyRead = false;
 	bool storage = false;
 	bool timers = false;
 	bool ui = false;

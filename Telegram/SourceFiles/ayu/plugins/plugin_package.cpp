@@ -1,5 +1,6 @@
 #include "ayu/plugins/plugin_package.h"
 
+#include <algorithm>
 #include <QCryptographicHash>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -51,6 +52,7 @@ bool ParsePermissions(const QJsonObject &json, Permissions &result, QString &err
 		u"joinChannels"_q, u"botChats"_q, u"attachmentChats"_q,
 		u"editChats"_q, u"reactionChats"_q, u"historyChats"_q,
 		u"storage"_q, u"timers"_q, u"ui"_q, u"maxMessagesPerHour"_q,
+		u"webviewBots"_q, u"fileRead"_q, u"fileWrite"_q, u"moneyRead"_q,
 	};
 	for (auto i = json.begin(); i != json.end(); ++i) {
 		if (!allowed.contains(i.key())) {
@@ -67,11 +69,15 @@ bool ParsePermissions(const QJsonObject &json, Permissions &result, QString &err
 		|| !ParseList(json, u"editChats"_q, parsed.editChats, false)
 		|| !ParseList(json, u"reactionChats"_q, parsed.reactionChats, false)
 		|| !ParseList(json, u"historyChats"_q, parsed.historyChats, false)
-		|| !ParseList(json, u"httpHosts"_q, parsed.httpHosts, true)) {
+		|| !ParseList(json, u"httpHosts"_q, parsed.httpHosts, true)
+		|| !ParseList(json, u"webviewBots"_q, parsed.webviewBots, false)
+		|| std::any_of(parsed.webviewBots.begin(), parsed.webviewBots.end(),
+			[](const QString &id) { return id.startsWith('-'); })) {
 		error = u"Invalid chat or HTTPS host scope."_q;
 		return false;
 	}
-	for (const auto &key : { u"storage"_q, u"timers"_q, u"ui"_q }) {
+	for (const auto &key : { u"storage"_q, u"timers"_q, u"ui"_q,
+		u"fileRead"_q, u"fileWrite"_q, u"moneyRead"_q }) {
 		if (json.contains(key) && !json[key].isBool()) {
 			error = u"Permission must be boolean: "_q + key;
 			return false;
@@ -80,6 +86,9 @@ bool ParsePermissions(const QJsonObject &json, Permissions &result, QString &err
 	parsed.storage = json[u"storage"_q].toBool();
 	parsed.timers = json[u"timers"_q].toBool();
 	parsed.ui = json[u"ui"_q].toBool();
+	parsed.fileRead = json[u"fileRead"_q].toBool();
+	parsed.fileWrite = json[u"fileWrite"_q].toBool();
+	parsed.moneyRead = json[u"moneyRead"_q].toBool();
 	const auto limit = json.value(u"maxMessagesPerHour"_q).toDouble(20);
 	if ((json.contains(u"maxMessagesPerHour"_q) && !json[u"maxMessagesPerHour"_q].isDouble())
 		|| limit < 1 || limit > 60 || limit != int(limit)) {
@@ -105,6 +114,10 @@ QJsonObject PermissionsJson(const Permissions &permissions) {
 		{ u"storage"_q, permissions.storage },
 		{ u"timers"_q, permissions.timers },
 		{ u"ui"_q, permissions.ui },
+		{ u"fileRead"_q, permissions.fileRead },
+		{ u"fileWrite"_q, permissions.fileWrite },
+		{ u"moneyRead"_q, permissions.moneyRead },
+		{ u"webviewBots"_q, QJsonArray::fromStringList(permissions.webviewBots) },
 		{ u"maxMessagesPerHour"_q, permissions.maxMessagesPerHour },
 	};
 }
@@ -122,6 +135,10 @@ bool IsSubset(const Permissions &grant, const Permissions &requested) {
 		&& (!grant.storage || requested.storage)
 		&& (!grant.timers || requested.timers)
 		&& (!grant.ui || requested.ui)
+		&& (!grant.fileRead || requested.fileRead)
+		&& (!grant.fileWrite || requested.fileWrite)
+		&& (!grant.moneyRead || requested.moneyRead)
+		&& ListSubset(grant.webviewBots, requested.webviewBots)
 		&& grant.maxMessagesPerHour <= requested.maxMessagesPerHour;
 }
 

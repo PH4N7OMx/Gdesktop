@@ -27,7 +27,7 @@ test("API has no native object and is immutable", async () => {
   const env = await environment(jelly => { api = jelly; });
   assert.equal(vm.runInContext("typeof __jellyNative", env.context), "undefined");
   assert.ok(Object.isFrozen(api));
-  for (const key of ["telegram", "storage", "http", "timers", "ui"]) assert.ok(Object.isFrozen(api[key]));
+  for (const key of ["telegram", "storage", "http", "timers", "ui", "files", "money", "miniApps"]) assert.ok(Object.isFrozen(api[key]));
   assert.equal(api.exec, undefined);
   assert.equal(api.fs, undefined);
 });
@@ -113,4 +113,44 @@ test("extended Telegram methods preserve IDs and structured failures", async () 
     { accepted: true, messageId: 99 }, { error: "PERMISSION_DENIED", retryAfter: 0 },
     { error: "FLOOD_WAIT", retryAfter: 60 },
   ]);
+});
+
+
+test("selected files, balances and Mini Apps preserve consent errors and exact amounts", async () => {
+  let api;
+  const env = await environment(jelly => { api = jelly; });
+  const outcomes = [api.files.readText(), api.files.writeText("hello"),
+    api.money.getBalance(), api.money.getBalance("ton"),
+    api.miniApps.open("123", { startParam: "test", botId: "forged" })]
+    .map(p => p.catch(e => ({ code: e.code, retryAfter: e.retryAfter })));
+  assert.deepEqual(env.frames.map(f => [f.method, f.params]), [
+    ["files.readText", {}], ["files.writeText", { text: "hello", suggestedName: "export.txt" }],
+    ["money.getBalance", { currency: "stars" }], ["money.getBalance", { currency: "ton" }],
+    ["miniApps.open", { startParam: "test", botId: "123" }],
+  ]);
+  await env.dispatch({ type: "result", id: 5, value: { requested: true } });
+  await env.dispatch({ type: "result", id: 4, error: "PERMISSION_DENIED" });
+  await env.dispatch({ type: "result", id: 3, value: { currency: "stars", whole: "9007199254740993", nanos: 123 } });
+  await env.dispatch({ type: "result", id: 2, value: { name: "chosen.txt" } });
+  await env.dispatch({ type: "result", id: 1, error: "USER_CANCELLED" });
+  assert.deepEqual(await Promise.all(outcomes), [
+    { code: "USER_CANCELLED", retryAfter: 0 }, { name: "chosen.txt" },
+    { currency: "stars", whole: "9007199254740993", nanos: 123 },
+    { code: "PERMISSION_DENIED", retryAfter: 0 }, { requested: true },
+  ]);
+});
+
+
+test("binary file API uses base64 with user-selected output names", async () => {
+  let api;
+  const env = await environment(jelly => { api = jelly; });
+  const read = api.files.readFile();
+  const write = api.files.writeFile("AAEC/w==", "image.bin");
+  assert.deepEqual(env.frames.map(f => [f.method, f.params]), [
+    ["files.readFile", {}], ["files.writeFile", { base64: "AAEC/w==", suggestedName: "image.bin" }],
+  ]);
+  await env.dispatch({ type: "result", id: 1, value: { name: "selected.bin", base64: "AAEC/w==" } });
+  await env.dispatch({ type: "result", id: 2, value: { name: "user-renamed.bin" } });
+  assert.deepEqual(await read, { name: "selected.bin", base64: "AAEC/w==" });
+  assert.deepEqual(await write, { name: "user-renamed.bin" });
 });

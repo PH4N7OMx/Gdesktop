@@ -45,6 +45,18 @@
       sendMessage: (chatId, text, options = {}) =>
         request("telegram.sendMessage", Object.assign({}, options, { chatId, text })),
     }),
+    files: Object.freeze({
+      readFile: () => request("files.readFile"),
+      writeFile: (base64, suggestedName = "export.bin") => request("files.writeFile", { base64, suggestedName }),
+      readText: () => request("files.readText"),
+      writeText: (text, suggestedName = "export.txt") => request("files.writeText", { text, suggestedName }),
+    }),
+    money: Object.freeze({
+      getBalance: (currency = "stars") => request("money.getBalance", { currency }),
+    }),
+    miniApps: Object.freeze({
+      open: (botId, options = {}) => request("miniApps.open", Object.assign({}, options, { botId })),
+    }),
     http: Object.freeze({ get: url => request("http.get", { url }) }),
     storage: Object.freeze({
       get: key => request("storage.get", { key }),

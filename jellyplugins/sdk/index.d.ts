@@ -43,6 +43,18 @@ export interface JellyAPI {
       options?: { replyTo?: number; silent?: boolean }):
       Promise<{ accepted: boolean; messageId: number }>;
   };
+  readonly files: {
+    readFile(): Promise<{ name: string; base64: string }>;
+    writeFile(base64: string, suggestedName?: string): Promise<{ name: string }>;
+    readText(): Promise<{ name: string; text: string }>;
+    writeText(text: string, suggestedName?: string): Promise<{ name: string }>;
+  };
+  readonly money: {
+    getBalance(currency?: "stars" | "ton"): Promise<{ currency: "stars" | "ton"; whole: string; nanos: number }>;
+  };
+  readonly miniApps: {
+    open(botId: string, options?: { startParam?: string }): Promise<{ requested: boolean }>;
+  };
   readonly http: {
     get(url: string): Promise<{ status: number; text: string }>;
   };
@@ -73,6 +85,10 @@ export interface Permissions {
   reactionChats?: string[];
   historyChats?: string[];
   httpHosts?: string[];
+  webviewBots?: string[];
+  fileRead?: boolean;
+  fileWrite?: boolean;
+  moneyRead?: boolean;
   storage?: boolean;
   timers?: boolean;
   ui?: boolean;

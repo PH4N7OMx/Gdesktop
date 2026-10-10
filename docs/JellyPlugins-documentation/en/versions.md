@@ -2,7 +2,7 @@
 
 ## API 1
 
-JellyPlugins uses TypeScript/JavaScript and `.jelly` packages. Legacy `.jellyplugin` files can still be imported.
+JellyPlugins uses TypeScript/JavaScript and `.jelly` packages.
 
 - New message events, text sends, HTTPS GET, JSON storage, timers and UI actions.
 - Separate permissions for joining channels, callback buttons, attachment copying, editing outgoing messages, reactions and history.

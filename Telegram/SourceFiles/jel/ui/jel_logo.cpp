@@ -101,7 +101,7 @@ void loadIcons() {
 }
 
 QImage loadPreview(const QString &name) {
-	return CreateImage(name, Size(st::iconPickerIconSize), st::iconPickerImagePadding);
+	return CreateImage(name, Size(st::iconPickerIconSize));
 }
 
 QString currentAppLogoName() {

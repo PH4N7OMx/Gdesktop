@@ -90,6 +90,7 @@ void IconPicker::paintEvent(QPaintEvent *e) {
 
 	const auto cell = cellWidth();
 	const auto iconSize = st::iconPickerIconSize;
+	const auto contentSize = iconSize + st::iconPickerImagePadding * 2;
 
 	for (int row = 0; row < rows; row++) {
 		const auto columns = std::min(kColumns, static_cast<int>(icons.size()) - row * kColumns);
@@ -113,7 +114,7 @@ void IconPicker::paintEvent(QPaintEvent *e) {
 				opacity = _wasSelected.isEmpty() ? 1.0f : _animation.value(1.0f);
 			}
 
-			const auto x = i * cell + (cell - iconSize) / 2;
+			const auto x = i * cell + (cell - contentSize) / 2;
 			const auto y = row * cell;
 
 			drawIcon(p, icon, x, y, opacity);
@@ -127,17 +128,17 @@ void IconPicker::mousePressEvent(QMouseEvent *e) {
 
 	const auto cell = cellWidth();
 	const auto iconSize = st::iconPickerIconSize;
+	const auto contentSize = iconSize + st::iconPickerImagePadding * 2;
 
 	for (int row = 0; row < rows; row++) {
 		const auto columns = std::min(kColumns, static_cast<int>(icons.size()) - row * kColumns);
 		for (int i = 0; i < columns; i++) {
 			auto const idx = i + row * kColumns;
 
-			const auto x = i * cell + (cell - iconSize) / 2;
+			const auto x = i * cell + (cell - contentSize) / 2;
 			const auto y = row * cell;
 
-			if (e->pos().x() >= x && e->pos().x() <= x + iconSize
-				&& e->pos().y() >= y && e->pos().y() <= y + iconSize) {
+			if (QRect(x, y, contentSize, contentSize).contains(e->pos())) {
 				const auto &iconName = icons[idx];
 				if (iconName.isEmpty()) {
 					break;

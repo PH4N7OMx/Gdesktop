@@ -12,6 +12,7 @@
 #include "ui/layers/generic_box.h"
 #include "ui/widgets/labels.h"
 #include "styles/style_boxes.h"
+#include "styles/style_layers.h"
 #include "data/data_chat_participant_status.h"
 #include "data/data_channel.h"
 #include "data/data_peer.h"
@@ -29,7 +30,11 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QFileDialog>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QStringDecoder>
+#else
+#include <QTextCodec>
+#endif
 #include <QHostAddress>
 #include <QHostInfo>
 #include <QJsonArray>
@@ -1230,9 +1235,17 @@ void Manager::fileAction(const EntryPtr &entry, int id, const QString &method, c
 				});
 				return;
 			}
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 			auto decoder = QStringDecoder(QStringDecoder::Utf8, QStringConverter::Flag::Stateless);
 			const auto text = QString(decoder(content));
-			if (decoder.hasError()) {
+			const auto invalidUtf8 = decoder.hasError();
+#else
+			auto state = QTextCodec::ConverterState();
+			const auto text = QTextCodec::codecForName("UTF-8")->toUnicode(
+				content.constData(), content.size(), &state);
+			const auto invalidUtf8 = state.invalidChars || state.remainingChars;
+#endif
+			if (invalidUtf8) {
 				reply(entry, id, {}, u"FILE_NOT_UTF8_OR_TOO_LARGE"_q);
 				return;
 			}

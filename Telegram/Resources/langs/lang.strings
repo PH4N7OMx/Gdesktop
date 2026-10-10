@@ -9589,7 +9589,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "jel_PluginNoAuthor" = "Unknown Author";
 "jel_PluginsNotAvailable" = "This plugin format is not supported by GummyGram. Install a .jellyplugin package from the Plugins settings.";
 
-"jel_JellyPlugins" = "JellyPlugins";
+"jel_JellyPlugins" = "Plugins";
 "jel_JellyInstall" = "Install JellyPlugin";
 "jel_JellyInstallNotice" = "The package will be saved without running. Replacing a plugin stops it and requires new permission approval.";
 "jel_JellyPermissions" = "Plugin permissions";

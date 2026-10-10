@@ -102,7 +102,7 @@ void BuildCategories(SectionBuilder &builder) {
 	builder.addSubsectionTitle(tr::jel_CategoriesHeader());
 
 	builder.addSectionButton({
-		.title = rpl::single(QString("Jel")),
+		.title = rpl::single(u"Gummy"_q),
 		.targetSection = JelGhost::Id(),
 		.icon = { &st::menuIconGroupReactions },
 	});

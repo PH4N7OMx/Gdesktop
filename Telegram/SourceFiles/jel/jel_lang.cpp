@@ -92,7 +92,7 @@ void JelLanguage::loadCachedLanguage() {
 		{ u"jel_JellySettingsNotice"_q, u"Измени настройки ниже. Сохранение останавливает плагин; включи его снова для применения изменений."_q },
 		{ u"jel_JellyInvalidSettings"_q, u"Проверь выделенные настройки и допустимые значения."_q },
 		{ u"jel_JellyEditJson"_q, u"Редактировать JSON"_q },
-		{ u"jel_JellyPlugins"_q, u"JellyPlugins"_q },
+		{ u"jel_JellyPlugins"_q, u"Плагины"_q },
 		{ u"jel_JellyInstall"_q, u"Установить JellyPlugin"_q },
 		{ u"jel_JellyInstallNotice"_q, u"Пакет будет сохранён без запуска. Замена плагина останавливает его и требует повторного разрешения доступа."_q },
 		{ u"jel_JellyPermissions"_q, u"Разрешения плагина"_q },

@@ -102,6 +102,18 @@ class PrepareOptionsTests(unittest.TestCase):
         self.assertIn('git apply "', filtered)
         self.assertIn('qt5-static-angle.patch"\nif errorlevel 1 exit /b 1', filtered)
 
+    def test_windows_qt6_keeps_js_engine_without_quick_controls(self):
+        for platform in ('win32', 'win64', 'winarm'):
+            recipes = [commands for name, commands in stage_commands(platform, ('skip-debug',))
+                if name == 'qt_6.11.2' and '-feature-c++20' in commands]
+            self.assertEqual(len(recipes), 1)
+            with self.subTest(platform=platform):
+                commands = recipes[0]
+                self.assertIn('-no-feature-qml-animation', commands)
+                self.assertIn('-no-feature-qml-labs', commands)
+                self.assertNotIn('-skip qtdeclarative', commands)
+                self.assertRegex(commands, r'git submodule update[^\n]*\bqtdeclarative\b')
+
     def test_plugin_engine_dependency_is_prepared(self):
         telegram = SOURCE.parents[2]
         self.assertIn('#include <QJSEngine>',

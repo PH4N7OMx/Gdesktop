@@ -1853,6 +1853,8 @@ win:
         -static ^
         -static-runtime ^
         -feature-c++20 ^
+        -no-feature-qml-animation ^
+        -no-feature-qml-labs ^
         -openssl linked ^
         -system-webp ^
         -system-zlib ^

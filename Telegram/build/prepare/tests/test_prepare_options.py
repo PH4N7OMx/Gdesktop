@@ -20,9 +20,10 @@ def functions(platform='win64', options=()):
         re=re, os=os, keysLoc='cache_keys',
         win=platform != 'mac', win32=platform == 'win32',
         win64=platform == 'win64', winarm=platform == 'winarm',
-        mac=platform == 'mac', options=options, qt='6.11.1',
+        mac=platform == 'mac', options=options, qt='6.11.2',
         branch='v$QT', rustToolchain='1.90.0', modifiedEnv={},
         scriptPath=str(SOURCE.parent),
+        qtAngleCmake=str(SOURCE.parents[3] / 'cmake/external/angle/qt.cmake'),
         computeFileHash=lambda path: hashlib.sha1(Path(path).read_bytes()).hexdigest(),
         subprocess=types.SimpleNamespace(run=lambda *a, **k:
             types.SimpleNamespace(stdout='Python 3.12.10')),
@@ -56,6 +57,37 @@ def stage_commands(platform, options=()):
 
 
 class PrepareOptionsTests(unittest.TestCase):
+    def test_windows_qt_selection_matches_upstream_default(self):
+        source = SOURCE.parents[1] / 'qt_version.py'
+        for arch, arguments, expected in (
+                ('x64', [], '6.11.2'),
+                ('x86', [], '6.11.2'),
+                ('x64', ['qt5'], '5.15.19'),
+                ('arm', ['qt5'], '6.11.2')):
+            environment = {}
+            namespace = dict(
+                sys=types.SimpleNamespace(platform='win32', argv=arguments),
+                os=types.SimpleNamespace(environ=environment))
+            tree = ast.parse(source.read_text(encoding='utf-8'))
+            function = next(node for node in tree.body if isinstance(node, ast.FunctionDef))
+            exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), 'exec'), namespace)
+            with self.subTest(arch=arch, arguments=arguments), contextlib.redirect_stdout(io.StringIO()):
+                namespace['resolve'](arch)
+                self.assertEqual(environment['QT'], expected)
+
+    def test_qt6_angle_cache_tracks_cmake_integration(self):
+        for platform in ('win32', 'win64'):
+            namespace = functions(platform, ('skip-debug',))
+            recipe = next(node for node in ast.walk(TREE)
+                if isinstance(node, ast.Call) and getattr(node.func, 'id', '') == 'stage'
+                and 'QT_ANGLE_CMAKE' in ast.unparse(node))
+            commands = eval(compile(ast.Expression(recipe.args[1]), str(SOURCE), 'eval'), namespace)
+            filtered, dependencies, version = namespace['filterByPlatform'](commands)
+            with self.subTest(platform=platform):
+                self.assertIn(namespace['computeFileHash'](namespace['qtAngleCmake']), version)
+                self.assertIn('qt6_windows7/*.patch', dependencies)
+                self.assertIn('CMAKE_PROJECT_QtBase_INCLUDE', filtered)
+
     def test_qt5_patch_invalidates_the_preparation_cache(self):
         recipe = next(node for node in ast.walk(TREE)
             if isinstance(node, ast.Call) and getattr(node.func, 'id', '') == 'stage'

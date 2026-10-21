@@ -34,6 +34,23 @@ def main():
             if not relative or not (qrc.parent / relative).is_file():
                 errors.append(f"Missing resource in {qrc.name}: {relative}")
 
+    language_keys = set()
+    for strings in (telegram / "Resources" / "langs").glob("*.strings"):
+        language_keys.update(re.findall(
+            r'^"([^"#]+)(?:#[^"]+)?"\s*=',
+            strings.read_text(encoding="utf-8"), re.M))
+    tokens = re.compile(
+        r"\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|//[^\n]*|/\*.*?\*/", re.S)
+    for source in (telegram / "SourceFiles").rglob("*"):
+        if source.suffix not in (".cpp", ".h", ".mm", ".m", ".c"):
+            continue
+        code = tokens.sub(
+            lambda match: "" if match[0].startswith(("//", "/*")) else match[0],
+            source.read_text(encoding="utf-8"))
+        referenced = set(re.findall(r'\btr::((?:lng_|jel_)\w+)\s*\(', code))
+        for key in sorted(referenced - language_keys):
+            errors.append(f"Missing language key in {source.relative_to(telegram)}: {key}")
+
     version = dict(
         line.split(None, 1)
         for line in (telegram / "build" / "version").read_text().splitlines()

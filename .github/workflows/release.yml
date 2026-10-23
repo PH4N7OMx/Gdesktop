@@ -452,6 +452,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python Telegram/build/prepare/tests/test_prepare_options.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python Telegram/build/tests/test_patch_cmake_helpers.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python Telegram/build/tests/test_patch_codegen.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python Telegram/build/patch_codegen.py

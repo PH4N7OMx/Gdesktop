@@ -13,6 +13,10 @@ sys.path.append(scriptPath + '/../cmake')
 import run_cmake
 sys.path.append(scriptPath + '/build')
 import qt_version
+import patch_cmake_helpers
+
+if sys.platform == 'win32':
+    patch_cmake_helpers.main()
 
 executePath = os.getcwd()
 def finish(code):

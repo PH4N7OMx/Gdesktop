@@ -99,7 +99,8 @@ void Player::checkNextFrameRender() {
 	const auto now = crl::now();
 	if (now < _nextFrameTime) {
 		if (!_renderFrameTimer.isActive()) {
-			_renderFrameTimer.callOnce(_nextFrameTime - now);
+			_renderFrameTimer.callOnce(
+				std::min(_nextFrameTime - now, kDurationMax - 1));
 		}
 	} else {
 		_renderFrameTimer.cancel();
@@ -897,6 +898,10 @@ rpl::producer<Update, Error> Player::updates() const {
 
 rpl::producer<bool> Player::fullInCache() const {
 	return _fullInCache.events();
+}
+
+std::vector<std::pair<float64, float64>> Player::bufferedRanges() const {
+	return _file->bufferedRanges();
 }
 
 int64 Player::fileSize() const {

@@ -1,0 +1,1993 @@
+{
+  "repository": "https://github.com/TelegramMessenger/telegram-macos",
+  "revision": "561169337e838c3281f7cfe24652757a5b522df9",
+  "license": "GPL-2.0",
+  "assets": [
+    {
+      "name": "attach",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_ChatAttach.imageset/ic_attach@2x.png",
+      "sha256": "2e82e99c2084863e7be9b223f2575acd11a7ec612de6e3897681d2a2bccf81aa",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        40,
+        40
+      ]
+    },
+    {
+      "name": "send",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_SendMessage.imageset/ic_send@2x (1).png",
+      "sha256": "e1daa20b404dcbd5c6db77d6150c640edd83cf1ce0bda34241a4539b50738680",
+      "size": [
+        25.0,
+        25.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "emoji",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_Entertainments.imageset/ic_emoji@2x.png",
+      "sha256": "73c9198b0070dc957ec9da73fcd7d870b18da5f16679eb2539a12cb90a174023",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        40,
+        40
+      ]
+    },
+    {
+      "name": "search",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_SearchChatMessages.imageset/ic_search@2x.png",
+      "sha256": "43039b3fdc8f1fc3d5b5bdfb1ebc73b71c850354f1c16efb3e457bd488ecf200",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        32,
+        32
+      ]
+    },
+    {
+      "name": "call",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_callNavigationHeader.imageset/ic_call@2x.png",
+      "sha256": "229aba9fd36f9ccd3e5641061ffa72ed5defdf73b53b6f9aaea42f83093b3248",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        32,
+        32
+      ]
+    },
+    {
+      "name": "back",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_ChatNavigationBack.imageset/ic_back@2x.png",
+      "sha256": "683101aff193d6dc5d8827a71aa733661d67c15d59cf0bccf800b9a7fcbe1576",
+      "size": [
+        8.0,
+        14.0
+      ],
+      "canvas": [
+        16,
+        16
+      ]
+    },
+    {
+      "name": "more",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_ChatActions.imageset/ic_more@2x.png",
+      "sha256": "d1fc3276ad010f9ca9fbc65b5c084e9aa58c525f8260b1e034fdb0f7f5f0e577",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        32,
+        32
+      ]
+    },
+    {
+      "name": "settings",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_Entertainment_Settings.imageset/Settings@2x.png",
+      "sha256": "e52df8cd94bbb02cefdac11b7ad54630183957f4a7cab163bd21fc94c7ad2709",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "profile",
+      "source": "Telegram-Mac/Assets.xcassets/menu_open_profile.imageset/menu_open_profile@2x.png",
+      "sha256": "d0168373a4362f0431928b9277cd161c8649ec7ab6bc9215718a91f057251e3b",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "notifications",
+      "source": "Telegram-Mac/Assets.xcassets/menu_unmuted.imageset/menu_unmuted@2x.png",
+      "sha256": "1c66f6c151011b1150bae9eee09ccd70f61fb15439683dd2c990bacd754e671f",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "appearance",
+      "source": "Telegram-Mac/Assets.xcassets/menu_change_colors.imageset/menu_change_colors@2x.png",
+      "sha256": "186be544e7232481b567d7d4205f151e84b387fcab8c3025ecf7a40c906ab010",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "reply",
+      "source": "Telegram-Mac/Assets.xcassets/menu_reply.imageset/menu_reply@2x.png",
+      "sha256": "135a6e3fdf78f9ae0f2cc4fcb41aba3183fe7eda59eb2da9e4b1c3c479453ad7",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "copy",
+      "source": "Telegram-Mac/Assets.xcassets/menu_copy.imageset/img@2x.png",
+      "sha256": "06832747afc0d289b7263930ca32896149966aaa0681a8aee8e2338d549475e3",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "forward",
+      "source": "Telegram-Mac/Assets.xcassets/menu_forward.imageset/menu_forward@2x.png",
+      "sha256": "9d49c91e6e7ef5a0b2855c1d188873717dff5d27d7b8b22ead92663fb39bdb69",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "delete",
+      "source": "Telegram-Mac/Assets.xcassets/menu_delete.imageset/menu_delete@2x.png",
+      "sha256": "cb82194f58ec3bf814e4091b5f26aa5f9d92546864b541676e0ca742b5e8575c",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "edit",
+      "source": "Telegram-Mac/Assets.xcassets/menu_edit.imageset/menu_edit@2x.png",
+      "sha256": "47177938e986c6bd595806988e819182351b7c7e21b1765f2323ec48e4fa9ae6",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "pin",
+      "source": "Telegram-Mac/Assets.xcassets/menu_pin.imageset/menu_pin@2x.png",
+      "sha256": "80ee92e79a84a06e393ee1c76ddc70ad3b19d18c4ffca2ef28990766f8e7ef05",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "archive",
+      "source": "Telegram-Mac/Assets.xcassets/menu_archive.imageset/menu_archive@2x.png",
+      "sha256": "6e19103950c6d4b6da1315da00391f1e1c32e563c65199ef6b1e635819065c77",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "settings-profile",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_SettingsProfile.imageset/ic_prof@2x.png",
+      "sha256": "45cdca8e0d2ef32cf11fffa806aaaa9e05ad729e9a0ba08c81f5f14e56a36e19",
+      "usage": "full-color-settings"
+    },
+    {
+      "name": "settings-notifications",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_SettingsNotifications.imageset/ic_notifications@2x.png",
+      "sha256": "3d2c6830c5a10da151f33373363fbfcedb90d50e473ce44cd1337138e627591a",
+      "usage": "full-color-settings"
+    },
+    {
+      "name": "settings-privacy",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_SettingsSecurity.imageset/ic_privacy@2x.png",
+      "sha256": "07246235696680a3749cdfc7bd5e1b84a3dca2c9b11a91518e3b6909c433cd81",
+      "usage": "full-color-settings"
+    },
+    {
+      "name": "settings-appearance",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_AppearanceSettings.imageset/ic_theme@2x.png",
+      "sha256": "469cc00d915f86166cc1b03991ac58b48ab2151126269fc87a685c0f8285d9f5",
+      "usage": "full-color-settings"
+    },
+    {
+      "name": "settings-palette",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_AppearanceSettings.imageset/ic_theme@2x.png",
+      "sha256": "469cc00d915f86166cc1b03991ac58b48ab2151126269fc87a685c0f8285d9f5",
+      "usage": "full-color-settings"
+    },
+    {
+      "name": "settings-folders",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_SettingsFilters.imageset/ic_filters@2x.png",
+      "sha256": "3de64f0a456e3cdfe3c281f5e20903814fe3888a9dc5e2daa7579b6fcea3f74a",
+      "usage": "full-color-settings"
+    },
+    {
+      "name": "settings-advanced",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_SettingsGeneral.imageset/ic_general@2x.png",
+      "sha256": "6fe2f79988a7a48db33851e3cdfa9f497520871b701ae93758803f4f95975cd8",
+      "usage": "full-color-settings"
+    },
+    {
+      "name": "settings-language",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_SettingsLanguage.imageset/ic_lang@2x.png",
+      "sha256": "e76546d97e05b557bd8035a7f9c39fd4befd4da48f13f5c5f4cf8d714b66a6bd",
+      "usage": "full-color-settings"
+    },
+    {
+      "name": "navchats",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_TabChatList.imageset/ic_chats@2x.png",
+      "sha256": "caadee5af30caa305aa23cbe5421896640b78522c4d2f876c910a79bf2fbb5af",
+      "canvas": [
+        48,
+        32
+      ]
+    },
+    {
+      "name": "navcontacts",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_TabContacts.imageset/ic_contacts@2x.png",
+      "sha256": "cd1f9982d2feda194f7edb4ae20a7377caa81862e19b9f247d744d54d69906b4",
+      "canvas": [
+        48,
+        32
+      ]
+    },
+    {
+      "name": "navcalls",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_TabRecentCalls.imageset/ic_calls@2x.png",
+      "sha256": "e761667a4ba96d39c29519f5efff8fbd37ddfd71de6b97abd3c854d13893d0e8",
+      "canvas": [
+        48,
+        32
+      ]
+    },
+    {
+      "name": "navsettings",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_TabSettings.imageset/ic_settings@2x.png",
+      "sha256": "1c01c6c3ab0409f2796e3f9b81e9cabdfb3e920ebc458235cc7fe45e1726494b",
+      "canvas": [
+        48,
+        32
+      ]
+    },
+    {
+      "name": "menuunpin",
+      "source": "Telegram-Mac/Assets.xcassets/menu_unpin.imageset/menu_unpin@2x.png",
+      "sha256": "f778a89e2625934a17f3a9426d36bbeab52bd73cce9463cc40107b652b680e08",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuunarchive",
+      "source": "Telegram-Mac/Assets.xcassets/menu_unarchive.imageset/menu_unarchive@2x.png",
+      "sha256": "9c1f0df46ee6d16e0224c6db479a21b8a4ef57fd64884254ff1c8625b32422c4",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menumarkread",
+      "source": "Telegram-Mac/Assets.xcassets/menu_read.imageset/menu_read@2x.png",
+      "sha256": "dd040eefd5b6f147ea5978d6d0735740c81c7e66c500342b22d54cc52ddbb60f",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menumarkunread",
+      "source": "Telegram-Mac/Assets.xcassets/menu_unread.imageset/menu_unread@2x.png",
+      "sha256": "fbebd45be017194eee22ac216f65ed1b2ae64f13680f91ee542da4ffbb724573",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menumute",
+      "source": "Telegram-Mac/Assets.xcassets/menu_mute.imageset/menu_mute@2x.png",
+      "sha256": "807ba5fedf547fe7e3e4200167288d86aec3bcb720ba5e47aacd276e0eccfac7",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuunmute",
+      "source": "Telegram-Mac/Assets.xcassets/menu_unmuted.imageset/menu_unmuted@2x.png",
+      "sha256": "1c66f6c151011b1150bae9eee09ccd70f61fb15439683dd2c990bacd754e671f",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menumutefor",
+      "source": "Telegram-Mac/Assets.xcassets/menu_mute_for_1_hour.imageset/menu_mute_for_1_hour@2x.png",
+      "sha256": "9a3c0575c19f9ea5140440d942f8b62c917564572e7a1bb8e1960dfc158e1923",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menusoundon",
+      "source": "Telegram-Mac/Assets.xcassets/menu_speaker.imageset/menu_speaker@2x.png",
+      "sha256": "28ea204726973c714640c11f9e484650004b632394d0ac9550acfcbc223262d8",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menusoundoff",
+      "source": "Telegram-Mac/Assets.xcassets/menu_speaker_muted.imageset/menu_speaker_muted@2x.png",
+      "sha256": "bee41df1b5e5777c6435033d146d8d1b647d377231dfd10d7fd07c2bde9246ca",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuinfo",
+      "source": "Telegram-Mac/Assets.xcassets/menu_show_info.imageset/menu_show_info@2x.png",
+      "sha256": "e78c8d1cb1a101ae7dffd701bb27aa3b82cd495927d3dc65c73c926f975e8550",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuviewreplies",
+      "source": "Telegram-Mac/Assets.xcassets/menu_view_replies.imageset/menu_view_replies@2x.png",
+      "sha256": "f7be7367fa1a9b2ac89bc89f295b71b750948bd1b0fa30585ce3edb84e8bb166",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuselect",
+      "source": "Telegram-Mac/Assets.xcassets/menu_select_messages.imageset/menu_select_messages@2x.png",
+      "sha256": "47af8fb746dd2e36ccf7b940f3939b46c2060440b558b4d6a0852d6db6b5a452",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menusaveimage",
+      "source": "Telegram-Mac/Assets.xcassets/menu_save_as.imageset/menu_save_as@2x.png",
+      "sha256": "fd07c90f0668f6d02f92affcafe07d81658e33dda7c767ca7afb08d4e092ceda",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menudownload",
+      "source": "Telegram-Mac/Assets.xcassets/menu_download_circle.imageset/menu_download_circle@2x.png",
+      "sha256": "fef1f71aae06b49568f1ca96c86c907413af6d3d3be2eccbaa05a8d7a7cd877b",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menulink",
+      "source": "Telegram-Mac/Assets.xcassets/menu_link.imageset/img@2x.png",
+      "sha256": "d5e8766cd04742341347b9d700091bb53812c8a39ecc22dc7771a3b745969be0",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menulinks",
+      "source": "Telegram-Mac/Assets.xcassets/menu_copy_link.imageset/menu_copy_link@2x.png",
+      "sha256": "bc98a0aeda697793f34cb5351b8ff5ce932c665c74d4c382c031a24f2fe5761a",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menublock",
+      "source": "Telegram-Mac/Assets.xcassets/menu_ban.imageset/menu_ban@2x.png",
+      "sha256": "23e7d90c798e038120c3ac1c7dc56f15862a42aee8b15b40cb3a2ef4dd0b8e47",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuunblock",
+      "source": "Telegram-Mac/Assets.xcassets/menu_unblock.imageset/menu_unblock@2x.png",
+      "sha256": "f1ee9d5e07d176ce8733b7e312824dddad6adeb2bb356378a551377b0165276c",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menureport",
+      "source": "Telegram-Mac/Assets.xcassets/menu_report.imageset/menu_report@2x.png",
+      "sha256": "899f1ddc5cd91d7b47b791be9f0bc275ab01289433edd7b7a01fcd0058b4d1a2",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menureportantispam",
+      "source": "Telegram-Mac/Assets.xcassets/menu_report_false_positive.imageset/menu_report_false_positive@2x.png",
+      "sha256": "e1644d9f55a852eb8d972cee7b0917169aa4ca229a7d7ea43960f8f4842f9833",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuclear",
+      "source": "Telegram-Mac/Assets.xcassets/menu_clear_history.imageset/menu_clear_history@2x.png",
+      "sha256": "051d8739f31ecedb0727fefed1e040dcfc9020b32aae898311c44a6cafd6be55",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menucreatepoll",
+      "source": "Telegram-Mac/Assets.xcassets/menu_poll.imageset/menu_poll@2x.png",
+      "sha256": "bd22684558aa096f881c1a3d4c3798a06de7e934726464041f282ceb734d1c4d",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menucreatetodolist",
+      "source": "Telegram-Mac/Assets.xcassets/menu_checklist.imageset/img@2x.png",
+      "sha256": "5a842fae86e9ff2c9a36e3c0eef3f671b7089f3053c34e563803fff04b974a29",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuarticle",
+      "source": "Telegram-Mac/Assets.xcassets/menu_article.imageset/menu_article@2x.png",
+      "sha256": "3ca467374ba6110a94369efe027beb04622582b8cbd2f754468af2a56e51b60f",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menugif",
+      "source": "Telegram-Mac/Assets.xcassets/menu_add_gif.imageset/menu_add_gif@2x.png",
+      "sha256": "14a761b1c49f2dc55a7d905814f2146de0779abfc908969be270c0af890e8f46",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menustickers",
+      "source": "Telegram-Mac/Assets.xcassets/menu_view_sticker_set.imageset/menu_view_sticker_set@2x.png",
+      "sha256": "67ede08d1a5a8ca6356afb7bc554871843a55a522fe29b1e0dc4b9fce7208501",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuemoji",
+      "source": "Telegram-Mac/Assets.xcassets/menu_smile.imageset/menu_smile@2x.png",
+      "sha256": "e52639d354a84fa834759a23ded564b59af0c503c8f4ddc08d5f317c485be76d",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menufile",
+      "source": "Telegram-Mac/Assets.xcassets/menu_file.imageset/menu_file@2x.png",
+      "sha256": "201881c0948042d6cb6f219a0f5968c6519ec5051011accfbbaa41a576f09c4e",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuphoto",
+      "source": "Telegram-Mac/Assets.xcassets/menu_camera.imageset/menu_camera@2x.png",
+      "sha256": "a7bc7e5626d2b026e078269d8eb5e1f644f2abf4f9bd6ca5999d407745ce1f01",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuleave",
+      "source": "Telegram-Mac/Assets.xcassets/menu_leave.imageset/menu_leave@2x.png",
+      "sha256": "e405c603c43c2751689d7be9f2fd6c7859dad7bbbb198911d8a3c9d2d5add16d",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuschedule",
+      "source": "Telegram-Mac/Assets.xcassets/menu_schedule_message.imageset/menu_schedule_message@2x.png",
+      "sha256": "cd82f2253caf4fef66f3d59345d970507afcd807992f080f529e0aef17ca4049",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menureschedule",
+      "source": "Telegram-Mac/Assets.xcassets/menu_calendar_up.imageset/menu_calendar_up@2x.png",
+      "sha256": "9170cbdecafbb581df6330047e19765743422e6389a10384adfa2d3425f4e756",
+      "size": [
+        16.0,
+        16.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menusend",
+      "source": "Telegram-Mac/Assets.xcassets/menu_send_now.imageset/menu_send_now@2x.png",
+      "sha256": "0b542608c0f4ff8eed363ab3fe2b530fbcbed2d7519f032f31fc087790e32668",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuwhenonline",
+      "source": "Telegram-Mac/Assets.xcassets/menu_online.imageset/menu_online@2x.png",
+      "sha256": "cc7907f4111821e06f0cedcd31180b516f417012fa49241a8ba280d7171b6f68",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menutranslate",
+      "source": "Telegram-Mac/Assets.xcassets/menu_translate.imageset/menu_translate@2x.png",
+      "sha256": "2f21b6ad2b10915a2410b7bed6fb7c935dadaafc625b798ad9eb06ec7a03abad",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menushare",
+      "source": "Telegram-Mac/Assets.xcassets/menu_share.imageset/menu_share@2x.png",
+      "sha256": "b4c7fb40946ca68582d73edd76ecf7f7e87406354a7680118c8fb8d1e0f829ed",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menugroups",
+      "source": "Telegram-Mac/Assets.xcassets/menu_create_group.imageset/menu_create_group@2x.png",
+      "sha256": "e9dc50bc17b259a5ea27dba5774ab3f215a9d82e733c33c2efccbe3c58f7a5ef",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuchannel",
+      "source": "Telegram-Mac/Assets.xcassets/menu_channel.imageset/menu_channel@2x.png",
+      "sha256": "68ebbc1c3a6f9a3f91b9da92dc4aaed3cc6304e9a4c3b0b18f2ac483615ac4a5",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menunightmode",
+      "source": "Telegram-Mac/Assets.xcassets/menu_moon.imageset/menu_moon@2x.png",
+      "sha256": "48dda666670e8d50f1fd90b64c839cda13327653d16b80794768e6aeb268aeda",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menulock",
+      "source": "Telegram-Mac/Assets.xcassets/menu_lock.imageset/menu_lock@2x.png",
+      "sha256": "0a0953956c0ff9e815c248ecde4b67cdb6c327ebcdacebe5896a603ea559a560",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menustats",
+      "source": "Telegram-Mac/Assets.xcassets/menu_statistics.imageset/menu_statistics@2x.png",
+      "sha256": "33f48998cb4a996680e5616b7cc88bf5aadfb743a8b6019c86cec8b0cad76eb7",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menureactions",
+      "source": "Telegram-Mac/Assets.xcassets/menu_reactions.imageset/menu_reactions@2x.png",
+      "sha256": "ac13d30c8aff58c204baffbbf366bd74764d84b9ba41cecdb51ea7fea886ee9b",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuretractvote",
+      "source": "Telegram-Mac/Assets.xcassets/menu_retract_vote.imageset/menu_retract_vote@2x.png",
+      "sha256": "5c3dfcd3fac17a190ddbd3817328bc9587c3fe81e5fc5e238cb89b77c565b538",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menupromote",
+      "source": "Telegram-Mac/Assets.xcassets/menu_promote.imageset/menu_promote@2x.png",
+      "sha256": "f21546ad149ec4b3b9871f5944e29987fadd8dc8d90fa061cacab20a4f894bbc",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menupermissions",
+      "source": "Telegram-Mac/Assets.xcassets/menu_restrict.imageset/menu_restrict@2x.png",
+      "sha256": "ea1e7037d752520b5666df685060f4b36dedafb21b310b9510a2523a0b466e87",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuexpand",
+      "source": "Telegram-Mac/Assets.xcassets/menu_expand.imageset/menu_expand@2x.png",
+      "sha256": "cc7c1db43908227492c4b609993e30467a97f84df4c572d7daafd034eeffb0ae",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menucollapse",
+      "source": "Telegram-Mac/Assets.xcassets/menu_collapse.imageset/menu_collapse@2x.png",
+      "sha256": "b1c8bc595cc8e901be749ef861dfef5d97884b99e1b7155ccbf30852c367de86",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuaddtofolder",
+      "source": "Telegram-Mac/Assets.xcassets/menu_add_to_folder.imageset/menu_add_to_folder@2x.png",
+      "sha256": "d1468e7d5e3fcc4afc9df7008e593fbee28e15aa8a6aaf1a0313443858069508",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menushowinfolder",
+      "source": "Telegram-Mac/Assets.xcassets/menu_show_in_finder.imageset/menu_show_in_finder@2x.png",
+      "sha256": "6ae074dbb05321e0823152ef656b3233748637d5853d9f946b0ec59f39338dc1",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menufave",
+      "source": "Telegram-Mac/Assets.xcassets/menu_add_to_favorites.imageset/menu_add_to_favorites@2x.png",
+      "sha256": "1d81f47cb21d9cc69bc0f8b7ada8d4205dfb178aca94de432d7573e700ff94b1",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuunfave",
+      "source": "Telegram-Mac/Assets.xcassets/menu_remove_from_favorites.imageset/menu_remove_from_favorites@2x.png",
+      "sha256": "885b6b6b6d387af780440eef1c4418b3b5c7846cf6065df81a890b8db21e7416",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuadd",
+      "source": "Telegram-Mac/Assets.xcassets/menu_add.imageset/menu_add@2x.png",
+      "sha256": "dae3565e3437c29fea99edd3166a4039221ef79dce4391d6d67ac41e63108495",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuboosts",
+      "source": "Telegram-Mac/Assets.xcassets/menu_boost.imageset/menu_boost@2x (1).png",
+      "sha256": "984e197bedeabec7cac1a579ecc179529f19c63adb65aea088d267fafa2c0b2f",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuspoiler",
+      "source": "Telegram-Mac/Assets.xcassets/menu_spoiler.imageset/img@2x.png",
+      "sha256": "bc2aef7c92047a2f63df1ec1e33aa790087610765665cbc56bddad6d5765c816",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuvideochat",
+      "source": "Telegram-Mac/Assets.xcassets/menu_video_chat.imageset/menu_video_chat@2x.png",
+      "sha256": "5fa4c382bda922c8115f95cd8f27e9684036a453a406d7d527cbed27947605b2",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuchatbubble",
+      "source": "Telegram-Mac/Assets.xcassets/menu_message.imageset/menu_message@2x.png",
+      "sha256": "7993787b1ec4012a684d9d023419de5e3e22752fa81e91a00cce35af9c202e19",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menusavedmessages",
+      "source": "Telegram-Mac/Assets.xcassets/menu_bookmark.imageset/menu_bookmark@2x.png",
+      "sha256": "1c0772cddc1abe252764ccbc3028134a069d4c7bee2c7d37087d7e016f063d2a",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menutopics",
+      "source": "Telegram-Mac/Assets.xcassets/menu_topics.imageset/menu_topics@2x.png",
+      "sha256": "59e713a0b0cacd4ea1f8802550550ec38c0570158c624e8765f7e30733aec911",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuchangecolors",
+      "source": "Telegram-Mac/Assets.xcassets/menu_change_colors.imageset/menu_change_colors@2x.png",
+      "sha256": "186be544e7232481b567d7d4205f151e84b387fcab8c3025ecf7a40c906ab010",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuexport",
+      "source": "Telegram-Mac/Assets.xcassets/menu_share.imageset/menu_share@2x.png",
+      "sha256": "b4c7fb40946ca68582d73edd76ecf7f7e87406354a7680118c8fb8d1e0f829ed",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menushowinchat",
+      "source": "Telegram-Mac/Assets.xcassets/menu_show_message.imageset/menu_show_message@2x.png",
+      "sha256": "7d036fc4edaa5b156098b3522f1e6c88f2a2ba4902ad32ebbed289cd832f0637",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menutagfilter",
+      "source": "Telegram-Mac/Assets.xcassets/menu_tag_filter.imageset/menu_tag_filter@2x.png",
+      "sha256": "0ec150c8ac3cd46832ca55d843bcb03b2e7eecd06c3c99aef8a4737ec463823e",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menutagrename",
+      "source": "Telegram-Mac/Assets.xcassets/menu_tag_rename.imageset/menu_tag_rename@2x.png",
+      "sha256": "b81701fadd56397c98d443869cd1f852762e0e1412a9a307d82e10b9c7731d44",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menutagremove",
+      "source": "Telegram-Mac/Assets.xcassets/menu_tag_remove.imageset/menu_tag_remove@2x.png",
+      "sha256": "9d89b7076becbfffdf60bad19625408744c2a3e934c51153a4b2d6b1bd8ea88d",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menuabove",
+      "source": "Telegram-Mac/Assets.xcassets/menu_add_above.imageset/img@2x.png",
+      "sha256": "f8210583998fa42e2783cd2564994ce6dc91b74294814004dee756281326f1f5",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menubelow",
+      "source": "Telegram-Mac/Assets.xcassets/menu_add_below.imageset/img@2x.png",
+      "sha256": "05cdf5670dd1cfc0fd7cdfceb2e26d0be0179300ec833dd48d8f8f9d7e3fef80",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menucaptionshow",
+      "source": "Telegram-Mac/Assets.xcassets/menu_text.imageset/img@2x.png",
+      "sha256": "d3f07b89cbc7a6792f05cdc802350727d9d4073a742b2cc288716ca590fca091",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "menufont",
+      "source": "Telegram-Mac/Assets.xcassets/menu_text.imageset/img@2x.png",
+      "sha256": "d3f07b89cbc7a6792f05cdc802350727d9d4073a742b2cc288716ca590fca091",
+      "size": [
+        18.0,
+        18.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "readmarkone",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_MessageCheckMark1.imageset/ModernMessageCheckmark1@2x.png",
+      "sha256": "07d37fd36581a33167343a02158617231c992640a021633c34200b551537ddd3",
+      "size": [
+        12.0,
+        12.0
+      ],
+      "canvas": [
+        12,
+        12
+      ]
+    },
+    {
+      "name": "readmarktwo",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_MessageCheckmark2.imageset/ModernMessageCheckmark2@2x.png",
+      "sha256": "122201d3954f8dc0bdac018e03099b642fed482de578b7927bb16f7eb452bc7d",
+      "size": [
+        12.0,
+        12.0
+      ],
+      "canvas": [
+        12,
+        12
+      ]
+    },
+    {
+      "name": "listpinned",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_ChatListPinned.imageset/ic_chatslistpin@2x.png",
+      "sha256": "ab527343284de29ace76fda173108e63117ea7e2940d17c4d9f4cca9a083b08a",
+      "size": [
+        20.0,
+        20.0
+      ],
+      "canvas": [
+        20,
+        20
+      ]
+    },
+    {
+      "name": "listmuted",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_DialogMute.imageset/DialogList_Muted@2x.png",
+      "sha256": "70343e93723c9c4bf22c65aa883ea8c2e5aa9c9a9c349da890c9fadda557e562",
+      "size": [
+        10.0,
+        10.0
+      ],
+      "canvas": [
+        10,
+        10
+      ]
+    },
+    {
+      "name": "listsending",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_ChatStateSending.imageset/Sending@2x.png",
+      "sha256": "e03a43a788c3a938a97eaad5fe4b665ae647be89a9495dd55988851046a81ccb",
+      "size": [
+        12.0,
+        12.0
+      ],
+      "canvas": [
+        12,
+        12
+      ]
+    },
+    {
+      "name": "compose",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_NewMessage.imageset/ic_create@2x.png",
+      "sha256": "4ff14ee98a11d6bb51d94786d56f32376ce3dd784370a0e0d52bde0deecdbabd",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "galleryprev",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_GalleryPrev.imageset/leftphoto@2x.png",
+      "sha256": "6dc3e449964b6390b4c28819dd9b18886f84544e2bc0b7daa51b3751bd291d1b",
+      "size": [
+        60.0,
+        60.0
+      ],
+      "canvas": [
+        60,
+        60
+      ]
+    },
+    {
+      "name": "gallerynext",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_GalleryNext.imageset/rightphoto@2x.png",
+      "sha256": "79c1957b82923badfe51d0cdbcab4e42b1ba9d85dc31775dc4bd103dc05cb50a",
+      "size": [
+        60.0,
+        60.0
+      ],
+      "canvas": [
+        60,
+        60
+      ]
+    },
+    {
+      "name": "gallerysave",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_Gallery_FastSave.imageset/Download@2x (1).png",
+      "sha256": "25fa10c51137159f78e1c70cc464e45adcd548d192ce58993f570ed2ff640705",
+      "size": [
+        24.0,
+        24.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "galleryshare",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_GalleryShare.imageset/sharephoto@2x.png",
+      "sha256": "7732e946428399ea61cf57d59dd470bb145ef82f857873d9e9f957a95077b70e",
+      "size": [
+        42.0,
+        42.0
+      ],
+      "canvas": [
+        42,
+        42
+      ]
+    },
+    {
+      "name": "gallerymore",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_GalleryMore.imageset/morephoto@2x.png",
+      "sha256": "27f69525cd51d36120093a78078796500e6b5ed054526b51dbc0e7529d956ec7",
+      "size": [
+        42.0,
+        42.0
+      ],
+      "canvas": [
+        42,
+        42
+      ]
+    },
+    {
+      "name": "galleryrotate",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_GalleryRotate.imageset/turn 2@2x.png",
+      "sha256": "d90e05d14285cf118b623f018920683fe1714aac435a42b35b2cbb623bdd6737",
+      "size": [
+        21.0,
+        21.0
+      ],
+      "canvas": [
+        21,
+        21
+      ]
+    },
+    {
+      "name": "emojirecent",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_EmojiTabRecent.imageset/recent@2x.png",
+      "sha256": "2aff7daec5027fee2ae5a57cb96eb266c9d63bce477b78b6489ac84fb9585f52",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "emojipeople",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_EmojiTabSmiles.imageset/smiles@2x.png",
+      "sha256": "a5b11d07277366c48e9c05873eda5ca449967f498eb72060e730cc38151f8803",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "emojinature",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_EmojiTabNature.imageset/Animals@2x.png",
+      "sha256": "e7589064daadf8c957d5e2434773d0f533a05d260aecfdde3653b1e3ab41425e",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "emojifood",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_EmojiTabFood.imageset/Food@2x.png",
+      "sha256": "050e1df7ae97a5096b2dc3b835ffd9a3dccfcf4a8959b3c48c8bcca03d8f44f3",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "emojiactivity",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_EmojiTabSports.imageset/activity@2x.png",
+      "sha256": "b3c433f1790b7c59087a275c265f953c32f7d0ebc9ac4dbaa626de9b9405508e",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "emojitravel",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_EmojiTabCar.imageset/places@2x.png",
+      "sha256": "3beb1358a26ee9f24969bc3d7833e2f0a0602df77c4ce2e3ab426929e1e71e34",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "emojiobjects",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_EmojiTabObjects.imageset/objects@2x.png",
+      "sha256": "7cd0f8981cf6b8cc0d8e5c284ccd05a8a08fae85f907093433e29942a0348d19",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "emojisymbols",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_EmojiTabSymbols.imageset/Symbols@2x.png",
+      "sha256": "332396583d65b539645bc7390a5b5ae600621f3c1bf029737fb9bda2a44baea5",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "checkmark",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_AlertCheckBoxMark.imageset/check@2x.png",
+      "sha256": "4825b57dd5dc719336e45ef09fe16897bbc8b3804884178f3179d6c179f82062",
+      "size": [
+        9.5,
+        7.5
+      ],
+      "canvas": [
+        22,
+        22
+      ]
+    },
+    {
+      "name": "callmicrophone",
+      "source": "packages/PrivateCallScreen/Sources/Resources/Assets.xcassets/ic_mute.imageset/ic_mute@2x.png",
+      "sha256": "d02aaa9ba0895e33121db2758001826e296e185b72b48dd8d4d0dce66ff1c310",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "callvideo",
+      "source": "packages/PrivateCallScreen/Sources/Resources/Assets.xcassets/ic_video.imageset/ic_video@2x.png",
+      "sha256": "d97ce465121c9f3a0eafbe9c8585fad8eb7c20eedef058617d0910f2eef04824",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "callscreen",
+      "source": "packages/PrivateCallScreen/Sources/Resources/Assets.xcassets/ic_screen.imageset/ic_screen@2x.png",
+      "sha256": "51c498591c613ebfdc4ba02d788308dd47a2c8ba105c5b4cb0d7d755af10a7bd",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "callpeople",
+      "source": "packages/PrivateCallScreen/Sources/Resources/Assets.xcassets/ic_add_people.imageset/ic_addPeople@2x (2).png",
+      "sha256": "9bcd745975598d30ad228bfb55c8fe2261d2e046cdf547437426e475a19b8876",
+      "size": [
+        24.0,
+        24.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "callmicrophoneoff",
+      "source": "packages/PrivateCallScreen/Sources/Resources/Assets.xcassets/ic_microphoneoff.imageset/ic_call_microphoneoff@2x.png",
+      "sha256": "43da8e291c1e03c91c967a661adaac37c5245085a99d811a8df3812f5f6c86c1",
+      "size": [
+        24.0,
+        24.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "callaccept",
+      "source": "packages/PrivateCallScreen/Sources/Resources/Assets.xcassets/ic_accept.imageset/ic_accept@2x.png",
+      "sha256": "e65da43aaad2f3707c48876d8bc30a49db4e73613f1dd226f14539cf93bbcd00",
+      "size": [
+        50,
+        50
+      ],
+      "canvas": [
+        50,
+        50
+      ],
+      "usage": "full-color-call"
+    },
+    {
+      "name": "calldecline",
+      "source": "packages/PrivateCallScreen/Sources/Resources/Assets.xcassets/ic_decline.imageset/xmark@2x.png",
+      "sha256": "32dd628c616728f805e23ce9839bb3c8f4f5fcb29673a17e8182eb970c40ff3b",
+      "size": [
+        50,
+        50
+      ],
+      "canvas": [
+        50,
+        50
+      ],
+      "usage": "full-color-call"
+    },
+    {
+      "name": "callredial",
+      "source": "packages/PrivateCallScreen/Sources/Resources/Assets.xcassets/ic_redial.imageset/ic_redial@2x.png",
+      "sha256": "ba4ce879b764dd6f3bbfaa1e41a8617a500bf49c92b0c7759b429f2953c78f55",
+      "size": [
+        50,
+        50
+      ],
+      "canvas": [
+        50,
+        50
+      ],
+      "usage": "full-color-call"
+    },
+    {
+      "name": "playernext",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_InlinePlayerNext.imageset/Next@2x (1).png",
+      "sha256": "6027c54110d0ff93ccfa978df4aebf1a35a1253d2134f2abb6a45da2a0a15f37",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "playerprevious",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_InlinePlayerNext.imageset/Next@2x (1).png",
+      "sha256": "6027c54110d0ff93ccfa978df4aebf1a35a1253d2134f2abb6a45da2a0a15f37",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ],
+      "transform": "flip-horizontal"
+    },
+    {
+      "name": "playerrepeat",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_InlinePlayer_Repeat.imageset/Repeat@2x.png",
+      "sha256": "9614ccb5b4191f02bb3ea09bf49a4375bcd0a300b76f5052a7e4bef8e076d235",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "playerrepeatone",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_InlinePlayer_RepeatOne.imageset/Repeat_1@2x.png",
+      "sha256": "0df10c5c38d3a3dc4af2824906d3d3697bb37c4c48115b1c4e10829711c2542a",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "playervolume",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_InlinePlayer_VolumeOn.imageset/ic_vol1@2x.png",
+      "sha256": "d26fd1019e2d107e833b4f3b68750071b4fec52073978c3dc5a2354e3e5764d2",
+      "size": [
+        30.0,
+        30.0
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "playermuted",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_InlinePlayer_VolumeOff.imageset/ic_vol2@2x.png",
+      "sha256": "3b2e320ca27ee2243d2846a39b0c429444273ce900c7df8fac59171c87ef9abe",
+      "size": [
+        31.0,
+        30.0
+      ],
+      "canvas": [
+        31,
+        30
+      ]
+    },
+    {
+      "name": "playerclose",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_Pip_Close.imageset/pip_cross@2x.png",
+      "sha256": "a6fc56366385f75d14fa403d0fc6ac5ac0c7392fed22bbd3456030e45696fa75",
+      "size": [
+        24.0,
+        24.0
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "playerlist",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_AudioPlayer_List.imageset/list_30@2x.png",
+      "sha256": "3957deb49fe80620187213ecd6007c242ceaff1ecdfb6945f89bd0d680a3a1b1",
+      "size": [
+        30,
+        30
+      ],
+      "canvas": [
+        30,
+        30
+      ]
+    },
+    {
+      "name": "playlistnext",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_PlayList_Next.imageset/Next@2x.png",
+      "sha256": "06ac2051ebfcacefa69fbe8c0bc63f4d94a5afd8012fc9bdc8c16d85fe119073",
+      "size": [
+        36,
+        36
+      ],
+      "canvas": [
+        36,
+        36
+      ]
+    },
+    {
+      "name": "playlistprevious",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_PlayList_Next.imageset/Next@2x.png",
+      "sha256": "06ac2051ebfcacefa69fbe8c0bc63f4d94a5afd8012fc9bdc8c16d85fe119073",
+      "size": [
+        36,
+        36
+      ],
+      "canvas": [
+        36,
+        36
+      ]
+    },
+    {
+      "name": "playlistorder",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_PlayList_Order.imageset/Order@2x.png",
+      "sha256": "6dd8941e09fb21b2bbfb1641264dd5923ee2b93954d0da7964df9e0937ddf7aa",
+      "size": [
+        24,
+        24
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "playlistshuffle",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_PlayList_Random.imageset/Repeat_1@2x.png",
+      "sha256": "ec4fede524c9346d256ff0a6af29f23ac6bce1e5238282e4fb1a3e34cc9d203a",
+      "size": [
+        24,
+        24
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "playlistrepeat",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_PlayList_Repeat.imageset/Repeat@2x.png",
+      "sha256": "b0bb26e9f06e3ff1867b71a098c389ef0780aa5ddd2e00f292ae8b440267f10a",
+      "size": [
+        24,
+        24
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "playlistrepeatone",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_PlayList_RepeatOne.imageset/Random@2x.png",
+      "sha256": "66996e9e7821ea8542d60a87457743e1fa3a5cb739c7adaad9916af3abbb92d3",
+      "size": [
+        24,
+        24
+      ],
+      "canvas": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "playlistplaceholder",
+      "source": "Telegram-Mac/Assets.xcassets/Icon_MusicPlayerSmallAlbumArtPlaceholder.imageset/ic_music@2x.png",
+      "sha256": "ce35a776a15ce8a7388461cb8cc518f2af73f6b4c3ffbf7d66335643832f54d7",
+      "size": [
+        17,
+        21
+      ],
+      "canvas": [
+        17,
+        21
+      ]
+    }
+  ],
+  "code_references": [
+    {
+      "source": "packages/TelegramTheme/Sources/TelegramTheme/ChatMessageBubbleImages.swift",
+      "sha256": "4305df52c4b996ea6652db0eabd5894721d9bd8a14c45e40ee0fd7eaf961d896"
+    },
+    {
+      "source": "packages/ColorPalette/Sources/ColorPalette/ColorPalette.swift",
+      "sha256": "2cba8d3603aeccc0453db3b8163cbabbeea61a09661639621ed404b568cf664e"
+    },
+    {
+      "source": "packages/TGUIKit/Sources/SwitchView.swift",
+      "sha256": "eb5f002d17df0f8c4dcef1015f82848d607a7a6b66f4b0ab557c771e2e0a711f"
+    },
+    {
+      "source": "packages/TGUIKit/Sources/ContextMenu.swift",
+      "sha256": "f72b4bc32378b3605e2fc064de3de08243c8769d31fd34eb5f3e2468fc99e4a0"
+    },
+    {
+      "source": "packages/GeneralRows/Sources/GeneralRows/GeneralRowView.swift",
+      "sha256": "76e115c0af90dc7dafd1ccb134b596f90c919aee23fc6c4b717104358c703e26"
+    },
+    {
+      "source": "packages/SettingsUI/Sources/SettingsUI/AccountInfoItem.swift",
+      "sha256": "04272d9f6009fe2bf0ae40550b7a29f7801606296e62d9ad1acfa17294b17c2d"
+    },
+    {
+      "source": "packages/ChatUI/Sources/ChatUI/ChatInputView.swift",
+      "sha256": "9c5fa57cc94745935d3e9e8d202b13bdf655b955725d9278949127fe452a4343"
+    },
+    {
+      "source": "packages/ChatUI/Sources/ChatUI/ChatInputSendButton.swift",
+      "sha256": "d26417227719270e2f945b81015d359c537adb9eac05361367cfb154169bfb47"
+    },
+    {
+      "source": "packages/PeerInfoUI/Sources/PeerInfoUI/PeerInfoHeadItem.swift",
+      "sha256": "df910a6f54cee91eced95d9ac79bc79fdfb8f407cc2f518007715e0fce0d193a"
+    },
+    {
+      "source": "packages/ChatListUI/Sources/ChatListUI/PeersListController.swift",
+      "sha256": "2739148c48f7b7d98e77e9a0d206ad35a5829e9a6a610fab22823e7ef4dda802"
+    },
+    {
+      "source": "packages/ChatListUI/Sources/ChatListUI/ChatListRowItem.swift",
+      "sha256": "bc2c150f49506c6277a3850c7df0b532fd2fc1beb6c0834c47d2f79bb0682c0b"
+    },
+    {
+      "source": "packages/ChatListUI/Sources/ChatListUI/ChatListRowView.swift",
+      "sha256": "03816ed8efdd76c14cd2f4d1f4ec2272623197695e51b99c8d92cc065cf8b267"
+    },
+    {
+      "source": "packages/TGUIKit/Sources/Window.swift",
+      "sha256": "e0b2e51e1e2648b73eb71ca3817f7ef29d2d070afe4949b9efa62ac1a9cfc86a"
+    },
+    {
+      "source": "packages/TGUIKit/Sources/TGFont.swift",
+      "sha256": "867fa746f8fb3dcf8b25451f61a3042183ebe6a8d8ddac78399fc5ac88a72d2a"
+    },
+    {
+      "source": "packages/ShortPeerRow/Sources/ShortPeerRow/ShortPeerRowItem.swift",
+      "sha256": "4aae4f2c56c93705e129f2639a3165e2a38061be77d6b0710cf7b75b70c42139"
+    },
+    {
+      "source": "packages/ShortPeerRow/Sources/ShortPeerRow/ShortPeerRowView.swift",
+      "sha256": "3700a8198e3180587d488c9a8547bb031651199e9e92e10f174fd6afc5b122df"
+    },
+    {
+      "source": "packages/ChatListUI/Sources/ChatListUI/ContactsController.swift",
+      "sha256": "1f6900b2e15c9319e1654c3fd7541e903730a3c84683be4a481282819a98599d"
+    },
+    {
+      "source": "packages/CallsUI/Sources/CallsUI/RecentCallsViewController.swift",
+      "sha256": "0fe9d35a6422c2ac02c99c741d777ba07cdfc305969512467ae1522cfb70f471"
+    },
+    {
+      "source": "packages/ChatUI/Sources/ChatUI/ChatInputRecordModeIcon.swift",
+      "sha256": "e216a40740d396aff73584c012473db64d2ab034e60d34bf1459aa61ab7758b9"
+    },
+    {
+      "source": "packages/TGUIKit/Sources/Modal.swift",
+      "sha256": "c27b63005d0ca83eb416479b760e1d441080dbb63d86f7f64410e707eb1ca78b"
+    },
+    {
+      "source": "packages/AuthUI/Sources/AuthUI/Auth_Insets.swift",
+      "sha256": "74e158135a5e2d59859a92b3389691528a6e29bca2f2bb0994c0a5daaf8ee383"
+    },
+    {
+      "source": "packages/AuthUI/Sources/AuthUI/Auth_NextView.swift",
+      "sha256": "177553926b56c0bc2f4fbf534aa552663ab5c3c41f625df56eb40f4311756497"
+    },
+    {
+      "source": "packages/PhoneInputUI/Sources/PhoneInputUI/Auth_PhoneInput.swift",
+      "sha256": "0c3d40508c385c993f4409d3ff3c3540198c278dd0cd70f7dc1336cc7c9ba7db"
+    },
+    {
+      "source": "packages/AuthUI/Sources/AuthUI/Auth_Token.swift",
+      "sha256": "4e0596b0c8d200ab8026632f9be80e93c5d7a2ae6307c023b5750749b9d24de5"
+    },
+    {
+      "source": "packages/AuthUI/Sources/AuthUI/Auth_PhoneNumber.swift",
+      "sha256": "8d86ddd5c5e11498ff394f28c1101f905920c7963382762913216611f3638160"
+    },
+    {
+      "source": "packages/PeerInfoUI/Sources/PeerInfoUI/PeerMediaTabsView.swift",
+      "sha256": "83f291806a427fc63de4c32d123727d52485185bdf4f60718f4fe103946397eb"
+    },
+    {
+      "source": "packages/GeneralRows/Sources/GeneralRows/PreciseSliderRowItem.swift",
+      "sha256": "2c1dab520acca333fb2623fa050081e47eb52527bcf806deda537ebfc1dd1560"
+    },
+    {
+      "source": "packages/TGUIKit/Sources/GlassSegmentView.swift",
+      "sha256": "61c9776cc238ba6bc3fb6eecdb8b47e59405f19cc8497bcb7b28483e0e32dea7"
+    },
+    {
+      "source": "Telegram-Mac/app/AppDelegate.swift",
+      "sha256": "af52005fe7a721ce923e4ba2e0c014d62040c23bdb82aea1c8fc3e96e953bb4b"
+    },
+    {
+      "source": "Telegram-Mac/app/ApplicationContext.swift",
+      "sha256": "4cc1e2cccf5006cdf50269526357ed17bd936e20569ce8ec2980e8173e346643"
+    },
+    {
+      "source": "packages/TelegramTheme/Sources/TelegramTheme/Appearance.swift",
+      "sha256": "4acd7bb055a0a77a53692b516a8dcf34cb39d20d7a9a10e7f53c39c22abdd953"
+    },
+    {
+      "source": "packages/TGUIKit/Sources/SelectingControl.swift",
+      "sha256": "f0a0da2f7ee4fcc9c67d43b9600bc6d4bed71d8b9b845f0b99e218aec272c127"
+    },
+    {
+      "source": "packages/PrivateCallScreen/Sources/PeerCallAction.swift",
+      "sha256": "dc1987eff8988ce9fd31a070648c03a6c4125d4260285a398b20d70a3c21b471"
+    },
+    {
+      "source": "packages/PrivateCallScreen/Sources/PeerCallScreenView.swift",
+      "sha256": "c6dbf7fac285ba15cc6384b24e20cb5700f6120f189a23e04dfe03fdac849bc7"
+    },
+    {
+      "source": "packages/PrivateCallScreen/Sources/PeerCallPhotoView.swift",
+      "sha256": "11c57afedd716408b1487af453a3fd100624499e9e9bd4dc4e393ee464a8f0bb"
+    },
+    {
+      "source": "packages/PrivateCallScreen/Sources/PeerCallStatusView.swift",
+      "sha256": "d0f60301b4c7a8b2a0383a205af8f7f897536439b5ae412f052710752a47ac84"
+    },
+    {
+      "source": "packages/AudioPlayerUI/Sources/AudioPlayerUI/InlineAudioPlayerView.swift",
+      "sha256": "0591b6be53ce0f2c2dc7ee1bbfd6d03fd46c742060bc74ab6835545550202c45"
+    },
+    {
+      "source": "packages/AudioPlayerUI/Sources/AudioPlayerUI/PlayerListController.swift",
+      "sha256": "b48c1c170929de7f6b20ea630f08c8291e44713546c0dab6cd608542f30d7be3"
+    },
+    {
+      "source": "packages/AudioPlayerCore/Sources/AudioPlayerCore/AudioPlayerController.swift",
+      "sha256": "8d8cd901fef4578e1d695113b784989e6e7089558965c53f79e80cb037a385af"
+    },
+    {
+      "source": "packages/TelegramUtils/Sources/TelegramUtils/TimeFormatting.swift",
+      "sha256": "cb4bda3b3fd63a92fe327bb68777a1cc95d9c9f71993c515ef560d0a82077c00"
+    },
+    {
+      "source": "packages/AudioPlayerUI/Sources/AudioPlayerUI/AudioPlayerBuffering.swift",
+      "sha256": "a116eba2e739a4a4a37ad655f5cb507725c4fb921a0390fc99cc03357986c2bd"
+    },
+    {
+      "source": "packages/TGUIKit/Sources/LinearProgressControl.swift",
+      "sha256": "50a09cc940863392fc407c50576a9fc9da02b4d1d4ec155aa95559c9247930c4"
+    },
+    {
+      "source": "packages/TGUIKit/Sources/LiquidGlassView.swift",
+      "sha256": "6738b001280bd487570445717d8c46cc4f3558664de02f9831e416613126d8bb"
+    },
+    {
+      "source": "packages/TGUIKit/Sources/Extensions.swift",
+      "sha256": "20087438085a1795d6e0389807d537340bb604e9d2053b97c6e7ab256cbeef64"
+    }
+  ],
+  "animations": [
+    {
+      "name": "playlist_play_pause",
+      "source": "Resources/tgs/playlist_play_pause.tgs",
+      "sha256": "49a042fbfbd6656ce482641eb0f4279d817236e0fdce6f989098b7d36929f601",
+      "canvas": [
+        320,
+        320
+      ],
+      "frames": [
+        0,
+        27
+      ],
+      "fps": 60
+    },
+    {
+      "name": "playlist_pause_play",
+      "source": "Resources/tgs/playlist_pause_play.tgs",
+      "sha256": "63939d8f72d72b473b78af9a3b821c487f50b8faf1984ecc08475a043f975b37",
+      "canvas": [
+        320,
+        320
+      ],
+      "frames": [
+        0,
+        27
+      ],
+      "fps": 60
+    }
+  ]
+}

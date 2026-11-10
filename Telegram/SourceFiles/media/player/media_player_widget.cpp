@@ -8,6 +8,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "media/player/media_player_widget.h"
 
 #include "platform/platform_specific.h"
+#include "jel/ui/macos_interface.h"
+#include "base/event_filter.h"
 #include "data/data_document.h"
 #include "data/data_session.h"
 #include "data/data_peer.h"
@@ -37,9 +39,269 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_session.h"
 #include "window/window_session_controller.h"
 #include "styles/style_media_player.h"
+#include "styles/style_jel_styles.h"
+
+#include <QtCore/QEasingCurve>
 
 namespace Media {
 namespace Player {
+namespace {
+
+[[nodiscard]] QColor PlayerCapsuleColor() {
+	const auto bg = st::windowBg->c;
+	const auto fg = st::windowFg->c;
+	return QColor(
+		bg.red() + (fg.red() - bg.red()) * 0.04,
+		bg.green() + (fg.green() - bg.green()) * 0.04,
+		bg.blue() + (fg.blue() - bg.blue()) * 0.04);
+}
+
+[[nodiscard]] const style::MediaPlayerPlayButton &PlayerPlayStyle() {
+	if (!Jel::Ui::MacosInterfaceEnabled()) {
+		return st::mediaPlayerPlayButton;
+	}
+	static const auto result = [] {
+		auto copy = st::mediaPlayerPlayButton;
+		copy.size = style::ConvertScale(QSize(34, 34));
+		copy.iconPosition = QPoint((copy.size.width() - copy.icon.size.width()) / 2,
+			(copy.size.height() - copy.icon.size.height()) / 2);
+		copy.rippleAreaSize = style::ConvertScale(34);
+		copy.rippleAreaPosition = QPoint();
+		return copy;
+	}();
+	return result;
+}
+
+[[nodiscard]] const style::IconButton &PlayerSkipStyle(bool previous) {
+	const auto &original = previous ? st::mediaPlayerPreviousButton : st::mediaPlayerNextButton;
+	if (!Jel::Ui::MacosInterfaceEnabled()) {
+		return original;
+	}
+	const auto prepare = [](const style::IconButton &original) {
+		auto copy = original;
+		copy.width = copy.height = style::ConvertScale(30);
+		copy.iconPosition = QPoint(-1, -1);
+		copy.rippleAreaPosition = QPoint();
+		copy.rippleAreaSize = style::ConvertScale(30);
+		return copy;
+	};
+	static const auto previousStyle = prepare(st::mediaPlayerPreviousButton);
+	static const auto nextStyle = prepare(st::mediaPlayerNextButton);
+	return previous ? previousStyle : nextStyle;
+}
+
+[[nodiscard]] QString SeekTime(crl::time milliseconds) {
+	const auto seconds = std::max(crl::time(0), milliseconds) / 1000;
+	const auto minutes = seconds / 60;
+	return (minutes >= 60
+		? QString::number(minutes / 60) + ':'
+			+ QString::number(minutes % 60).rightJustified(2, '0')
+		: QString::number(minutes))
+		+ ':' + QString::number(seconds % 60).rightJustified(2, '0');
+}
+
+class SeekTooltip final : public Ui::RpWidget {
+public:
+	explicit SeekTooltip(QWidget *parent) : RpWidget(parent) {
+		setAttribute(Qt::WA_TransparentForMouseEvents);
+		hide();
+	}
+
+	void setTimes(crl::time position, crl::time duration) {
+		const auto current = SeekTime(position);
+		const auto total = u"  "_q + SeekTime(duration);
+		if (_current == current && _total == total) {
+			return;
+		}
+		_current = current;
+		_total = total;
+		const auto font = st::macosPlayerName.style.font;
+		_currentWidth = font->width(_current);
+		resize(_currentWidth + font->width(_total) + style::ConvertScale(16), style::ConvertScale(24));
+		update();
+	}
+
+protected:
+	void paintEvent(QPaintEvent *e) override {
+		auto p = QPainter(this);
+		p.setRenderHint(QPainter::Antialiasing);
+		p.setPen(Qt::NoPen);
+		p.setBrush(st::windowBg);
+		p.drawRoundedRect(rect(), height() / 2., height() / 2.);
+		const auto font = st::macosPlayerName.style.font;
+		const auto baseline = (height() - font->height) / 2 + font->ascent;
+		const auto left = style::ConvertScale(8);
+		p.setFont(font);
+		p.setPen(st::windowFg);
+		p.drawText(left, baseline, _current);
+		p.setPen(st::windowSubTextFg);
+		p.drawText(left + _currentWidth, baseline, _total);
+	}
+
+private:
+	QString _current;
+	QString _total;
+	int _currentWidth = 0;
+
+};
+
+class PlaybackSlider final : public Ui::FilledSlider {
+public:
+	PlaybackSlider(QWidget *parent, const style::FilledSlider &st, QWidget *tooltipParent)
+	: FilledSlider(parent, st)
+	, _tooltip(std::in_place, tooltipParent) {
+		if (Jel::Ui::MacosInterfaceEnabled()) {
+			setMouseTracking(true);
+			base::install_event_filter(this, window(), [=](not_null<QEvent*> event) {
+				if (event->type() == QEvent::WindowDeactivate) {
+					clearPreview();
+				}
+				return base::EventFilterResult::Continue;
+			});
+		}
+	}
+
+	void setBufferedRanges(std::vector<std::pair<float64, float64>> ranges) {
+		_bufferedRanges = std::move(ranges);
+		update();
+	}
+
+	void setExpansionProgress(float64 progress) {
+		_expansionProgress = progress;
+		updateTooltip();
+		update();
+	}
+
+	void setDuration(crl::time duration) {
+		const auto value = std::max(crl::time(0), duration);
+		if (_duration != value) {
+			_duration = value;
+			update();
+		}
+		updateTooltip();
+	}
+
+protected:
+	void mouseMoveEvent(QMouseEvent *e) override {
+		updatePreview(e->pos());
+		FilledSlider::mouseMoveEvent(e);
+	}
+
+	void mousePressEvent(QMouseEvent *e) override {
+		updatePreview(e->pos());
+		FilledSlider::mousePressEvent(e);
+	}
+
+	void mouseReleaseEvent(QMouseEvent *e) override {
+		if (rect().contains(e->pos())) {
+			updatePreview(e->pos());
+		} else {
+			clearPreview();
+		}
+		FilledSlider::mouseReleaseEvent(e);
+	}
+
+	void enterEventHook(QEnterEvent *e) override {
+		FilledSlider::enterEventHook(e);
+		updatePreview(mapFromGlobal(QCursor::pos()));
+	}
+
+	void leaveEventHook(QEvent *e) override {
+		FilledSlider::leaveEventHook(e);
+		if (!isChanging()) {
+			clearPreview();
+		}
+	}
+
+	void hideEvent(QHideEvent *e) override {
+		clearPreview();
+		FilledSlider::hideEvent(e);
+	}
+
+	void paintEvent(QPaintEvent *e) override {
+		if (!Jel::Ui::MacosInterfaceEnabled()) {
+			FilledSlider::paintEvent(e);
+			return;
+		}
+		auto p = QPainter(this);
+		p.setRenderHint(QPainter::Antialiasing);
+		p.setPen(Qt::NoPen);
+		p.setOpacity(fadeOpacity());
+		const auto line = style::ConvertScale(2.)
+			+ style::ConvertScale(4.) * _expansionProgress;
+		const auto track = QRectF(0., (height() - line) / 2., width(), line);
+		const auto fg = st::windowFg->c;
+		auto color = fg;
+		color.setAlphaF(0.2 * _expansionProgress);
+		p.setBrush(color);
+		p.drawRoundedRect(track, line / 2., line / 2.);
+		const auto draw = [&](float64 value, float64 alpha) {
+			p.save();
+			p.setClipRect(QRectF(0., 0., width() * std::clamp(value, 0., 1.), height()));
+			color = fg;
+			color.setAlphaF(alpha);
+			p.setBrush(color);
+			p.drawRoundedRect(track, line / 2., line / 2.);
+			p.restore();
+		};
+		for (const auto &[from, till] : _bufferedRanges) {
+			if (getCurrentValue() < from || getCurrentValue() >= till) continue;
+			p.save();
+			p.setClipRect(QRectF(width() * from, 0., width() * (till - from), height()));
+			color = fg;
+			color.setAlphaF(0.3);
+			p.setBrush(color);
+			p.drawRoundedRect(track, line / 2., line / 2.);
+			p.restore();
+		}
+		if (_hoverProgress && _duration > 0 && _expansionProgress > 0. && !isDisabled()) {
+			draw(*_hoverProgress, 0.25);
+		}
+		draw(getCurrentValue(), isDisabled() ? 0.3 : 1.);
+	}
+
+private:
+	void updatePreview(QPoint position) {
+		if (!Jel::Ui::MacosInterfaceEnabled() || isDisabled() || !width()) {
+			clearPreview();
+			return;
+		}
+		_hoverProgress = std::clamp(position.x() / float64(width()), 0., 1.);
+		updateTooltip();
+		update();
+	}
+
+	void clearPreview() {
+		_hoverProgress.reset();
+		_tooltip->hide();
+		update();
+	}
+
+	void updateTooltip() {
+		if (!_hoverProgress || _expansionProgress <= 0. || !_duration
+			|| isHidden() || isDisabled() || !window()->isActiveWindow()) {
+			_tooltip->hide();
+			return;
+		}
+		_tooltip->setTimes(crl::time(*_hoverProgress * _duration), _duration);
+		const auto line = style::ConvertScale(2.) + style::ConvertScale(4.) * _expansionProgress;
+		const auto x = std::clamp(int(base::SafeRound(width() * *_hoverProgress))
+			+ style::ConvertScale(12), 0, std::max(0, width() - _tooltip->width()));
+		const auto y = int(std::ceil((height() + line) / 2.)) + style::ConvertScale(4);
+		_tooltip->move(_tooltip->parentWidget()->mapFromGlobal(mapToGlobal(QPoint(x, y))));
+		_tooltip->show();
+		_tooltip->raise();
+	}
+
+	std::vector<std::pair<float64, float64>> _bufferedRanges;
+	float64 _expansionProgress = 0.;
+	crl::time _duration = 0;
+	std::optional<float64> _hoverProgress;
+	base::unique_qptr<SeekTooltip> _tooltip;
+
+};
+
+} // namespace
 
 Widget::Widget(
 	QWidget *parent,
@@ -48,17 +310,18 @@ Widget::Widget(
 : RpWidget(parent)
 , _controller(controller)
 , _orderMenuParent(dropdownsParent)
-, _nameLabel(this, st::mediaPlayerName)
+, _nameLabel(this, Jel::Ui::MacosInterfaceEnabled() ? st::macosPlayerName : st::mediaPlayerName)
+, _artistLabel(this, st::macosPlayerArtist)
 , _rightControls(this, object_ptr<Ui::RpWidget>(this))
 , _timeLabel(rightControls(), st::mediaPlayerTime)
-, _playPause(this, st::mediaPlayerPlayButton)
+, _playPause(this, PlayerPlayStyle())
 , _volumeToggle(rightControls(), st::mediaPlayerVolumeToggle)
 , _repeatToggle(rightControls(), st::mediaPlayerRepeatButton)
 , _orderToggle(rightControls(), st::mediaPlayerOrderButton)
 , _speedToggle(rightControls(), st::mediaPlayerSpeedButton)
 , _close(this, st::mediaPlayerClose)
 , _shadow(this)
-, _playbackSlider(this, st::mediaPlayerPlayback)
+, _playbackSlider(object_ptr<PlaybackSlider>(this, st::mediaPlayerPlayback, dropdownsParent))
 , _volume(std::in_place, dropdownsParent.get())
 , _playbackProgress(std::make_unique<View::PlaybackProgress>())
 , _orderController(
@@ -76,6 +339,9 @@ Widget::Widget(
 		[=](bool over) { markOver(over); },
 		[=](bool lastNonDefault) { return speedLookup(lastNonDefault); },
 		[=](float64 speed) { saveSpeed(speed); })) {
+	_speedController->setApplySpeed([=](float64 speed) {
+		instance()->setPlaybackSpeed(speed);
+	});
 	_speedController->realtimeValue(
 	) | rpl::on_next([=](float64 speed) {
 		_speedToggle->setSpeed(speed);
@@ -88,8 +354,23 @@ Widget::Widget(
 
 	setAttribute(Qt::WA_OpaquePaintEvent);
 	setMouseTracking(true);
-	resize(width(), st::mediaPlayerHeight + st::lineWidth);
+	resize(width(), Jel::Ui::MacosInterfaceEnabled()
+		? style::ConvertScale(52)
+		: st::mediaPlayerHeight + st::lineWidth);
+	if (Jel::Ui::MacosInterfaceEnabled()) {
+		_shadow->hide();
+		base::install_event_filter(this, window(), [=](not_null<QEvent*> event) {
+			if (event->type() == QEvent::WindowDeactivate
+				|| event->type() == QEvent::WindowActivate) {
+				InvokeQueued(this, [=] { updateExpansion(); });
+			}
+			return base::EventFilterResult::Continue;
+		});
+	}
 
+	if (Jel::Ui::MacosInterfaceIconsEnabled()) {
+		_playPause->enableMacosIcons();
+	}
 	setupRightControls();
 
 	_volumeToggle->setAccessibleName(tr::lng_ringtones_box_volume(tr::now));
@@ -98,10 +379,16 @@ Widget::Widget(
 	_close->setAccessibleName(tr::lng_sr_player_close(tr::now));
 
 	_nameLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+	_artistLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+	_artistLabel->hide();
 	_timeLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+	if (Jel::Ui::MacosInterfaceEnabled()) {
+		_timeLabel->hide();
+	}
 
 	_playbackProgress->setInLoadingStateChangedCallback([=](bool loading) {
 		_playbackSlider->setDisabled(loading);
+		static_cast<PlaybackSlider*>(_playbackSlider.data())->setDuration(_lastDurationMs);
 	});
 	_playbackProgress->setValueChangedCallback([=](float64 value, float64) {
 		_playbackSlider->setValue(value);
@@ -144,6 +431,11 @@ Widget::Widget(
 	}, lifetime());
 
 	_repeatToggle->setClickedCallback([=] {
+		if (Jel::Ui::MacosInterfaceEnabled() && _type == AudioMsgId::Type::Song) {
+			_playlistButtonRequests.fire(QRect(
+				_repeatToggle->mapToGlobal(QPoint()), _repeatToggle->size()));
+			return;
+		}
 		auto &settings = Core::App().settings();
 		settings.setPlayerRepeatMode([&] {
 			switch (settings.playerRepeatMode()) {
@@ -281,6 +573,10 @@ void Widget::setupRightControls() {
 	raw->paintRequest(
 	) | rpl::on_next([=](QRect clip) {
 		auto p = QPainter(raw);
+		if (Jel::Ui::MacosInterfaceEnabled()) {
+			p.fillRect(clip, PlayerCapsuleColor());
+			return;
+		}
 		const auto &icon = st::mediaPlayerControlsFade;
 		const auto fade = QRect(0, 0, icon.width(), raw->height());
 		if (fade.intersects(clip)) {
@@ -336,7 +632,8 @@ void Widget::setShadowGeometryToLeft(int x, int y, int w, int h) {
 }
 
 void Widget::showShadowAndDropdowns() {
-	_shadow->show();
+	_shadowSuppressed = false;
+	_shadow->setVisible(!Jel::Ui::MacosInterfaceEnabled());
 	_playbackSlider->setVisible(_type == AudioMsgId::Type::Song || _type == AudioMsgId::Type::Voice);
 	if (_volumeHidden) {
 		_volumeHidden = false;
@@ -352,7 +649,9 @@ void Widget::updateDropdownsGeometry() {
 		_volumeToggle->mapToGlobal(
 			QPoint(
 				(_volumeToggle->width() - dropdownWidth) / 2,
-				height())));
+				Jel::Ui::MacosInterfaceEnabled()
+					? height() - _volumeToggle->mapTo(this, QPoint()).y()
+					: height())));
 	const auto playerMargins = _volume->getMargin();
 	const auto shift = QPoint(playerMargins.left(), playerMargins.top());
 	_volume->move(position - shift);
@@ -362,6 +661,7 @@ void Widget::updateDropdownsGeometry() {
 }
 
 void Widget::hideShadowAndDropdowns() {
+	_shadowSuppressed = true;
 	_shadow->hide();
 	_playbackSlider->hide();
 	if (!_volume->isHidden()) {
@@ -412,14 +712,20 @@ void Widget::resizeEvent(QResizeEvent *e) {
 }
 
 void Widget::updateControlsGeometry() {
-	_close->moveToRight(st::mediaPlayerCloseRight, st::mediaPlayerPlayTop);
+	const auto native = Jel::Ui::MacosInterfaceEnabled();
+	const auto top = native
+		? style::ConvertScale(12) + (style::ConvertScale(40) - _close->height()) / 2
+		: st::mediaPlayerPlayTop;
+	_close->moveToRight(native ? style::ConvertScale(24) : st::mediaPlayerCloseRight, top);
 	auto right = 0;
 	if (hasPlaybackSpeedControl()) {
 		_speedToggle->moveToRight(right, 0); right += _speedToggle->width();
 	}
 	if (_type == AudioMsgId::Type::Song) {
 		_repeatToggle->moveToRight(right, 0); right += _repeatToggle->width();
-		_orderToggle->moveToRight(right, 0); right += _orderToggle->width();
+		if (!native) {
+			_orderToggle->moveToRight(right, 0); right += _orderToggle->width();
+		}
 	}
 	_volumeToggle->moveToRight(right, 0); right += _volumeToggle->width();
 
@@ -427,32 +733,68 @@ void Widget::updateControlsGeometry() {
 
 	updatePlayPrevNextPositions();
 
-	_playbackSlider->setGeometry(
-		0,
-		height() - st::mediaPlayerPlayback.fullWidth,
-		width(),
-		st::mediaPlayerPlayback.fullWidth);
+	if (native) {
+		const auto line = style::ConvertScale(2.)
+			+ style::ConvertScale(4.) * _expansionProgress;
+		const auto padding = (line + style::ConvertScale(2.)) * _expansionProgress;
+		const auto sliderHeight = int(std::ceil(line + 2 * padding));
+		const auto inset = style::ConvertScale(32);
+		_playbackSlider->setGeometry(inset, height() - sliderHeight,
+			std::max(0, width() - 2 * inset), sliderHeight);
+		static_cast<PlaybackSlider*>(_playbackSlider.data())->setExpansionProgress(_expansionProgress);
+	} else {
+		_playbackSlider->setGeometry(
+			0,
+			height() - st::mediaPlayerPlayback.fullWidth,
+			width(),
+			st::mediaPlayerPlayback.fullWidth);
+	}
 
 	updateDropdownsGeometry();
 }
 
 void Widget::updateControlsWrapGeometry() {
-	const auto fade = st::mediaPlayerControlsFade.width();
-	const auto controls = getTimeRight() + _timeLabel->width() + fade;
+	const auto native = Jel::Ui::MacosInterfaceEnabled();
+	const auto controls = getTimeRight()
+		+ (native ? 0 : _timeLabel->width() + st::mediaPlayerControlsFade.width());
 	rightControls()->resize(controls, _repeatToggle->height());
 	_rightControls->move(
-		width() - st::mediaPlayerCloseRight - _close->width() - controls,
-		st::mediaPlayerPlayTop);
+		width() - (Jel::Ui::MacosInterfaceEnabled()
+			? style::ConvertScale(24) : st::mediaPlayerCloseRight) - _close->width() - controls,
+		Jel::Ui::MacosInterfaceEnabled()
+			? style::ConvertScale(12) + (style::ConvertScale(40) - rightControls()->height()) / 2
+			: st::mediaPlayerPlayTop);
 }
 
 void Widget::updateControlsWrapVisibility() {
 	_rightControls->toggle(
-		_over || !_narrow,
+		Jel::Ui::MacosInterfaceEnabled() || _over || !_narrow,
 		isHidden() ? anim::type::instant : anim::type::normal);
 }
 
 void Widget::paintEvent(QPaintEvent *e) {
 	auto p = QPainter(this);
+	if (Jel::Ui::MacosInterfaceEnabled()) {
+		p.fillRect(e->rect(), st::windowBg);
+		p.setRenderHint(QPainter::Antialiasing);
+		const auto inset = style::ConvertScale(12);
+		const auto radius = style::ConvertScale(20);
+		const auto capsule = QRectF(inset, inset,
+			std::max(0, width() - 2 * inset), height() - inset);
+		p.setBrush(Qt::NoBrush);
+		for (auto step = 8; step > 0; --step) {
+			const auto spread = style::ConvertScale(step * 1.5);
+			p.setPen(QPen(QColor(0, 0, 0, 4), spread));
+			p.drawRoundedRect(capsule, radius, radius);
+		}
+		const auto dark = st::windowBg->c.lightnessF() < 0.5;
+		auto rim = dark ? QColor(Qt::white) : QColor(Qt::black);
+		rim.setAlphaF(dark ? 0.10 : 0.04);
+		p.setPen(QPen(rim, style::ConvertScale(0.5)));
+		p.setBrush(PlayerCapsuleColor());
+		p.drawRoundedRect(capsule, radius, radius);
+		return;
+	}
 	auto fill = e->rect().intersected(
 		QRect(0, 0, width(), st::mediaPlayerHeight + st::lineWidth));
 	if (!fill.isEmpty()) {
@@ -474,6 +816,7 @@ void Widget::markOver(bool over) {
 		_wontBeOver = false;
 		InvokeQueued(this, [=] {
 			updateControlsWrapVisibility();
+			updateExpansion();
 		});
 	} else {
 		_wontBeOver = true;
@@ -484,9 +827,42 @@ void Widget::markOver(bool over) {
 			_wontBeOver = false;
 			_over = false;
 			updateControlsWrapVisibility();
+			updateExpansion();
 		});
 		updateOverLabelsState(false);
 	}
+}
+
+void Widget::updateExpansion() {
+	if (!Jel::Ui::MacosInterfaceEnabled()) {
+		return;
+	}
+	const auto expanded = _over && window()->isActiveWindow();
+	if (_expanded == expanded) {
+		return;
+	}
+	_expanded = expanded;
+	const auto target = expanded ? 1. : 0.;
+	const auto distance = std::abs(target - _expansionProgress);
+	if (distance < 0.0001) {
+		_expansionAnimation.stop();
+		return;
+	}
+	_expansionAnimation.start([=](float64 progress) {
+		_expansionProgress = std::clamp(progress, 0., 1.);
+		resize(width(), style::ConvertScale(52)
+			+ int(base::SafeRound(style::ConvertScale(14) * _expansionProgress)));
+		updateControlsGeometry();
+		update();
+	}, _expansionProgress, target, std::max(crl::time(17), crl::time(150 * distance)),
+	[](float64 delta, float64 dt) {
+		static const auto curve = [] {
+			auto result = QEasingCurve(QEasingCurve::BezierSpline);
+			result.addCubicBezierSegment(QPointF(0., 0.), QPointF(0.2, 1.), QPointF(1., 1.));
+			return result;
+		}();
+		return delta * curve.valueForProgress(dt);
+	});
 }
 
 void Widget::saveOrder(OrderMode mode) {
@@ -544,7 +920,11 @@ void Widget::updateOverLabelsState(QPoint pos) {
 		- _rightControls->x()
 		- _rightControls->width()
 		+ getTimeRight();
-	const auto labels = myrtlrect(left, 0, width() - right - left, height() - st::mediaPlayerPlayback.fullWidth);
+	const auto native = Jel::Ui::MacosInterfaceEnabled();
+	const auto labels = myrtlrect(left, native ? style::ConvertScale(12) : 0,
+		std::max(0, width() - right - left), native
+			? style::ConvertScale(40)
+			: height() - st::mediaPlayerPlayback.fullWidth);
 	const auto over = labels.contains(pos);
 	updateOverLabelsState(over);
 }
@@ -555,33 +935,48 @@ void Widget::updateOverLabelsState(bool over) {
 		&& ((_type == AudioMsgId::Type::Voice)
 			|| _lastSongFromAnotherSession);
 	setCursor(pressShowsItem ? style::cur_pointer : style::cur_default);
-	_togglePlaylistRequests.fire(over && (_type == AudioMsgId::Type::Song));
+	_togglePlaylistRequests.fire(over && (_type == AudioMsgId::Type::Song)
+		&& !Jel::Ui::MacosInterfaceEnabled());
 }
 
 void Widget::updatePlayPrevNextPositions() {
-	auto left = st::mediaPlayerPlayLeft;
-	auto top = st::mediaPlayerPlayTop;
-	if (_previousTrack) {
-		_previousTrack->moveToLeft(left, top); left += _previousTrack->width() + st::mediaPlayerPlaySkip;
-		_playPause->moveToLeft(left, top); left += _playPause->width() + st::mediaPlayerPlaySkip;
-		_nextTrack->moveToLeft(left, top);
+	const auto native = Jel::Ui::MacosInterfaceEnabled();
+	auto left = native ? style::ConvertScale(22) : st::mediaPlayerPlayLeft;
+	const auto position = [&](not_null<QWidget*> button) {
+		return native
+			? style::ConvertScale(12) + (style::ConvertScale(40) - button->height()) / 2
+			: st::mediaPlayerPlayTop;
+	};
+	const auto skip = native ? style::ConvertScale(5) : st::mediaPlayerPlaySkip;
+	const auto compact = native && width() < style::ConvertScale(320);
+	if (_previousTrack && native) {
+		_previousTrack->setVisible(!compact);
+		_nextTrack->setVisible(!compact);
+	}
+	if (_previousTrack && !compact) {
+		_previousTrack->moveToLeft(left, position(_previousTrack.data())); left += _previousTrack->width() + skip;
+		_playPause->moveToLeft(left, position(_playPause.data())); left += _playPause->width() + skip;
+		_nextTrack->moveToLeft(left, position(_nextTrack.data()));
 	} else {
-		_playPause->moveToLeft(left, top);
+		_playPause->moveToLeft(left, position(_playPause.data()));
 	}
 	updateLabelsGeometry();
 }
 
 int Widget::getNameLeft() const {
-	auto result = st::mediaPlayerPlayLeft + _playPause->width();
-	if (_previousTrack) {
-		result += _previousTrack->width() + st::mediaPlayerPlaySkip + _nextTrack->width() + st::mediaPlayerPlaySkip;
+	auto result = (Jel::Ui::MacosInterfaceEnabled()
+		? style::ConvertScale(22) : st::mediaPlayerPlayLeft) + _playPause->width();
+	if (_previousTrack && (!Jel::Ui::MacosInterfaceEnabled() || width() >= style::ConvertScale(320))) {
+		const auto skip = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(5) : st::mediaPlayerPlaySkip;
+		result += _previousTrack->width() + _nextTrack->width() + 2 * skip;
 	}
-	result += st::mediaPlayerPadding;
+	result += Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(20) : st::mediaPlayerPadding;
 	return result;
 }
 
 int Widget::getNameRight() const {
-	return st::mediaPlayerCloseRight
+	return (Jel::Ui::MacosInterfaceEnabled()
+		? style::ConvertScale(24) : st::mediaPlayerCloseRight)
 		+ _close->width()
 		+ st::mediaPlayerPadding;
 }
@@ -590,8 +985,10 @@ int Widget::getTimeRight() const {
 	auto result = 0;
 	result += _volumeToggle->width();
 	if (_type == AudioMsgId::Type::Song) {
-		result += _repeatToggle->width()
-			+ _orderToggle->width();
+		result += _repeatToggle->width();
+		if (!Jel::Ui::MacosInterfaceEnabled()) {
+			result += _orderToggle->width();
+		}
 	}
 	if (hasPlaybackSpeedControl()) {
 		result += _speedToggle->width();
@@ -601,20 +998,48 @@ int Widget::getTimeRight() const {
 }
 
 void Widget::updateLabelsGeometry() {
+	updateControlsWrapGeometry();
 	const auto left = getNameLeft();
+	const auto native = Jel::Ui::MacosInterfaceEnabled();
 	const auto widthForName = width()
 		- left
-		- getNameRight();
-	_nameLabel->resizeToNaturalWidth(widthForName);
-	_nameLabel->moveToLeft(left, st::mediaPlayerNameTop - st::mediaPlayerName.style.font->ascent);
+		- getNameRight()
+		- (native ? rightControls()->width() : 0);
+	const auto showMetadata = !native || widthForName >= style::ConvertScale(40);
+	_nameLabel->setVisible(showMetadata);
+	_artistLabel->setVisible(native && _hasArtist && showMetadata);
+	_nameLabel->resizeToNaturalWidth(std::max(0, widthForName));
+	if (native && _hasArtist) {
+		_artistLabel->resizeToNaturalWidth(std::max(0, widthForName));
+		const auto gap = std::clamp((style::ConvertScale(40)
+			- _nameLabel->height() - _artistLabel->height()) / 2, 0, style::ConvertScale(4));
+		_nameLabel->moveToLeft(left, style::ConvertScale(12) + gap);
+		_artistLabel->moveToLeft(left, style::ConvertScale(52) - gap - _artistLabel->height());
+	} else {
+		_nameLabel->moveToLeft(left, native
+			? style::ConvertScale(12) + (style::ConvertScale(40) - _nameLabel->height()) / 2
+			: st::mediaPlayerNameTop - st::mediaPlayerName.style.font->ascent);
+	}
 
 	const auto right = getTimeRight();
-	_timeLabel->moveToRight(right, st::mediaPlayerNameTop - st::mediaPlayerTime.font->ascent);
+	_timeLabel->moveToRight(right, Jel::Ui::MacosInterfaceEnabled()
+		? (rightControls()->height() - _timeLabel->height()) / 2
+		: st::mediaPlayerNameTop - st::mediaPlayerTime.font->ascent);
 
 	updateControlsWrapGeometry();
 }
 
 void Widget::updateRepeatToggleIcon() {
+	if (Jel::Ui::MacosInterfaceEnabled() && _type == AudioMsgId::Type::Song) {
+		const auto nativeIcons = Jel::Ui::MacosInterfaceIconsEnabled();
+		_repeatToggle->setIconOverride(
+			nativeIcons ? &st::macosPlayerList : &st::macosPlayerListDesktop,
+			nativeIcons ? &st::macosPlayerListOver : &st::macosPlayerListDesktopOver);
+		_repeatToggle->setRippleColorOverride(nullptr);
+		_repeatToggle->setAccessibleName(tr::lng_media_saved_music_title(tr::now));
+		return;
+	}
+	_repeatToggle->setAccessibleName(tr::lng_schedule_repeat_label(tr::now));
 	switch (Core::App().settings().playerRepeatMode()) {
 	case RepeatMode::None:
 		_repeatToggle->setIconOverride(
@@ -655,9 +1080,9 @@ bool Widget::hasPlaybackSpeedControl() const {
 
 void Widget::updateControlsVisibility() {
 	_repeatToggle->setVisible(_type == AudioMsgId::Type::Song);
-	_orderToggle->setVisible(_type == AudioMsgId::Type::Song);
+	_orderToggle->setVisible(_type == AudioMsgId::Type::Song && !Jel::Ui::MacosInterfaceEnabled());
 	_speedToggle->setVisible(hasPlaybackSpeedControl());
-	if (!_shadow->isHidden()) {
+	if (Jel::Ui::MacosInterfaceEnabled() ? !_shadowSuppressed : !_shadow->isHidden()) {
 		_playbackSlider->setVisible(_type == AudioMsgId::Type::Song || _type == AudioMsgId::Type::Voice);
 	}
 	updateControlsGeometry();
@@ -666,6 +1091,7 @@ void Widget::updateControlsVisibility() {
 void Widget::setType(AudioMsgId::Type type) {
 	if (_type != type) {
 		_type = type;
+		updateRepeatToggleIcon();
 		handleSongChange();
 		updateControlsVisibility();
 		updateLabelsGeometry();
@@ -688,6 +1114,10 @@ void Widget::handleSongUpdate(const TrackState &state) {
 		return;
 	}
 
+	if (Jel::Ui::MacosInterfaceEnabled()) {
+		static_cast<PlaybackSlider*>(_playbackSlider.data())->setBufferedRanges(
+			instance()->bufferedRanges(_type));
+	}
 	if (state.id.audio()->loading()) {
 		_playbackProgress->updateLoadingState(state.id.audio()->progress());
 	} else {
@@ -722,17 +1152,18 @@ void Widget::updateTimeText(const TrackState &state) {
 		display = (document->duration() * frequency) / 1000;
 	}
 
-	_lastDurationMs = (state.length * 1000LL) / frequency;
+	_lastDurationMs = frequency > 0 ? (state.length * 1000LL) / frequency : 0;
 
 	if (document->loading()) {
 		const auto progress = document->progress() * 100;
 		_time = QString::number(int(base::SafeRound(progress))) + '%';
 		_playbackSlider->setDisabled(true);
 	} else {
-		display = display / frequency;
+		display = frequency > 0 ? display / frequency : 0;
 		_time = Ui::FormatDurationText(display);
 		_playbackSlider->setDisabled(false);
 	}
+	static_cast<PlaybackSlider*>(_playbackSlider.data())->setDuration(_lastDurationMs);
 	if (_seekPositionMs < 0) {
 		updateTimeLabel();
 	}
@@ -775,6 +1206,18 @@ void Widget::handleSongChange() {
 		textWithEntities = Ui::Text::FormatSongNameFor(document)
 			.textWithEntities(true);
 	}
+	_hasArtist = false;
+	_artistLabel->hide();
+	if (Jel::Ui::MacosInterfaceEnabled()) {
+		if (const auto song = document->song()) {
+			if (!song->title.isEmpty() && !song->performer.isEmpty()) {
+				textWithEntities = TextWithEntities{ song->title };
+				_artistLabel->setText(song->performer);
+				_hasArtist = true;
+				_artistLabel->show();
+			}
+		}
+	}
 	_nameLabel->setMarkedText(textWithEntities);
 	handlePlaylistUpdate();
 	updateLabelsGeometry();
@@ -783,10 +1226,15 @@ void Widget::handleSongChange() {
 void Widget::handlePlaylistUpdate() {
 	const auto previousEnabled = instance()->previousAvailable(_type);
 	const auto nextEnabled = instance()->nextAvailable(_type);
-	if (!previousEnabled && !nextEnabled) {
+	const auto nativeSong = Jel::Ui::MacosInterfaceEnabled() && _type == AudioMsgId::Type::Song;
+	if (!previousEnabled && !nextEnabled && !nativeSong) {
 		destroyPrevNextButtons();
 	} else {
 		createPrevNextButtons();
+		if (Jel::Ui::MacosInterfaceEnabled()) {
+			_previousTrack->setDisabled(!previousEnabled);
+			_nextTrack->setDisabled(!nextEnabled);
+		}
 		_previousTrack->setIconOverride(previousEnabled ? nullptr : &st::mediaPlayerPreviousDisabledIcon);
 		_previousTrack->setRippleColorOverride(previousEnabled ? nullptr : &st::mediaPlayerBg);
 		_previousTrack->setPointerCursor(previousEnabled);
@@ -798,13 +1246,13 @@ void Widget::handlePlaylistUpdate() {
 
 void Widget::createPrevNextButtons() {
 	if (!_previousTrack) {
-		_previousTrack.create(this, st::mediaPlayerPreviousButton);
+		_previousTrack.create(this, PlayerSkipStyle(true));
 		_previousTrack->show();
 		_previousTrack->setClickedCallback([=]() {
 			instance()->previous(_type);
 		});
 		_previousTrack->setAccessibleName(tr::lng_shortcuts_media_previous(tr::now));
-		_nextTrack.create(this, st::mediaPlayerNextButton);
+		_nextTrack.create(this, PlayerSkipStyle(false));
 		_nextTrack->show();
 		_nextTrack->setClickedCallback([=]() {
 			instance()->next(_type);

@@ -189,6 +189,43 @@ void BuildAppearance(SectionBuilder &builder, JelSectionBuilder &jel) {
 
 	builder.addSubsectionTitle(tr::jel_CategoryAppearance());
 
+	jel.addChooseButton({
+		.id = u"jel/interface"_q,
+		.title = tr::jel_InterfaceStyle(),
+		.boxTitle = tr::jel_InterfaceStyle(),
+		.initialSelection = settings->macosInterface() ? 1 : 0,
+		.options = { u"Telegram Desktop"_q, u"macOS"_q },
+		.setter = [controller = builder.controller()](int index) {
+			auto &settings = JelSettings::getInstance();
+			if (settings.macosInterface() != (index == 1)) {
+				settings.setMacosInterface(index == 1);
+				ShowRestartPrompt(controller);
+			}
+		},
+		.keywords = { u"macOS"_q, u"interface"_q },
+	});
+	jel.addChooseButton({
+		.id = u"jel/interfaceIcons"_q,
+		.title = tr::jel_InterfaceIcons(),
+		.boxTitle = tr::jel_InterfaceIcons(),
+		.initialSelection = settings->interfaceIcons(),
+		.options = {
+			tr::jel_InterfaceIconsAutomatic(tr::now),
+			u"Telegram Desktop"_q,
+			u"macOS"_q,
+		},
+		.setter = [controller = builder.controller()](int index) {
+			auto &settings = JelSettings::getInstance();
+			if (settings.interfaceIcons() != index) {
+				settings.setInterfaceIcons(index);
+				ShowRestartPrompt(controller);
+			}
+		},
+		.keywords = { u"macOS"_q, u"icons"_q },
+	});
+	builder.addDividerText(tr::jel_InterfaceStyleDescription());
+	builder.addSkip();
+
 	jel.addSettingToggle({
 		.id = u"jel/materialSwitches"_q,
 		.altIds = { u"jel/newSwitchStyle"_q },

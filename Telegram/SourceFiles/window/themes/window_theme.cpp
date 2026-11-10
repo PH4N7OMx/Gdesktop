@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "window/themes/window_theme.h"
 
+#include "jel/ui/macos_interface.h"
+
 #include "window/themes/window_theme_preview.h"
 #include "window/themes/window_themes_chat.h"
 #include "window/themes/window_themes_embedded.h"
@@ -38,6 +40,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/chat/chat_theme.h"
 #include "ui/chat/chat_theme_readability.h"
 #include "ui/image/image.h"
+#include "ui/image/image_prepare.h"
 #include "ui/style/style_palette_colorizer.h"
 #include "ui/ui_utility.h"
 #include "ui/boxes/confirm_box.h"
@@ -56,7 +59,6 @@ namespace Window {
 namespace Theme {
 namespace {
 
-constexpr auto kThemeFileSizeLimit = 5 * 1024 * 1024;
 constexpr auto kBackgroundSizeLimit = 25 * 1024 * 1024;
 constexpr auto kNightThemeFile = ":/gui/night.tdesktop-theme"_cs;
 constexpr auto kDarkValueThreshold = 0.5;
@@ -361,9 +363,13 @@ bool LoadTheme(
 		if (!backgroundContent.isEmpty()) {
 			auto check = QBuffer(&backgroundContent);
 			auto reader = QImageReader(&check);
+			if (Images::IsSvgFormat(reader.format())) {
+				LOG(("Theme Error: SVG background is not supported."));
+				return false;
+			}
 			const auto size = reader.size();
 			if (size.isEmpty()
-				|| (size.width() * size.height() > kBackgroundSizeLimit)) {
+				|| (int64(size.width()) * size.height() > kBackgroundSizeLimit)) {
 				LOG(("Theme Error: bad background image size in the theme file."));
 				return false;
 			}
@@ -371,6 +377,7 @@ bool LoadTheme(
 				.content = backgroundContent,
 				.forceOpaque = true,
 			}).image;
+			background = Ui::PreprocessBackgroundImage(std::move(background));
 			if (background.isNull()) {
 				LOG(("Theme Error: could not read background image in the theme file."));
 				return false;
@@ -424,7 +431,14 @@ bool InitializeFromCache(
 		QDataStream stream(cache.background);
 		QImageReader reader(stream.device());
 		reader.setAutoTransform(true);
-		if (!reader.read(&background) || background.isNull()) {
+		const auto size = reader.size();
+		if (size.isEmpty()
+			|| (int64(size.width()) * size.height() > kBackgroundSizeLimit)
+			|| !reader.read(&background)) {
+			return false;
+		}
+		background = Ui::PreprocessBackgroundImage(std::move(background));
+		if (background.isNull()) {
 			return false;
 		}
 	}
@@ -567,11 +581,13 @@ void ChatBackground::start() {
 	) | rpl::on_next([=](const BackgroundUpdate &update) {
 		refreshThemeWatcher();
 		if (update.paletteChanged()) {
+			Jel::Ui::ApplyMacosPalette();
 			style::NotifyPaletteChanged();
 		}
 	}, _lifetime);
 
 	initialRead();
+	Jel::Ui::ApplyMacosPalette();
 
 	Core::App().domain().activeSessionValue(
 	) | rpl::filter([=](Main::Session *session) {
@@ -933,12 +949,6 @@ std::optional<QColor> ChatBackground::colorForFill() const {
 
 QImage ChatBackground::gradientForFill() const {
 	return _gradient;
-}
-
-void ChatBackground::recacheGradientForFill(QImage gradient) {
-	if (_gradient.size() == gradient.size()) {
-		_gradient = std::move(gradient);
-	}
 }
 
 QImage ChatBackground::createCurrentImage() const {

@@ -11,11 +11,11 @@ class PeerData;
 
 namespace Ui {
 class VerticalLayout;
-} // namespace Ui
+}
 
 namespace Info {
 class Controller;
-} // namespace Info
+}
 
 namespace Info::Saved {
 

@@ -37,6 +37,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_chat_filters.h"
 #include "window/window_controller.h"
 #include "styles/style_intro.h"
+#include "styles/style_jel_styles.h"
+#include "jel/ui/macos_interface.h"
 #include "styles/style_window.h"
 
 // GummyGram includes
@@ -279,6 +281,11 @@ void Step::updateLabelsPosition() {
 	if (hasCover()) {
 		_title->moveToLeft((width() - _title->width()) / 2, contentTop() + st::introCoverTitleTop);
 		_description->moveToLeft((width() - _description->width()) / 2, contentTop() + st::introCoverDescriptionTop);
+	} else if (Jel::Ui::MacosInterfaceEnabled()) {
+		_title->resizeToNaturalWidth(std::max(0, width() - 2 * st::macosAuthPhoneSeparatorInset));
+		_title->moveToLeft((width() - _title->width()) / 2, contentTop() + st::introTitleTop);
+		_description->resizeToWidth(st::macosAuthInput.width);
+		_description->moveToLeft((width() - _description->width()) / 2, contentTop() + st::introDescriptionTop);
 	} else {
 		_title->moveToLeft(contentLeft() + st::buttonRadius, contentTop() + st::introTitleTop);
 		_description->resizeToWidth(st::introDescription.minWidth);
@@ -316,7 +323,9 @@ void Step::showFinished() {
 
 bool Step::paintAnimated(QPainter &p, QRect clip) {
 	if (_slideAnimation) {
-		_slideAnimation->paintFrame(p, (width() - st::introStepWidth) / 2, contentTop(), width());
+		const auto native = Jel::Ui::MacosInterfaceEnabled();
+		_slideAnimation->paintFrame(p, native ? 0 : (width() - st::introStepWidth) / 2,
+			native ? 0 : contentTop(), width());
 		if (!_slideAnimation->animating()) {
 			showFinished();
 			return false;
@@ -392,14 +401,6 @@ void Step::fillSentCodeData(const MTPDauth_sentCode &data) {
 	}, [&](const MTPDauth_sentCodeTypeSetUpEmailRequired &) {
 		getData()->emailStatus = EmailStatus::SetupRequired;
 	});
-}
-
-void Step::showDescription() {
-	_description->show(anim::type::normal);
-}
-
-void Step::hideDescription() {
-	_description->hide(anim::type::normal);
 }
 
 void Step::paintContentSnapshot(QPainter &p, const QPixmap &snapshot, float64 alpha, float64 howMuchHidden) {
@@ -487,6 +488,14 @@ int Step::contentLeft() const {
 	return (width() - st::introNextButton.width) / 2;
 }
 
+int Step::minimumFooterTop() const {
+	return 0;
+}
+
+int Step::nextButtonTop() const {
+	return contentTop() + st::introNextTop;
+}
+
 int Step::contentTop() const {
 	auto result = (height() - st::introHeight) / 2;
 	accumulate_max(result, st::introStepTopMin);
@@ -533,7 +542,7 @@ void Step::refreshError(const QString &text) {
 
 void Step::prepareShowAnimated(Step *after) {
 	setInnerFocus();
-	if (hasCover() || after->hasCover()) {
+	if ((hasCover() || after->hasCover()) && !Jel::Ui::MacosInterfaceEnabled()) {
 		_coverAnimation = prepareCoverAnimation(after);
 		prepareCoverMask();
 	} else {
@@ -571,6 +580,7 @@ QPixmap Step::prepareContentSnapshot() {
 }
 
 QPixmap Step::prepareSlideAnimation() {
+	if (Jel::Ui::MacosInterfaceEnabled()) return Ui::GrabWidget(this, rect());
 	auto grabLeft = (width() - st::introStepWidth) / 2;
 	auto grabTop = contentTop();
 	return Ui::GrabWidget(
@@ -586,7 +596,10 @@ void Step::showAnimated(Animate animate) {
 		auto slideLeft = (animate == Animate::Back);
 		_slideAnimation->start(
 			slideLeft,
-			[=] { update(0, contentTop(), width(), st::introStepHeight); },
+			[=] {
+				if (Jel::Ui::MacosInterfaceEnabled()) update();
+				else update(0, contentTop(), width(), st::introStepHeight);
+			},
 			st::introSlideDuration);
 	} else {
 		_a_show.start([this] { update(); }, 0., 1., st::introCoverDuration);

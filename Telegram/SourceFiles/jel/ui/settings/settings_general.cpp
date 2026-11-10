@@ -34,7 +34,7 @@ using namespace JelBuilder;
 namespace {
 
 void BuildTranslator(SectionBuilder &builder, JelSectionBuilder &jel) {
-	builder.addSubsectionTitle(tr::lng_translate_settings_subtitle());
+	builder.addSubsectionTitle(tr::jel_TranslatorHeader());
 
 	auto *settings = &JelSettings::getInstance();
 

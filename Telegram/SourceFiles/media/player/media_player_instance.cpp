@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "media/player/media_player_instance.h"
+#include "jel/ui/macos_interface.h"
 
 #include "data/data_document.h"
 #include "data/data_session.h"
@@ -1361,6 +1362,17 @@ void Instance::updatePlaybackSpeed() {
 	}
 }
 
+void Instance::setPlaybackSpeed(float64 speed) {
+	if (const auto data = getData(getActiveType())) {
+		if (!data->current.changeablePlaybackSpeed()) {
+			return;
+		}
+		if (const auto streamed = data->streamed.get()) {
+			streamed->instance.setSpeed(speed);
+		}
+	}
+}
+
 void Instance::emitUpdate(AudioMsgId::Type type) {
 	emitUpdate(type, [](const AudioMsgId &playing) { return true; });
 }
@@ -1389,6 +1401,13 @@ rpl::producer<OrderMode> Instance::orderChanges(
 	return (data->type == AudioMsgId::Type::Song)
 		? Core::App().settings().playerOrderModeChanges()
 		: rpl::never<OrderMode>();
+}
+
+std::vector<std::pair<float64, float64>> Instance::bufferedRanges(AudioMsgId::Type type) const {
+	const auto data = getData(type);
+	return (data && data->streamed)
+		? data->streamed->instance.player().bufferedRanges()
+		: std::vector<std::pair<float64, float64>>();
 }
 
 TrackState Instance::getState(AudioMsgId::Type type) const {
@@ -1551,7 +1570,9 @@ void Instance::handleStreamingUpdate(
 	}, [&](UpdateVideo) {
 		emitUpdate(data->type);
 	}, [&](PreloadedAudio) {
-		//emitUpdate(data->type, [](AudioMsgId) { return true; });
+		if (Jel::Ui::MacosInterfaceEnabled()) {
+			emitUpdate(data->type);
+		}
 	}, [&](UpdateAudio) {
 		emitUpdate(data->type);
 	}, [](WaitingForData) {

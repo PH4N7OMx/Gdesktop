@@ -79,12 +79,16 @@ void SavedMusic::loadIds() {
 	).done([=](const MTPaccount_SavedMusicIds &result) {
 		_loadIdsRequest = 0;
 		_lastReceived = crl::now();
+		const auto previous = _myIds;
 		result.match([&](const MTPDaccount_savedMusicIds &data) {
 			_myIds = data.vids().v
 				| ranges::views::transform(&MTPlong::v)
 				| ranges::to_vector;
 		}, [](const MTPDaccount_savedMusicIdsNotModified &) {
 		});
+		if (_myIds != previous) {
+			_changed.fire_copy(_owner->session().userPeerId());
+		}
 	}).fail([=] {
 		_loadIdsRequest = 0;
 		_lastReceived = crl::now();

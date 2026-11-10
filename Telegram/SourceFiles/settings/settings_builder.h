@@ -275,6 +275,9 @@ private:
 		HighlightArgs &&args);
 
 	BuildContext _context;
+	Ui::VerticalLayout *_macosGroup = nullptr;
+	Ui::VerticalLayout *_macosGroupParent = nullptr;
+	bool _addingMacosRow = false;
 
 };
 

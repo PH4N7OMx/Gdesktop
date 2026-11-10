@@ -10,11 +10,13 @@ def main():
     source_count = 0
     resource_count = 0
     cmake = (telegram / "CMakeLists.txt").read_text(encoding="utf-8")
-    for block in re.findall(
+    blocks = re.findall(
         r"nice_target_sources\([^\s]+\s+\$\{src_loc\}(.*?)\n\s*\)",
         cmake,
         re.S,
-    ):
+    )
+    blocks += re.findall(r"set\(gummygram_files\s+(.*?)\n\s*\)", cmake, re.S)
+    for block in blocks:
         for line in block.splitlines():
             relative = line.strip()
             if re.fullmatch(r"[\w./ -]+\.(?:cpp|h|mm|m|c)", relative):

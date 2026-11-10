@@ -1,11 +1,11 @@
 /*
- * This is the source code of AyuGram for Desktop.
- *
- * We do not and cannot prevent the use of our code,
- * but be respectful and credit the original author.
- *
- * Copyright @Radolyn, 2025
- */
+	* This is the source code of AyuGram for Desktop.
+	*
+	* We do not and cannot prevent the use of our code,
+	* but be respectful and credit the original author.
+	*
+	* Copyright @Radolyn, 2025
+	*/
 
 using "ui/basic.style";
 using "ui/colors.palette";
@@ -103,7 +103,7 @@ pluginShowInFolder: IconButton(defaultIconButton) {
 }
 maxPluginDescriptionHeight: 400px;
 pluginVersionAuthorLabel: FlatLabel(boxLabel) {
-    align: align(center);
+	   align: align(center);
 }
 pluginChipSkip: 6px;
 
@@ -124,3 +124,701 @@ jelServiceTimeBadgeVerticalPadding: 2px;
 jelServiceTimeBadgeGap: 8px;
 jelServiceTimeBadgeTrailingInset: 3px;
 jelServiceTimeBadgeLastLineWidthAdd: 9px;
+
+using "dialogs/dialogs.style";
+using "chat_helpers/chat_helpers.style";
+using "ui/menu_icons.style";
+
+macosDialogRow: DialogRow(defaultDialogRow) {
+	height: 70px;
+	padding: margins(10px, 10px, 10px, 10px);
+	photoSize: 50px;
+	nameLeft: 70px;
+	nameTop: 9px;
+	textLeft: 70px;
+	textTop: 27px;
+}
+macosTaggedDialogRow: DialogRow(taggedDialogRow, macosDialogRow) {
+	height: 80px;
+	textTop: 32px;
+	tagTop: 60px;
+}
+macosForumDialogRow: DialogRow(forumDialogRow, macosDialogRow) {
+	height: 88px;
+	textTop: 34px;
+}
+macosTaggedForumDialogRow: DialogRow(taggedForumDialogRow, macosForumDialogRow) {
+	height: 104px;
+	tagTop: 85px;
+}
+macosDialogsFont: font(13px);
+macosDialogsUnreadFont: font(11px semibold);
+macosDialogsTextStyle: TextStyle(defaultTextStyle) {
+	font: macosDialogsFont;
+	lineHeight: 16px;
+}
+macosDialogsDateFont: font(12px);
+macosDialogsFilter: InputField(dialogsFilter) {
+	borderRadius: 10px;
+	border: 0px;
+	borderActive: 0px;
+	textMargins: margins(12px, 7px, 30px, 6px);
+}
+macosMessagePadding: margins(10px, 7px, 10px, 7px);
+macosSettingsButton: SettingsButton(settingsButton) {
+	padding: margins(48px, 10px, 14px, 10px);
+	height: 20px;
+	iconLeft: 14px;
+	toggleSkip: 14px;
+	style: TextStyle(defaultTextStyle) { font: font(14px); }
+	rightLabel: FlatLabel(defaultSettingsRightLabel) {
+		style: TextStyle(defaultTextStyle) { font: font(13px); }
+	}
+}
+macosSettingsButtonNoIcon: SettingsButton(settingsButtonNoIcon, macosSettingsButton) {
+	padding: margins(14px, 10px, 14px, 10px);
+}
+
+macosHistoryAttach: IconButton(historyAttach) {
+	icon: icon {{ "jel/macos/attach", historyComposeIconFg }};
+	iconOver: icon {{ "jel/macos/attach", historyComposeIconFgOver }};
+	iconPosition: point(-1px, -1px);
+}
+
+macosTopBarSearch: IconButton(topBarSearch) {
+	icon: icon {{ "jel/macos/search", windowFg }};
+	iconOver: icon {{ "jel/macos/search", windowFgOver }};
+	iconPosition: point(-1px, -1px);
+}
+
+macosTopBarCall: IconButton(topBarCall) {
+	icon: icon {{ "jel/macos/call", windowFg }};
+	iconOver: icon {{ "jel/macos/call", windowFgOver }};
+	iconPosition: point(-1px, -1px);
+}
+
+macosTopBarMenuToggle: IconButton(topBarMenuToggle) {
+	icon: icon {{ "jel/macos/more", windowFg }};
+	iconOver: icon {{ "jel/macos/more", windowFgOver }};
+	iconPosition: point(-1px, -1px);
+}
+
+macosHistoryAttachEmojiInner: IconButton(historyAttachEmojiInner) {
+	icon: icon {{ "jel/macos/emoji", historyComposeIconFg }};
+	iconOver: icon {{ "jel/macos/emoji", historyComposeIconFgOver }};
+	iconPosition: point(-1px, -1px);
+}
+
+macosHistorySendIcon: icon {{ "jel/macos/send", historySendIconFg }};
+
+macosHistorySendIconOver: icon {{ "jel/macos/send", historySendIconFgOver }};
+
+macosTopBarBack: icon {{ "jel/macos/back", lightButtonFg }};
+
+macosMenuIconSettings: icon {{ "jel/macos/settings", menuIconColor }};
+
+macosMenuIconProfile: icon {{ "jel/macos/profile", menuIconColor }};
+
+macosMenuIconNotifications: icon {{ "jel/macos/notifications", menuIconColor }};
+
+macosMenuIconPalette: icon {{ "jel/macos/appearance", menuIconColor }};
+
+macosMenuIconPhone: icon {{ "jel/macos/call-24x24", menuIconColor }};
+
+macosMenuIconSearch: icon {{ "jel/macos/search-24x24", menuIconColor }};
+
+macosMenuIconReply: icon {{ "jel/macos/reply", menuIconColor }};
+
+macosMenuIconCopy: icon {{ "jel/macos/copy", menuIconColor }};
+
+macosMenuIconForward: icon {{ "jel/macos/forward", menuIconColor }};
+
+macosMenuIconDelete: icon {{ "jel/macos/delete", menuIconColor }};
+
+macosMenuIconEdit: icon {{ "jel/macos/edit", menuIconColor }};
+
+macosMenuIconPin: icon {{ "jel/macos/pin", menuIconColor }};
+
+macosMenuIconArchive: icon {{ "jel/macos/archive", menuIconColor }};
+
+macosNavigationHeight: 50px;
+macosNavigationButton: IconButton(defaultIconButton) {
+	width: 64px;
+	height: macosNavigationHeight;
+	iconPosition: point(-1px, -1px);
+	rippleAreaSize: 0px;
+}
+
+macosNavigationChats: icon {{ "jel/macos/navchats", menuIconFg }};
+macosNavigationChatsActive: icon {{ "jel/macos/navchats", windowActiveTextFg }};
+
+macosNavigationContacts: icon {{ "jel/macos/navcontacts", menuIconFg }};
+macosNavigationContactsActive: icon {{ "jel/macos/navcontacts", windowActiveTextFg }};
+
+macosNavigationCalls: icon {{ "jel/macos/navcalls", menuIconFg }};
+macosNavigationCallsActive: icon {{ "jel/macos/navcalls", windowActiveTextFg }};
+
+macosNavigationSettings: icon {{ "jel/macos/navsettings", menuIconFg }};
+macosNavigationSettingsActive: icon {{ "jel/macos/navsettings", windowActiveTextFg }};
+
+// Native context-menu symbols, also used by the independent icon setting.
+macosMenuIconUnpin: icon {{ "jel/macos/menuunpin", menuIconColor }};
+macosMenuIconUnarchive: icon {{ "jel/macos/menuunarchive", menuIconColor }};
+macosMenuIconMarkRead: icon {{ "jel/macos/menumarkread", menuIconColor }};
+macosMenuIconMarkUnread: icon {{ "jel/macos/menumarkunread", menuIconColor }};
+macosMenuIconMute: icon {{ "jel/macos/menumute", menuIconColor }};
+macosMenuIconUnmute: icon {{ "jel/macos/menuunmute", menuIconColor }};
+macosMenuIconMuteFor: icon {{ "jel/macos/menumutefor", menuIconColor }};
+macosMenuIconSoundOn: icon {{ "jel/macos/menusoundon", menuIconColor }};
+macosMenuIconSoundOff: icon {{ "jel/macos/menusoundoff", menuIconColor }};
+macosMenuIconInfo: icon {{ "jel/macos/menuinfo", menuIconColor }};
+macosMenuIconViewReplies: icon {{ "jel/macos/menuviewreplies", menuIconColor }};
+macosMenuIconSelect: icon {{ "jel/macos/menuselect", menuIconColor }};
+macosMenuIconSaveImage: icon {{ "jel/macos/menusaveimage", menuIconColor }};
+macosMenuIconDownload: icon {{ "jel/macos/menudownload", menuIconColor }};
+macosMenuIconLink: icon {{ "jel/macos/menulink", menuIconColor }};
+macosMenuIconLinks: icon {{ "jel/macos/menulinks", menuIconColor }};
+macosMenuIconBlock: icon {{ "jel/macos/menublock", menuIconColor }};
+macosMenuIconUnblock: icon {{ "jel/macos/menuunblock", menuIconColor }};
+macosMenuIconReport: icon {{ "jel/macos/menureport", menuIconColor }};
+macosMenuIconReportAntiSpam: icon {{ "jel/macos/menureportantispam", menuIconColor }};
+macosMenuIconClear: icon {{ "jel/macos/menuclear", menuIconColor }};
+macosMenuIconCreatePoll: icon {{ "jel/macos/menucreatepoll", menuIconColor }};
+macosMenuIconCreateTodoList: icon {{ "jel/macos/menucreatetodolist", menuIconColor }};
+macosMenuIconArticle: icon {{ "jel/macos/menuarticle", menuIconColor }};
+macosMenuIconGif: icon {{ "jel/macos/menugif", menuIconColor }};
+macosMenuIconStickers: icon {{ "jel/macos/menustickers", menuIconColor }};
+macosMenuIconEmoji: icon {{ "jel/macos/menuemoji", menuIconColor }};
+macosMenuIconFile: icon {{ "jel/macos/menufile", menuIconColor }};
+macosMenuIconPhoto: icon {{ "jel/macos/menuphoto", menuIconColor }};
+macosMenuIconLeave: icon {{ "jel/macos/menuleave", menuIconColor }};
+macosMenuIconSchedule: icon {{ "jel/macos/menuschedule", menuIconColor }};
+macosMenuIconReschedule: icon {{ "jel/macos/menureschedule", menuIconColor }};
+macosMenuIconSend: icon {{ "jel/macos/menusend", menuIconColor }};
+macosMenuIconWhenOnline: icon {{ "jel/macos/menuwhenonline", menuIconColor }};
+macosMenuIconTranslate: icon {{ "jel/macos/menutranslate", menuIconColor }};
+macosMenuIconShare: icon {{ "jel/macos/menushare", menuIconColor }};
+macosMenuIconGroups: icon {{ "jel/macos/menugroups", menuIconColor }};
+macosMenuIconChannel: icon {{ "jel/macos/menuchannel", menuIconColor }};
+macosMenuIconNightMode: icon {{ "jel/macos/menunightmode", menuIconColor }};
+macosMenuIconLock: icon {{ "jel/macos/menulock", menuIconColor }};
+macosMenuIconStats: icon {{ "jel/macos/menustats", menuIconColor }};
+macosMenuIconReactions: icon {{ "jel/macos/menureactions", menuIconColor }};
+macosMenuIconRetractVote: icon {{ "jel/macos/menuretractvote", menuIconColor }};
+macosMenuIconPromote: icon {{ "jel/macos/menupromote", menuIconColor }};
+macosMenuIconPermissions: icon {{ "jel/macos/menupermissions", menuIconColor }};
+macosMenuIconExpand: icon {{ "jel/macos/menuexpand", menuIconColor }};
+macosMenuIconCollapse: icon {{ "jel/macos/menucollapse", menuIconColor }};
+macosMenuIconAddToFolder: icon {{ "jel/macos/menuaddtofolder", menuIconColor }};
+macosMenuIconShowInFolder: icon {{ "jel/macos/menushowinfolder", menuIconColor }};
+macosMenuIconFave: icon {{ "jel/macos/menufave", menuIconColor }};
+macosMenuIconUnfave: icon {{ "jel/macos/menuunfave", menuIconColor }};
+macosMenuIconAdd: icon {{ "jel/macos/menuadd", menuIconColor }};
+macosMenuIconBoosts: icon {{ "jel/macos/menuboosts", menuIconColor }};
+macosMenuIconSpoiler: icon {{ "jel/macos/menuspoiler", menuIconColor }};
+macosMenuIconVideoChat: icon {{ "jel/macos/menuvideochat", menuIconColor }};
+macosMenuIconChatBubble: icon {{ "jel/macos/menuchatbubble", menuIconColor }};
+macosMenuIconSavedMessages: icon {{ "jel/macos/menusavedmessages", menuIconColor }};
+macosMenuIconTopics: icon {{ "jel/macos/menutopics", menuIconColor }};
+macosMenuIconChangeColors: icon {{ "jel/macos/menuchangecolors", menuIconColor }};
+macosMenuIconExport: icon {{ "jel/macos/menuexport", menuIconColor }};
+macosMenuIconShowInChat: icon {{ "jel/macos/menushowinchat", menuIconColor }};
+macosMenuIconTagFilter: icon {{ "jel/macos/menutagfilter", menuIconColor }};
+macosMenuIconTagRename: icon {{ "jel/macos/menutagrename", menuIconColor }};
+macosMenuIconTagRemove: icon {{ "jel/macos/menutagremove", menuIconColor }};
+macosMenuIconAbove: icon {{ "jel/macos/menuabove", menuIconColor }};
+macosMenuIconBelow: icon {{ "jel/macos/menubelow", menuIconColor }};
+macosMenuIconCaptionShow: icon {{ "jel/macos/menucaptionshow", menuIconColor }};
+macosMenuIconFont: icon {{ "jel/macos/menufont", menuIconColor }};
+
+// Community rows keep their extra inset while sharing the native row metrics.
+macosCommunityInfoDialogRow: DialogRow(communityInfoDialogRow, macosDialogRow) {
+	padding: margins(22px, 10px, 18px, 10px);
+	nameLeft: 84px;
+	textLeft: 84px;
+}
+macosCommunityInfoTaggedDialogRow: DialogRow(communityInfoTaggedDialogRow, macosTaggedDialogRow) {
+	padding: margins(22px, 10px, 18px, 10px);
+	nameLeft: 84px;
+	textLeft: 84px;
+}
+macosCommunityInfoForumDialogRow: DialogRow(communityInfoForumDialogRow, macosForumDialogRow) {
+	padding: margins(22px, 10px, 18px, 10px);
+	nameLeft: 84px;
+	textLeft: 84px;
+}
+macosCommunityInfoTaggedForumDialogRow: DialogRow(communityInfoTaggedForumDialogRow, macosTaggedForumDialogRow) {
+	padding: margins(22px, 10px, 18px, 10px);
+	nameLeft: 84px;
+	textLeft: 84px;
+}
+macosCommunityRequestableListItem: PeerListItem(communityRequestableListItem) {
+	height: 70px;
+	photoSize: 50px;
+	photoPosition: point(10px, 10px);
+	namePosition: point(72px, 12px);
+	statusPosition: point(72px, 36px);
+}
+macosCommunityInfoRequestableListItem: PeerListItem(macosCommunityRequestableListItem) {
+	photoPosition: point(22px, 10px);
+	namePosition: point(84px, 12px);
+	statusPosition: point(84px, 36px);
+}
+
+// AppMenuRowItem uses 13px text, 28px rows and an 18px outer corner.
+macosMenuTextStyle: TextStyle(defaultTextStyle) {
+	font: font(13px);
+}
+macosMenu: Menu(defaultMenu) {
+	itemRadius: 14px;
+	itemInset: 4px;
+	frosted: true;
+	itemPadding: margins(15px, 5px, 15px, 5px);
+	itemStyle: macosMenuTextStyle;
+	separator: MenuSeparator(defaultMenuSeparator) {
+		padding: margins(11px, 2px, 11px, 2px);
+	}
+}
+macosMenuWithIcons: Menu(menuWithIcons, macosMenu) {
+	itemIconPosition: point(12px, 2px);
+	itemPadding: margins(43px, 5px, 15px, 5px);
+}
+macosPopupMenu: PopupMenu(defaultPopupMenu) {
+	radius: 18px;
+	showDuration: 280;
+	animation: PanelAnimation(defaultPanelAnimation) {
+		startWidth: 0.85;
+		startHeight: 0.85;
+		startOpacity: 0.;
+	}
+	menu: macosMenu;
+}
+macosPopupMenuWithIcons: PopupMenu(popupMenuWithIcons, macosPopupMenu) {
+	menu: macosMenuWithIcons;
+}
+
+macosWindowTitle: WindowTitle(defaultWindowTitle) {
+	height: 32px;
+	bg: dialogsBg;
+	bgActive: dialogsBg;
+	shadow: false;
+	oneSideControls: true;
+}
+
+macosTopBarHeight: 50px;
+macosBubbleRadiusSmall: 8px;
+
+macosComposeField: InputField(historyComposeField) {
+	textMargins: margins(14px, 8px, 14px, 8px);
+	textBg: filterInputInactiveBg;
+	textBgActive: filterInputInactiveBg;
+	borderRadius: 20px;
+	heightMin: 36px;
+	placeholderMargins: margins(14px, 8px, 14px, 8px);
+}
+
+macosSettingsPhoto: UserpicButton(defaultUserpicButton) {
+	size: size(60px, 60px);
+	photoSize: 60px;
+}
+macosSettingsName: FlatLabel(defaultFlatLabel) {
+	maxHeight: 20px;
+	textFg: windowBoldFg;
+	style: TextStyle(defaultTextStyle) { font: font(14px semibold); }
+}
+
+macosUnifiedWindowTitle: WindowTitle(macosWindowTitle) {
+	controlsOverlayWidth: 70px;
+	height: 50px;
+}
+macosDialogsSearchHeight: 40px;
+
+macosDialogsSent: ThreeStateIcon {
+	icon: icon {{ "jel/macos/readmarkone", dialogsSentIconFg, point(10px, 2px) }};
+	over: icon {{ "jel/macos/readmarkone", dialogsSentIconFgOver, point(10px, 2px) }};
+	active: icon {{ "jel/macos/readmarkone", dialogsSentIconFgActive, point(10px, 2px) }};
+}
+macosDialogsReceived: ThreeStateIcon {
+	icon: icon { { "jel/macos/readmarkone", dialogsSentIconFg, point(6px, 2px) }, { "jel/macos/readmarktwo", dialogsSentIconFg, point(10px, 2px) } };
+	over: icon { { "jel/macos/readmarkone", dialogsSentIconFgOver, point(6px, 2px) }, { "jel/macos/readmarktwo", dialogsSentIconFgOver, point(10px, 2px) } };
+	active: icon { { "jel/macos/readmarkone", dialogsSentIconFgActive, point(6px, 2px) }, { "jel/macos/readmarktwo", dialogsSentIconFgActive, point(10px, 2px) } };
+}
+macosDialogsPinned: ThreeStateIcon {
+	icon: icon {{ "jel/macos/listpinned", menuIconFg }};
+	over: icon {{ "jel/macos/listpinned", menuIconFgOver }};
+	active: icon {{ "jel/macos/listpinned", dialogsTextFgActive }};
+}
+macosDialogsMuted: ThreeStateIcon {
+	icon: icon {{ "jel/macos/listmuted", menuIconFg }};
+	over: icon {{ "jel/macos/listmuted", menuIconFgOver }};
+	active: icon {{ "jel/macos/listmuted", dialogsTextFgActive }};
+}
+macosHistorySending: icon {{ "jel/macos/listsending", historySendingOutIconFg, point(5px, 4px) }};
+macosHistorySendingInverted: icon {{ "jel/macos/listsending", historySendingInvertedIconFg, point(5px, 4px) }};
+macosHistorySent: icon {{ "jel/macos/readmarkone", historyOutIconFg, point(2px, 3px) }};
+macosHistoryReceived: icon { { "jel/macos/readmarkone", historyOutIconFg, point(2px, 3px) }, { "jel/macos/readmarktwo", historyOutIconFg, point(6px, 3px) } };
+macosHistorySentSelected: icon {{ "jel/macos/readmarkone", historyOutIconFgSelected, point(2px, 3px) }};
+macosHistoryReceivedSelected: icon { { "jel/macos/readmarkone", historyOutIconFgSelected, point(2px, 3px) }, { "jel/macos/readmarktwo", historyOutIconFgSelected, point(6px, 3px) } };
+
+macosComposeIcon: icon {{ "jel/macos/compose", windowActiveTextFg }};
+
+using "media/view/media_view.style";
+macosGalleryprev: icon {{ "jel/macos/galleryprev", mediaviewControlFg }};
+macosGallerynext: icon {{ "jel/macos/gallerynext", mediaviewControlFg }};
+macosGallerysave: icon {{ "jel/macos/gallerysave", mediaviewControlFg }};
+macosGalleryshare: icon {{ "jel/macos/galleryshare", mediaviewControlFg }};
+macosGallerymore: icon {{ "jel/macos/gallerymore", mediaviewControlFg }};
+macosGalleryrotate: icon {{ "jel/macos/galleryrotate", mediaviewControlFg }};
+
+macosComposeIcons: ComposeIcons(defaultComposeIcons) {
+	recent: icon {{ "jel/macos/emojirecent", emojiIconFg }};
+	recentActive: icon {{ "jel/macos/emojirecent", emojiSubIconFgActive }};
+	people: icon {{ "jel/macos/emojipeople", emojiIconFg }};
+	peopleActive: icon {{ "jel/macos/emojipeople", emojiSubIconFgActive }};
+	nature: icon {{ "jel/macos/emojinature", emojiIconFg }};
+	natureActive: icon {{ "jel/macos/emojinature", emojiSubIconFgActive }};
+	food: icon {{ "jel/macos/emojifood", emojiIconFg }};
+	foodActive: icon {{ "jel/macos/emojifood", emojiSubIconFgActive }};
+	activity: icon {{ "jel/macos/emojiactivity", emojiIconFg }};
+	activityActive: icon {{ "jel/macos/emojiactivity", emojiSubIconFgActive }};
+	travel: icon {{ "jel/macos/emojitravel", emojiIconFg }};
+	travelActive: icon {{ "jel/macos/emojitravel", emojiSubIconFgActive }};
+	objects: icon {{ "jel/macos/emojiobjects", emojiIconFg }};
+	objectsActive: icon {{ "jel/macos/emojiobjects", emojiSubIconFgActive }};
+	symbols: icon {{ "jel/macos/emojisymbols", emojiIconFg }};
+	symbolsActive: icon {{ "jel/macos/emojisymbols", emojiSubIconFgActive }};
+	menuFave: macosMenuIconFave;
+	menuUnfave: macosMenuIconUnfave;
+	menuStickerSet: macosMenuIconStickers;
+	menuRecentRemove: macosMenuIconDelete;
+	menuGifAdd: macosMenuIconGif;
+	menuGifRemove: macosMenuIconDelete;
+	menuGifCaption: macosMenuIconEdit;
+	menuSetAdd: macosMenuIconAdd;
+	menuSetShare: macosMenuIconShare;
+	menuSetCopyLink: macosMenuIconLink;
+	menuSetRemove: macosMenuIconDelete;
+	menuEmojiStatus: macosMenuIconEmoji;
+	menuEmojiCopy: macosMenuIconCopy;
+	menuMute: macosMenuIconMute;
+	menuUnmute: macosMenuIconUnmute;
+	menuSchedule: macosMenuIconSchedule;
+	menuWhenOnline: macosMenuIconWhenOnline;
+	menuSpoiler: macosMenuIconSpoiler;
+	menuBelow: macosMenuIconBelow;
+	menuAbove: macosMenuIconAbove;
+	menuCover: macosMenuIconEdit;
+}
+
+macosStoriesComposeIcons: ComposeIcons {
+	settings: icon {{ "emoji/emoji_settings", storiesComposeGrayIcon }};
+	collectibles: icon {{ "menu/unique", storiesComposeGrayIcon }};
+
+	recent: icon {{ "jel/macos/emojirecent", storiesComposeGrayIcon }};
+	recentActive: icon {{ "jel/macos/emojirecent", storiesComposeWhiteText }};
+	people: icon {{ "jel/macos/emojipeople", storiesComposeGrayIcon }};
+	peopleActive: icon {{ "jel/macos/emojipeople", storiesComposeWhiteText }};
+	nature: icon {{ "jel/macos/emojinature", storiesComposeGrayIcon }};
+	natureActive: icon {{ "jel/macos/emojinature", storiesComposeWhiteText }};
+	food: icon {{ "jel/macos/emojifood", storiesComposeGrayIcon }};
+	foodActive: icon {{ "jel/macos/emojifood", storiesComposeWhiteText }};
+	activity: icon {{ "jel/macos/emojiactivity", storiesComposeGrayIcon }};
+	activityActive: icon {{ "jel/macos/emojiactivity", storiesComposeWhiteText }};
+	travel: icon {{ "jel/macos/emojitravel", storiesComposeGrayIcon }};
+	travelActive: icon {{ "jel/macos/emojitravel", storiesComposeWhiteText }};
+	objects: icon {{ "jel/macos/emojiobjects", storiesComposeGrayIcon }};
+	objectsActive: icon {{ "jel/macos/emojiobjects", storiesComposeWhiteText }};
+	symbols: icon {{ "jel/macos/emojisymbols", storiesComposeGrayIcon }};
+	symbolsActive: icon {{ "jel/macos/emojisymbols", storiesComposeWhiteText }};
+
+	menuFave: icon {{ "jel/macos/menufave", storiesComposeWhiteText }};
+	menuUnfave: icon {{ "jel/macos/menuunfave", storiesComposeWhiteText }};
+	menuStickerSet: icon {{ "jel/macos/menustickers", storiesComposeWhiteText }};
+	menuRecentRemove: icon {{ "jel/macos/delete", storiesComposeWhiteText }};
+	menuGifAdd: icon {{ "jel/macos/menugif", storiesComposeWhiteText }};
+	menuGifRemove: icon {{ "jel/macos/delete", storiesComposeWhiteText }};
+	menuGifCaption: icon {{ "jel/macos/edit", storiesComposeWhiteText }};
+	menuSetAdd: icon {{ "jel/macos/menuadd", storiesComposeWhiteText }};
+	menuSetShare: icon {{ "jel/macos/menushare", storiesComposeWhiteText }};
+	menuSetCopyLink: icon {{ "jel/macos/menulink", storiesComposeWhiteText }};
+	menuSetRemove: icon {{ "jel/macos/delete", storiesComposeWhiteText }};
+	menuEmojiStatus: icon {{ "jel/macos/menuemoji", storiesComposeWhiteText }};
+	menuEmojiCopy: icon {{ "jel/macos/copy", storiesComposeWhiteText }};
+	menuEmojiViewPack: icon {{ "menu/all_media", storiesComposeWhiteText }};
+	menuEmojiRemoveRecent: icon {{ "menu/cancel", storiesComposeWhiteText }};
+	menuMute: icon {{ "jel/macos/menumute", storiesComposeWhiteText }};
+	menuUnmute: icon {{ "jel/macos/menuunmute", storiesComposeWhiteText }};
+	menuSchedule: icon {{ "jel/macos/menuschedule", storiesComposeWhiteText }};
+	menuWhenOnline: icon {{ "jel/macos/menuwhenonline", storiesComposeWhiteText }};
+	menuSpoiler: icon {{ "jel/macos/menuspoiler", storiesComposeWhiteText }};
+	menuBelow: icon {{ "jel/macos/menubelow", storiesComposeWhiteText }};
+	menuAbove: icon {{ "jel/macos/menuabove", storiesComposeWhiteText }};
+	menuQualityHigh: icon {{ "menu/quality_hd", storiesComposeWhiteText }};
+	menuCover: icon {{ "jel/macos/edit", storiesComposeWhiteText }};
+	menuCoverRemove: icon {{ "menu/cancel", storiesComposeWhiteText }};
+	menuPrice: icon {{ "menu/earn", storiesComposeWhiteText }};
+	menuEditStars: icon {{ "chat/input_paid", storiesComposeWhiteText, point(-8px, -8px) }};
+
+	stripBubble: icon{
+		{ "chat/reactions_bubble_shadow", windowShadowFg },
+		{ "chat/reactions_bubble", storiesComposeBg },
+	};
+	stripExpandPanel: icon{
+		{ "chat/reactions_round_big", storiesComposeBgRipple },
+		{ "chat/reactions_expand_panel", storiesComposeGrayIcon },
+	};
+	stripExpandDropdown: icon{
+		{ "chat/reactions_round_small", storiesComposeBgRipple },
+		{ "chat/reactions_expand_panel", storiesComposeGrayIcon },
+	};
+}
+
+using "boxes/boxes.style";
+
+macosPeerStatusStyle: TextStyle(defaultTextStyle) {
+	font: font(13px);
+}
+macosPeerItem: PeerListItem(peerListBoxItem) {
+	height: 50px;
+	photoSize: 36px;
+	photoPosition: point(10px, 7px);
+	namePosition: point(56px, 8px);
+	statusPosition: point(56px, 26px);
+	nameStyle: TextStyle(defaultTextStyle) { font: font(14px semibold); }
+	checkbox: RoundImageCheckbox(defaultPeerListCheckbox) {
+		imageRadius: 18px;
+		imageSmallRadius: 16px;
+		check: RoundCheckbox(defaultPeerListCheck) { size: 0px; }
+	}
+}
+macosContacts: PeerList(contactsWithStories) {
+	item: macosPeerItem;
+	padding: margins(0px, 0px, 0px, 0px);
+}
+macosRecentCalls: PeerList(macosContacts) {
+	item: PeerListItem(macosPeerItem) {
+		height: 46px;
+		photoPosition: point(10px, 5px);
+		namePosition: point(56px, 6px);
+		statusPosition: point(56px, 24px);
+	}
+}
+
+using "intro/intro.style";
+macosAuthNextButton: RoundButton(introNextButton) {
+	width: 280px;
+	height: 36px;
+	radius: 18px;
+	fullRadius: true;
+	textTop: 8px;
+	style: TextStyle(defaultTextStyle) { font: font(15px semibold); }
+}
+macosAuthTitle: TextStyle(defaultTextStyle) {
+	font: font(22px semibold);
+}
+macosAuthInfo: TextStyle(defaultTextStyle) {
+	font: font(13px);
+	lineHeight: 20px;
+}
+
+macosModalButton: RoundButton(defaultBoxButton) {
+	height: 40px;
+	radius: 20px;
+	fullRadius: true;
+	textTop: 12px;
+	style: TextStyle(defaultTextStyle) { font: font(13px semibold); }
+}
+macosModalTitle: TextStyle(defaultTextStyle) {
+	font: font(14px semibold);
+}
+
+macosAuthQrTitle: TextStyle(defaultTextStyle) { font: font(18px semibold); }
+macosAuthInput: InputField(introCountry) {
+	width: 280px;
+	heightMin: 40px;
+	borderRadius: 10px;
+	border: 1px;
+	borderActive: 1px;
+	textMargins: margins(10px, 11px, 10px, 9px);
+	placeholderScale: 0.;
+	placeholderShift: 0px;
+	placeholderFont: font(14px);
+	style: TextStyle(defaultTextStyle) { font: font(14px); }
+}
+macosAuthCountry: InputField(macosAuthInput) {
+	style: TextStyle(defaultTextStyle) { font: font(15px); }
+	borderRadius: 0px;
+	border: 0px;
+	borderActive: 0px;
+	textBg: transparent;
+	textBgActive: transparent;
+	textMargins: margins(10px, 11px, 30px, 9px);
+}
+macosAuthCountryCode: InputField(macosAuthCountry) {
+	width: 64px;
+	textMargins: margins(10px, 11px, 0px, 9px);
+}
+macosAuthPhone: InputField(macosAuthCountry) {
+	width: 216px;
+	textMargins: margins(0px, 11px, 10px, 9px);
+}
+macosAuthPhoneRadius: 10px;
+macosAuthPhoneSeparatorInset: 10px;
+macosAuthPhoneNextTop: 216px;
+macosAuthPhoneErrorTop: 186px;
+macosAuthPhoneQrTop: 272px;
+
+macosAuthQrPixels: 186px;
+macosAuthGap: 20px;
+macosAuthGapCompact: 8px;
+macosAuthPagePadding: 16px;
+
+macosProfileTabsStrip: ProfileTabsStrip(infoProfileTabsStrip) {
+	height: 52px;
+	margin: margins(8px, 6px, 8px, 6px);
+	activeSkip: 3px;
+	tabPadding: margins(16px, 0px, 16px, 0px);
+	style: TextStyle(defaultTextStyle) { font: font(14px semibold); }
+	fg: windowFg;
+	fgActive: windowFg;
+	bgActive: macosTabsSelectionBg;
+}
+
+macosAuthQrStep: FlatLabel(introQrStep) {
+	style: TextStyle(defaultTextStyle) { font: font(13px); }
+	maxHeight: 32px;
+}
+macosAuthQrBadge: 20px;
+macosAuthQrTextLeft: 30px;
+macosAuthQrTextTop: 2px;
+macosAuthQrRowBottom: 16px;
+macosAuthQrLastBottom: 6px;
+
+macosSettingsSliderSize: size(20px, 20px);
+
+macosCheckMark: icon {{ "jel/macos/checkmark", overviewCheckFgActive }};
+macosCheck: Check(defaultCheck) {
+	diameter: 14px;
+}
+macosCheckboxStyle: TextStyle(defaultTextStyle) { font: font(13px); }
+
+using "wallet/wallet.style";
+using "ui/effects/credits.style";
+macosSegmentedSlider: SettingsSlider(defaultTabsSlider) {
+	height: 40px;
+	padding: 0px;
+	strictSkip: 24px;
+	barSkip: -8px;
+	barSnapToLabel: false;
+	pill: true;
+	pillInset: 3px;
+	pillBg: windowBg;
+	pillActiveBg: macosTabsSelectionBg;
+	labelTop: 12px;
+	labelStyle: TextStyle(defaultTextStyle) { font: font(14px semibold); }
+	labelFg: windowFg;
+	labelFgActive: windowFg;
+	ripple: emptyRippleAnimation;
+}
+
+macosWindowMinHeight: 550px;
+
+// PrivateCallScreen action glyphs retain their native logical dimensions.
+macosCallMicrophone: icon {{ "jel/macos/callmicrophone", callIconFg }};
+macosCallMicrophoneActive: icon {{ "jel/macos/callmicrophone", callIconFgActive }};
+macosCallVideo: icon {{ "jel/macos/callvideo", callIconFg }};
+macosCallVideoActive: icon {{ "jel/macos/callvideo", callIconFgActive }};
+macosCallScreen: icon {{ "jel/macos/callscreen", callIconFg }};
+macosCallScreenActive: icon {{ "jel/macos/callscreen", callIconFgActive }};
+macosCallPeople: icon {{ "jel/macos/callpeople", callIconFg }};
+macosCallMicrophoneOff: icon {{ "jel/macos/callmicrophoneoff", videoPlayIconFg }};
+macosCallLabel: TextStyle(defaultTextStyle) { font: font(12px); }
+macosCallName: TextStyle(defaultTextStyle) { font: font(26px semibold); }
+macosCallStatus: TextStyle(defaultTextStyle) { font: font(15px); }
+
+using "media/player/media_player.style";
+macosPlayerNext: icon {{ "jel/macos/playernext", mediaPlayerActiveFg }};
+macosPlayerNextDisabled: icon {{ "jel/macos/playernext", mediaPlayerInactiveFg }};
+macosPlayerPrevious: icon {{ "jel/macos/playerprevious", mediaPlayerActiveFg }};
+macosPlayerPreviousDisabled: icon {{ "jel/macos/playerprevious", mediaPlayerInactiveFg }};
+macosPlayerRepeat: icon {{ "jel/macos/playerrepeat", mediaPlayerActiveFg }};
+macosPlayerRepeatDisabled: icon {{ "jel/macos/playerrepeat", menuIconFg }};
+macosPlayerRepeatDisabledOver: icon {{ "jel/macos/playerrepeat", menuIconFgOver }};
+macosPlayerRepeatOne: icon {{ "jel/macos/playerrepeatone", mediaPlayerActiveFg }};
+macosPlayerVolume: icon {{ "jel/macos/playervolume", mediaPlayerActiveFg }};
+macosPlayerMuted: icon {{ "jel/macos/playermuted", mediaPlayerActiveFg }};
+macosPlayerClose: icon {{ "jel/macos/playerclose", menuIconFg }};
+macosPlayerCloseOver: icon {{ "jel/macos/playerclose", menuIconFgOver }};
+
+macosPlayerName: FlatLabel(mediaPlayerName) {
+	style: TextStyle(defaultTextStyle) { font: font(13px); }
+	maxHeight: 20px;
+}
+macosPlayerArtist: FlatLabel(macosPlayerName) {
+	textFg: windowSubTextFg;
+}
+
+macosPlaylistArtist: LinkButton(defaultLinkButton) {
+	font: font(13px);
+	overFont: font(13px);
+	color: windowSubTextFg;
+	overColor: windowSubTextFg;
+	padding: margins(0px, 0px, 0px, 0px);
+}
+
+macosPlayerList: icon {{ "jel/macos/playerlist", menuIconFg }};
+macosPlayerListOver: icon {{ "jel/macos/playerlist", menuIconFgOver }};
+macosPlaylistNext: icon {{ "jel/macos/playlistnext", windowFg }};
+macosPlaylistNextDisabled: icon {{ "jel/macos/playlistnext", menuIconFg }};
+macosPlaylistPrevious: icon {{ "jel/macos/playlistprevious", windowFg }};
+macosPlaylistPreviousDisabled: icon {{ "jel/macos/playlistprevious", menuIconFg }};
+macosPlaylistOrder: icon {{ "jel/macos/playlistorder", windowFg }};
+macosPlaylistReverse: icon {{ "jel/macos/playlistorder", windowActiveTextFg }};
+macosPlaylistShuffle: icon {{ "jel/macos/playlistshuffle", windowActiveTextFg }};
+macosPlaylistRepeatNone: icon {{ "jel/macos/playlistrepeat", windowFg }};
+macosPlaylistRepeatAll: icon {{ "jel/macos/playlistrepeat", windowActiveTextFg }};
+macosPlaylistRepeatOne: icon {{ "jel/macos/playlistrepeatone", windowActiveTextFg }};
+macosPlaylistButton: IconButton(mediaPlayerRepeatButton) {
+	width: 36px;
+	height: 40px;
+	icon: macosPlaylistNext;
+	iconPosition: point(-1px, -1px);
+	rippleAreaPosition: point(0px, 2px);
+	rippleAreaSize: 36px;
+}
+
+macosPlayerListDesktop: icon {{ "menu/rich/bullet_list", menuIconFg }};
+macosPlayerListDesktopOver: icon {{ "menu/rich/bullet_list", menuIconFgOver }};
+
+macosPlaylistPlaceholder: icon {{ "jel/macos/playlistplaceholder", windowSubTextFg }};
+macosPlaylistTime: LabelSimple(mediaPlayerTime) { font: font(11px); }
+macosPlaylistSeek: MediaSlider(defaultContinuousSlider) {
+	width: 2px;
+	seekSize: size(8px, 8px);
+	activeFg: windowActiveTextFg;
+	activeFgOver: windowActiveTextFg;
+}
+
+macosPlaylistPlaceholderDesktop: icon {{ "local_storage/music-24x24", windowSubTextFg }};
+
+macosPlayerOrder: icon {{ "jel/macos/playlistorder", mediaPlayerActiveFg }};
+macosPlayerOrderDisabled: icon {{ "jel/macos/playlistorder", menuIconFg }};
+macosPlayerOrderDisabledOver: icon {{ "jel/macos/playlistorder", menuIconFgOver }};
+macosPlayerShuffle: icon {{ "jel/macos/playlistshuffle", mediaPlayerActiveFg }};
+macosPlayerOrderMenuReverse: icon {{ "jel/macos/playlistorder", windowFg }};
+macosPlayerOrderMenuReverseActive: icon {{ "jel/macos/playlistorder", windowActiveTextFg }};
+macosPlayerOrderMenuShuffle: icon {{ "jel/macos/playlistshuffle", windowFg }};
+macosPlayerOrderMenuShuffleActive: icon {{ "jel/macos/playlistshuffle", windowActiveTextFg }};
+
+macosPlaylistAdd: RoundButton(defaultBoxButton) {
+	height: 40px;
+	radius: 10px;
+	fullRadius: false;
+	textTop: 11px;
+	style: TextStyle(defaultTextStyle) { font: font(13px semibold); }
+}
+macosPlaylistSavedNotice: FlatLabel(defaultFlatLabel) {
+	align: align(center);
+	textFg: windowSubTextFg;
+	style: TextStyle(defaultTextStyle) { font: font(11px); }
+}

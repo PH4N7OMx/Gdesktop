@@ -116,6 +116,7 @@ public:
 		const AudioMsgId &audioId,
 		std::optional<PlaylistContext> context = {});
 	[[nodiscard]] TrackState getState(AudioMsgId::Type type) const;
+	[[nodiscard]] std::vector<std::pair<float64, float64>> bufferedRanges(AudioMsgId::Type type) const;
 
 	[[nodiscard]] PlaylistContext playlistContext(
 		AudioMsgId::Type type) const {
@@ -152,6 +153,7 @@ public:
 	void cancelSeeking(AudioMsgId::Type type);
 
 	void updatePlaybackSpeed();
+	void setPlaybackSpeed(float64 speed);
 
 	[[nodiscard]] bool nextAvailable(AudioMsgId::Type type) const;
 	[[nodiscard]] bool previousAvailable(AudioMsgId::Type type) const;

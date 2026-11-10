@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "info/info_top_bar.h"
+#include "jel/ui/macos_interface.h"
 
 #include "dialogs/ui/dialogs_stories_list.h"
 #include "lang/lang_keys.h"
@@ -397,6 +398,7 @@ void TopBar::updateControlsGeometry(int newWidth) {
 }
 
 void TopBar::updateDefaultControlsGeometry(int newWidth) {
+	const auto controlsInset = Jel::Ui::MacosTitleControlsInset(this);
 	auto right = 0;
 	for (auto &button : _buttons) {
 		if (!button) {
@@ -415,18 +417,18 @@ void TopBar::updateDefaultControlsGeometry(int newWidth) {
 	}
 	if (_back) {
 		_back->setGeometryToLeft(
+			controlsInset,
 			0,
-			0,
-			newWidth - right,
+			std::max(0, newWidth - right - controlsInset),
 			_back->height(),
 			newWidth);
 	}
 	if (_title) {
-		const auto x = _back
+		const auto x = controlsInset + (_back
 			? _st.back.width
 			: _subtitle
 			? _st.titleWithSubtitlePosition.x()
-			: _st.titlePosition.x();
+			: _st.titlePosition.x());
 		const auto y = _subtitle
 			? _st.titleWithSubtitlePosition.y()
 			: _st.titlePosition.y();
@@ -434,9 +436,9 @@ void TopBar::updateDefaultControlsGeometry(int newWidth) {
 		_title->entity()->resizeToWidth(available);
 		_title->moveToLeft(x, y, newWidth);
 		if (_subtitle) {
-			const auto subtitleX = _back
+			const auto subtitleX = controlsInset + (_back
 				? _st.back.width
-				: _st.subtitlePosition.x();
+				: _st.subtitlePosition.x());
 			_subtitle->entity()->resizeToWidth(
 				std::max(newWidth - right - subtitleX, 0));
 			_subtitle->moveToLeft(
@@ -468,7 +470,7 @@ void TopBar::updateSelectionControlsGeometry(int newWidth) {
 		right += _forward->width();
 	}
 
-	auto left = 0;
+	auto left = Jel::Ui::MacosTitleControlsInset(this);
 	_cancelSelection->moveToLeft(left, 0);
 	left += _cancelSelection->width();
 
@@ -509,40 +511,14 @@ void TopBar::updateStoriesGeometry(int newWidth) {
 void TopBar::paintEvent(QPaintEvent *e) {
 	auto p = QPainter(this);
 
-	auto highlight = _a_highlight.value(_highlight ? 1. : 0.);
-	if (_highlight && !_a_highlight.animating()) {
-		_highlight = false;
-		startHighlightAnimation();
-	}
 	if (!_roundRect) {
-		const auto brush = anim::brush(_st.bg, _st.highlightBg, highlight);
-		p.fillRect(e->rect(), brush);
-	} else if (highlight > 0.) {
-		p.setPen(Qt::NoPen);
-		p.setBrush(anim::brush(_st.bg, _st.highlightBg, highlight));
-		p.drawRoundedRect(
-			rect() + style::margins(0, 0, 0, _st.radius * 2),
-			_st.radius,
-			_st.radius);
+		p.fillRect(e->rect(), _st.bg);
 	} else {
 		_roundRect->paintSomeRounded(
 			p,
 			rect(),
 			RectPart::TopLeft | RectPart::TopRight);
 	}
-}
-
-void TopBar::highlight() {
-	_highlight = true;
-	startHighlightAnimation();
-}
-
-void TopBar::startHighlightAnimation() {
-	_a_highlight.start(
-		[this] { update(); },
-		_highlight ? 0. : 1.,
-		_highlight ? 1. : 0.,
-		_st.highlightDuration);
 }
 
 void TopBar::updateControlsVisibility(anim::type animated) {
@@ -884,14 +860,6 @@ bool TopBar::storiesTitle() const {
 
 bool TopBar::searchMode() const {
 	return _searchModeAvailable && _searchModeEnabled;
-}
-
-void TopBar::performForward() {
-	_selectionActionRequests.fire(SelectionAction::Forward);
-}
-
-void TopBar::performDelete() {
-	_selectionActionRequests.fire(SelectionAction::Delete);
 }
 
 } // namespace Info

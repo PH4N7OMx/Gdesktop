@@ -57,6 +57,7 @@ public:
 	}
 
 	void setMoveByWheel(bool move);
+	void finishChanging();
 
 	QAccessible::Role accessibilityRole() override {
 		return QAccessible::Role::Slider;
@@ -156,6 +157,7 @@ public:
 		std::optional<QColor> seekBorder;
 		std::optional<QColor> inactiveFg;
 		std::optional<QColor> inactiveBorder;
+		std::optional<QColor> receivedFg;
 	};
 
 	MediaSlider(QWidget *parent, const style::MediaSlider &st);
@@ -243,6 +245,7 @@ public:
 	};
 
 	void setColorOverrides(ColorOverrides overrides);
+	void setBufferedRanges(std::vector<std::pair<float64, float64>> ranges);
 	void addDivider(float64 atValue, const QSize &size);
 	void clearDividers();
 	void setDividerStyle(DividerStyle style);
@@ -269,6 +272,7 @@ private:
 	QRegion _dividerExclusion;
 	QSize _dividerExclusionSize;
 	ColorOverrides _overrides;
+	std::vector<std::pair<float64, float64>> _bufferedRanges;
 
 };
 

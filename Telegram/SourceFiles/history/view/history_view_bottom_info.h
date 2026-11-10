@@ -87,6 +87,7 @@ public:
 		int outerWidth,
 		bool unread,
 		bool inverted,
+		bool leftToRight,
 		const PaintContext &context) const;
 
 	[[nodiscard]] auto takeEffectAnimation()

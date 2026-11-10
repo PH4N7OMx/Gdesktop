@@ -128,5 +128,7 @@
     <file alias="cleaning_cache.tgs">../../animations/cleaning_cache.tgs</file>
     <file alias="wallet/paper.tgs">../../animations/wallet/paper.tgs</file>
     <file alias="wallet/test.tgs">../../animations/wallet/test.tgs</file>
+    <file alias="jel/macos/playlist_play_pause.tgs">../../animations/jel/macos/playlist_play_pause.tgs</file>
+    <file alias="jel/macos/playlist_pause_play.tgs">../../animations/jel/macos/playlist_pause_play.tgs</file>
   </qresource>
 </RCC>

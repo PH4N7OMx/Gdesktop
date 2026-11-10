@@ -37,6 +37,8 @@ public:
 	void finished() override;
 	void cancelled() override;
 	void submit() override;
+	int nextButtonTop() const override;
+	int minimumFooterTop() const override;
 
 	bool hasBack() const override {
 		return true;
@@ -44,6 +46,8 @@ public:
 
 protected:
 	void resizeEvent(QResizeEvent *e) override;
+	void paintEvent(QPaintEvent *e) override;
+	int errorTop() const override;
 
 private:
 	void setupQrLogin();

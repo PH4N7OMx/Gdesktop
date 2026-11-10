@@ -43,6 +43,7 @@ public:
 	void setLoaderPriority(int priority);
 
 	[[nodiscard]] int64 size() const;
+	[[nodiscard]] std::vector<std::pair<float64, float64>> bufferedRanges() const;
 	[[nodiscard]] rpl::producer<SpeedEstimate> speedEstimate() const;
 
 	~File();

@@ -398,6 +398,53 @@ bool Reader::Slices::fullInCache() const {
 	return _fullInCache;
 }
 
+std::vector<std::pair<float64, float64>> Reader::Slices::bufferedRanges() const {
+	auto bytes = std::vector<std::pair<int64, int64>>();
+	const auto append = [&](const Slice &slice, int64 base, int64 size) {
+		if (slice.flags & Slice::Flag::FullInCache) {
+			bytes.emplace_back(base, base + size);
+		} else {
+			for (const auto &[offset, data] : slice.parts) {
+				const auto from = std::clamp(base + offset, int64(0), int64(_size));
+				const auto till = std::clamp(from + data.size(), from, int64(_size));
+				if (from < till) bytes.emplace_back(from, till);
+			}
+		}
+	};
+	append(_header, 0, _size);
+	for (auto i = 0; i != _data.size(); ++i) {
+		const auto base = int64(i) * kInSlice;
+		append(_data[i], base, std::min(int64(kInSlice), _size - base));
+	}
+	ranges::sort(bytes);
+	auto merged = std::vector<std::pair<int64, int64>>();
+	for (const auto &range : bytes) {
+		if (!merged.empty() && range.first <= merged.back().second) {
+			merged.back().second = std::max(merged.back().second, range.second);
+		} else {
+			merged.push_back(range);
+		}
+	}
+	auto result = std::vector<std::pair<float64, float64>>();
+	if (!_size || (merged.size() == 1 && merged.front() == std::pair<int64, int64>(0, _size))) {
+		return result;
+	}
+	result.reserve(merged.size());
+	for (const auto &[from, till] : merged) {
+		result.emplace_back(from / float64(_size), till / float64(_size));
+	}
+	return result;
+}
+
+std::vector<std::pair<float64, float64>> Reader::bufferedRanges() const {
+	return _bufferedRanges.with([](const auto &ranges) { return ranges; });
+}
+
+void Reader::refreshBufferedRanges() {
+	auto ranges = _slices.bufferedRanges();
+	_bufferedRanges.with([&](auto &value) { value = std::move(ranges); });
+}
+
 int Reader::Slices::requestSliceSizesCount() const {
 	if (!headerModeUnknown() || isFullInHeader()) {
 		return 0;
@@ -1365,6 +1412,7 @@ bool Reader::processCacheResults() {
 		Assert(loaded.size() > 1);
 		Assert((loaded.begin() + 1)->first == 1);
 	}
+	if (!loaded.empty() || !sizes.empty()) refreshBufferedRanges();
 	return !loaded.empty();
 }
 
@@ -1385,6 +1433,7 @@ bool Reader::processLoadedParts() {
 			part.offset,
 			std::move(part.bytes));
 	}
+	if (!loaded.empty()) refreshBufferedRanges();
 	return !loaded.empty();
 }
 

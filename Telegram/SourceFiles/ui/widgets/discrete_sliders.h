@@ -47,8 +47,6 @@ public:
 	void finishAnimating();
 	void selectSection(int index);
 
-	void setAdditionalContentWidthToSection(int index, int width);
-
 	[[nodiscard]] rpl::producer<int> sectionActivated() const {
 		return _sectionActivated.events();
 	}
@@ -145,9 +143,14 @@ public:
 	virtual void fitWidthToSections();
 
 	void setRippleTopRoundRadius(int radius);
+	QString accessibilityValue() const override;
+	Qt::FocusPolicy accessibilityFocusPolicy() override;
 
 protected:
 	void paintEvent(QPaintEvent *e) override;
+	void keyPressEvent(QKeyEvent *e) override;
+	void focusInEvent(QFocusEvent *e) override;
+	void focusOutEvent(QFocusEvent *e) override;
 
 	int resizeGetHeight(int newWidth) override;
 

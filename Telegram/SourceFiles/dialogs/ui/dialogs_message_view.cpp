@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "dialogs/ui/dialogs_message_view.h"
+#include "jel/ui/macos_interface.h"
 
 #include "history/history.h"
 #include "history/history_item.h"
@@ -200,7 +201,7 @@ void MessageView::prepare(
 	const auto senderTill = (preview.arrowInTextPosition > 0)
 		? preview.arrowInTextPosition
 		: preview.imagesInTextPosition;
-	if ((hasImages || _leftIcon) && senderTill > 0) {
+	if ((hasImages || _leftIcon || Jel::Ui::MacosInterfaceEnabled()) && senderTill > 0) {
 		auto sender = Text::Mid(preview.text, 0, senderTill);
 		TextUtilities::Trim(sender);
 		_senderCache.setMarkedText(
@@ -437,6 +438,13 @@ void MessageView::paint(
 			: st::dialogsTextPalette));
 
 	auto rect = geometry;
+	const auto twoLines = Jel::Ui::MacosInterfaceEnabled()
+		&& !withTopic && !context.st->tagTop;
+	if (twoLines) {
+		rect.setHeight(std::min(st::dialogsTextFont->height * 2,
+			context.st->height - rect.top() - context.st->padding.bottom()));
+		_lastPaintGeometry = rect;
+	}
 	const auto checkJump = withTopic && !context.active;
 	const auto jump1 = checkJump ? _topics->jumpToTopicWidth() : 0;
 	if (jump1) {
@@ -462,10 +470,14 @@ void MessageView::paint(
 			.position = rect.topLeft(),
 			.availableWidth = rect.width(),
 			.palette = palette,
-			.elisionHeight = rect.height(),
+			.elisionHeight = twoLines ? st::dialogsTextFont->height : rect.height(),
 		});
-		rect.setLeft(rect.x() + _senderCache.maxWidth());
-		if (!_imagesCache.empty() && !_leftIcon) {
+		if (twoLines) {
+			rect.setTop(rect.top() + st::dialogsTextFont->height);
+		} else {
+			rect.setLeft(rect.x() + _senderCache.maxWidth());
+		}
+		if (!twoLines && !_imagesCache.empty() && !_leftIcon) {
 			const auto skip = st::dialogsMiniPreviewSkip
 				+ st::dialogsMiniPreviewRight;
 			rect.setLeft(rect.x() + skip);

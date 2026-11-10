@@ -84,6 +84,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/wrap/slide_wrap.h"
 #include "window/window_controller.h"
 #include "window/window_session_controller.h"
+
+#include <QtGui/QClipboard>
+#include <QtGui/QGuiApplication>
+#include <QtGui/QWindow>
+
 #include "styles/style_chat_helpers.h"
 #include "styles/style_info.h"
 #include "styles/style_layers.h"
@@ -96,6 +101,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 // GummyGram includes
 #include "jel/ui/settings/settings_main.h"
+#include "jel/ui/macos_interface.h"
+#include "styles/style_jel_styles.h"
+#include <QtGui/QPainter>
 #include "jel/ui/utils/jel_profile_values.h"
 #include "jel/utils/telegram_helpers.h"
 
@@ -149,9 +157,10 @@ Cover::Cover(
 	not_null<UserData*> user)
 : FixedHeightWidget(
 	parent,
-	st::settingsPhotoTop
-		+ st::infoProfileCover.photo.size.height()
-		+ st::settingsPhotoBottom)
+	Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(106)
+		: st::settingsPhotoTop
+			+ st::infoProfileCover.photo.size.height()
+			+ st::settingsPhotoBottom)
 , _controller(controller)
 , _user(user)
 , _badge(
@@ -184,10 +193,22 @@ Cover::Cover(
 	_user,
 	Ui::UserpicButton::Role::OpenPhoto,
 	Ui::UserpicButton::Source::PeerPhoto,
-	st::infoProfileCover.photo)
-, _name(this, st::infoProfileCover.name)
+	Jel::Ui::MacosInterfaceEnabled() ? st::macosSettingsPhoto : st::infoProfileCover.photo)
+, _name(this, Jel::Ui::MacosInterfaceEnabled() ? st::macosSettingsName : st::infoProfileCover.name)
 , _id(this, st::defaultFlatLabel, st::popupMenuWithIcons)
 , _username(this, st::infoProfileMegagroupCover.status) {
+	if (Jel::Ui::MacosInterfaceEnabled()) {
+		paintRequest() | rpl::on_next([=] {
+			auto p = QPainter(this);
+			p.setRenderHint(QPainter::Antialiasing);
+			p.fillRect(rect(), st::boxDividerBg->c);
+			p.setPen(Qt::NoPen);
+			p.setBrush(st::windowBg->c);
+			const auto inset = style::ConvertScale(20);
+			const auto vertical = style::ConvertScale(8);
+			p.drawRoundedRect(rect().adjusted(inset, vertical, -inset, -vertical), inset, inset);
+		}, lifetime());
+	}
 	_user->updateFull();
 
 	_name->setSelectable(true);
@@ -269,8 +290,8 @@ void Cover::setupChildGeometry() {
 	widthValue(
 	) | rpl::on_next([=](int newWidth) {
 		_userpic->moveToLeft(
-			st::settingsPhotoLeft,
-			st::settingsPhotoTop,
+			Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(36) : st::settingsPhotoLeft,
+			Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(23) : st::settingsPhotoTop,
 			newWidth);
 		refreshNameGeometry(newWidth);
 		refreshIdGeometry(newWidth);
@@ -324,8 +345,8 @@ void Cover::initViewers() {
 }
 
 void Cover::refreshNameGeometry(int newWidth) {
-	const auto nameLeft = st::settingsNameLeft;
-	const auto nameTop = st::settingsNameTop;
+	const auto nameLeft = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(121) : st::settingsNameLeft;
+	const auto nameTop = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(24) : st::settingsNameTop;
 	const auto qrButtonWidth = (_qrButton && !_qrButton->isHidden())
 		? (_qrButton->width() + st::infoProfileCover.rightSkip)
 		: 0;
@@ -358,8 +379,8 @@ void Cover::updateIdText() {
 }
 
 void Cover::refreshIdGeometry(int newWidth) {
-	const auto idLeft = st::settingsPhoneLeft;
-	const auto idTop = st::settingsPhoneTop;
+	const auto idLeft = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(121) : st::settingsPhoneLeft;
+	const auto idTop = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(45) : st::settingsPhoneTop;
 	const auto idWidth = newWidth
 		- idLeft
 		- st::infoProfileCover.rightSkip;
@@ -368,8 +389,8 @@ void Cover::refreshIdGeometry(int newWidth) {
 }
 
 void Cover::refreshUsernameGeometry(int newWidth) {
-	const auto usernameLeft = st::settingsUsernameLeft;
-	const auto usernameTop = st::settingsUsernameTop;
+	const auto usernameLeft = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(121) : st::settingsUsernameLeft;
+	const auto usernameTop = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(64) : st::settingsUsernameTop;
 	const auto usernameRight = st::infoProfileCover.rightSkip;
 	const auto usernameWidth = newWidth - usernameLeft - usernameRight;
 	_username->resizeToWidth(usernameWidth);
@@ -381,7 +402,7 @@ void Cover::refreshQrButtonGeometry(int newWidth) {
 		return;
 	}
 	const auto buttonTop = (height() - _qrButton->height()) / 2;
-	const auto buttonRight = st::infoProfileCover.rightSkip;
+	const auto buttonRight = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(30) : st::infoProfileCover.rightSkip;
 	const auto inset = st::infoProfileLabeledButtonQrInset;
 	_qrButton->moveToRight(buttonRight - inset, buttonTop, newWidth);
 }
@@ -665,9 +686,7 @@ void BuildHelpSection(SectionBuilder &builder) {
 		.id = u"main/features"_q,
 		.title = tr::lng_settings_features(),
 		.icon = { &st::menuIconEmojiObjects },
-		.onClick = [] {
-			UrlClickHandler::Open(tr::lng_telegram_features_url(tr::now));
-		},
+		.onClick = [=] { OpenFeatures(controller); },
 		.keywords = { u"tips"_q, u"tutorial"_q },
 	});
 
@@ -938,8 +957,8 @@ void SetupValidatePhoneNumberSuggestion(
 		st::boxRowPadding);
 	label->setClickHandlerFilter([=, weak = base::make_weak(controller)](
 			const auto &...) {
-		UrlClickHandler::Open(
-			tr::lng_settings_suggestion_phone_number_about_link(tr::now),
+		HiddenUrlClickHandler::OpenTranslated(
+			tr::lng_settings_suggestion_phone_number_about_link,
 			QVariant::fromValue(ClickHandlerContext{
 				.sessionWindow = weak,
 			}));
@@ -1250,8 +1269,16 @@ Type MainId() {
 }
 
 void OpenFaq(base::weak_ptr<Window::SessionController> weak) {
-	UrlClickHandler::Open(
-		tr::lng_settings_faq_link(tr::now),
+	HiddenUrlClickHandler::OpenTranslated(
+		tr::lng_settings_faq_link,
+		QVariant::fromValue(ClickHandlerContext{
+			.sessionWindow = weak,
+		}));
+}
+
+void OpenFeatures(base::weak_ptr<Window::SessionController> weak) {
+	HiddenUrlClickHandler::OpenTranslated(
+		tr::lng_telegram_features_url,
 		QVariant::fromValue(ClickHandlerContext{
 			.sessionWindow = weak,
 		}));

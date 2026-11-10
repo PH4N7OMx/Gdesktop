@@ -35,14 +35,13 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "main/main_session.h"
 #include "settings/sections/settings_main.h"
+#include "settings/sections/settings_premium_common.h"
 #include "settings/settings_builder.h"
 #include "settings/settings_common.h"
 #include "settings/settings_common_session.h"
 #include "settings/settings_credits_graphics.h"
 #include "statistics/widgets/chart_header_widget.h"
 #include "ui/boxes/boost_box.h"
-#include "ui/controls/swipe_handler.h"
-#include "ui/controls/swipe_handler_data.h"
 #include "ui/effects/animation_value_f.h"
 #include "ui/effects/credits_graphics.h"
 #include "ui/effects/premium_graphics.h"
@@ -119,7 +118,6 @@ public:
 
 private:
 	void setupContent();
-	void setupSwipeBack();
 	void setupHistory(not_null<Ui::VerticalLayout*> container);
 	void setupSubscriptions(not_null<Ui::VerticalLayout*> container);
 
@@ -164,7 +162,7 @@ Credits::Credits(
 		: Ui::GenerateStars(st::creditsBalanceStarHeight, 1)) {
 	controller->session().giftBoxStickersPacks().tonLoad();
 	setupContent();
-	setupSwipeBack();
+	SetupSectionSwipeBack(this, &_showBack);
 
 	controller->session().premiumPossibleValue(
 	) | rpl::on_next([=](bool premiumPossible) {
@@ -316,7 +314,7 @@ void Credits::setupHistory(not_null<Ui::VerticalLayout*> container) {
 					st::creditsHistoryTabsSlider)),
 			st::creditsHistoryTabsSliderPadding);
 		slider->toggle(!hasOneTab, anim::type::instant);
-		if (!hasOneTab) {
+		if (!hasOneTab && !st::creditsHistoryTabsSlider.pill) {
 			const auto shadow = Ui::CreateChild<Ui::RpWidget>(inner);
 			shadow->paintRequest() | rpl::on_next([=] {
 				auto p = QPainter(shadow);
@@ -347,11 +345,16 @@ void Credits::setupHistory(not_null<Ui::VerticalLayout*> container) {
 
 		{
 			const auto &st = st::creditsHistoryTabsSlider;
-			slider->entity()->setNaturalWidth(0
-				+ st.labelStyle.font->width(fullTabText)
-				+ (hasIn ? st.labelStyle.font->width(inTabText) : 0)
-				+ (hasOut ? st.labelStyle.font->width(outTabText) : 0)
-				+ rect::m::sum::h(st::creditsHistoryTabsSliderPadding));
+			if (st.pill) {
+				slider->entity()->fitWidthToSections();
+				slider->entity()->setNaturalWidth(slider->entity()->width());
+			} else {
+				slider->entity()->setNaturalWidth(0
+					+ st.labelStyle.font->width(fullTabText)
+					+ (hasIn ? st.labelStyle.font->width(inTabText) : 0)
+					+ (hasOut ? st.labelStyle.font->width(outTabText) : 0)
+					+ rect::m::sum::h(st::creditsHistoryTabsSliderPadding));
+			}
 		}
 
 		const auto tabs = inner->add(
@@ -443,46 +446,6 @@ void Credits::setupHistory(not_null<Ui::VerticalLayout*> container) {
 	}
 }
 
-void Credits::setupSwipeBack() {
-	using namespace Ui::Controls;
-
-	auto swipeBackData = lifetime().make_state<SwipeBackResult>();
-
-	auto update = [=](SwipeContextData data) {
-		if (data.translation > 0) {
-			if (!swipeBackData->callback) {
-				(*swipeBackData) = SetupSwipeBack(
-					this,
-					[]() -> std::pair<QColor, QColor> {
-						return {
-							st::historyForwardChooseBg->c,
-							st::historyForwardChooseFg->c,
-						};
-					});
-			}
-			swipeBackData->callback(data);
-			return;
-		} else if (swipeBackData->lifetime) {
-			(*swipeBackData) = {};
-		}
-	};
-
-	auto init = [=](Ui::Controls::SwipeHandlerInitData data) {
-		return (data.direction == Qt::RightToLeft)
-			? DefaultSwipeBackHandlerFinishData([=] {
-				_showBack.fire({});
-			})
-			: SwipeHandlerFinishData();
-	};
-
-	SetupSwipeHandler({
-		.widget = this,
-		.scroll = v::null,
-		.update = std::move(update),
-		.init = std::move(init),
-	});
-}
-
 void Credits::setupContent() {
 	const auto content = Ui::CreateChild<Ui::VerticalLayout>(this);
 	_content = content;
@@ -541,8 +504,13 @@ void Credits::setupContent() {
 						tr::marked)));
 		const auto show = controller()->uiShow();
 		if (isCurrency) {
-			const auto url = tr::lng_suggest_low_ton_fragment_url(tr::now);
-			button->setClickedCallback([=] { UrlClickHandler::Open(url); });
+			button->setClickedCallback([=] {
+				HiddenUrlClickHandler::OpenTranslated(
+					tr::lng_suggest_low_ton_fragment_url,
+					QVariant::fromValue(ClickHandlerContext{
+						.show = show,
+					}));
+			});
 		} else {
 			const auto paid = [parent = QPointer<QWidget>(_parent)] {
 				if (parent) {

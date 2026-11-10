@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "info/profile/tabs/info_profile_tabs_host.h"
+#include "jel/ui/macos_interface.h"
 
 #include "info/profile/tabs/info_profile_tabs_strip.h"
 #include "info/profile/tabs/adapters/info_profile_tab_media.h"
@@ -49,7 +50,7 @@ base::options::toggle ProfileMediaTabs({
 const char kOptionProfileMediaTabs[] = "profile-media-tabs";
 
 bool UseProfileMediaTabs() {
-	return ProfileMediaTabs.value();
+	return Jel::Ui::MacosInterfaceEnabled() || ProfileMediaTabs.value();
 }
 
 TabsHost::TabsHost(not_null<QWidget*> parent, Descriptor descriptor)
@@ -774,10 +775,6 @@ void TabsHost::pushViewportToActive() {
 	active->setVisibleRegion(
 		_visibleTop - _stripHeight,
 		_visibleBottom - _stripHeight);
-}
-
-rpl::producer<MediaTabContent*> TabsHost::activeTabValue() const {
-	return _activeTab.value();
 }
 
 rpl::producer<Ui::ScrollToRequest> TabsHost::scrollToRequests() const {

@@ -38,11 +38,13 @@ public:
 
 	void showFromOther();
 	void hideFromOther();
+	void toggleFromButton(QRect anchor);
 
 	int bestPositionFor(int left) const;
 
 protected:
 	void resizeEvent(QResizeEvent *e) override;
+	void moveEvent(QMoveEvent *e) override;
 	void paintEvent(QPaintEvent *e) override;
 	void enterEventHook(QEnterEvent *e) override;
 	void leaveEventHook(QEvent *e) override;
@@ -69,6 +71,7 @@ private:
 	[[nodiscard]] Data::ForumTopic *listTopic() const;
 	[[nodiscard]] Data::SavedSublist *listSublist() const;
 
+	void searchArtist(not_null<Main::Session*> session, QString query);
 	void updateControlsGeometry();
 	void refreshList();
 	void updateSize();
@@ -93,6 +96,8 @@ private:
 	}
 
 	bool _hiding = false;
+	bool _pinned = false;
+	QRect _buttonAnchor;
 
 	QPixmap _cache;
 	Ui::Animations::Simple _a_appearance;
@@ -103,6 +108,7 @@ private:
 	base::Timer _hideTimer;
 
 	object_ptr<Ui::ScrollArea> _scroll;
+	object_ptr<Ui::RpWidget> _controls = { nullptr };
 
 	rpl::lifetime _refreshListLifetime;
 	PeerData *_listPeer = nullptr;

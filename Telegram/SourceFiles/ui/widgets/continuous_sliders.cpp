@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "ui/widgets/continuous_sliders.h"
+#include "jel/ui/macos_interface.h"
 
 #include "ui/painter.h"
 #include "ui/rect.h"
@@ -100,6 +101,10 @@ void ContinuousSlider::mousePressEvent(QMouseEvent *e) {
 }
 
 void ContinuousSlider::mouseReleaseEvent(QMouseEvent *e) {
+	finishChanging();
+}
+
+void ContinuousSlider::finishChanging() {
 	if (_mouseDown) {
 		_mouseDown = false;
 		const auto weak = base::make_weak(this);
@@ -331,6 +336,13 @@ void MediaSlider::setDividerStyle(DividerStyle style) {
 	update();
 }
 
+void MediaSlider::setBufferedRanges(std::vector<std::pair<float64, float64>> ranges) {
+	if (_bufferedRanges != ranges) {
+		_bufferedRanges = std::move(ranges);
+		update();
+	}
+}
+
 void MediaSlider::setColorOverrides(ColorOverrides overrides) {
 	_overrides = std::move(overrides);
 	update();
@@ -479,6 +491,20 @@ void MediaSlider::paintEvent(QPaintEvent *e) {
 		p.setBrush(horizontal ? inactiveFg : activeFg);
 		p.drawRoundedRect(endRect, radius, radius);
 	}
+	if (horizontal && !disabled && !_bufferedRanges.empty()) {
+		p.setPen(Qt::NoPen);
+		p.setBrush(_overrides.receivedFg
+			? QBrush(*_overrides.receivedFg) : receivedTillFg->b);
+		const auto track = QRectF(0., (height() - _st.width) / 2., width(), _st.width);
+		for (const auto &[start, finish] : _bufferedRanges) {
+			if (value < start || value >= finish) continue;
+			const auto left = std::max(float64(mid), length * std::clamp(start, 0., 1.));
+			const auto right = length * std::clamp(finish, 0., 1.);
+			if (right <= left) continue;
+			p.setClipRect(QRectF(left, 0., right - left, height()));
+			p.drawRoundedRect(track, radius, radius);
+		}
+	}
 	if (!gapStyle && !_dividers.empty()) {
 		p.setClipRect(rect());
 		for (const auto &divider : _dividers) {
@@ -533,13 +559,15 @@ void MediaSlider::paintEvent(QPaintEvent *e) {
 			((1. - markerSizeRatio) * size) / 2.);
 		if (remove * 2 < size) {
 			p.setClipRect(rect());
+			const auto native = Jel::Ui::MacosContinuousSliderEnabled(_st);
+			const auto markerBorderWidth = native ? st::lineWidth : borderWidth;
 			const auto seekFg = _overrides.seekFg
 				? QBrush(*_overrides.seekFg)
-				: activeFg;
-			if (borderWidth > 0) {
+				: native ? st::windowBg->b : activeFg;
+			if (markerBorderWidth > 0) {
 				const auto seekBorderPen = _overrides.seekBorder
-					? QPen(*_overrides.seekBorder, borderWidth)
-					: QPen(borderFg, borderWidth);
+					? QPen(*_overrides.seekBorder, markerBorderWidth)
+					: QPen(native ? st::menuSeparatorFg : borderFg, markerBorderWidth);
 				p.setPen(seekBorderPen);
 				p.setBrush(seekFg);
 			} else {
@@ -559,10 +587,21 @@ void MediaSlider::paintEvent(QPaintEvent *e) {
 			auto ellipseRect = (seekButton - Margins(remove)).translated(
 				-xshift,
 				-yshift);
-			if (borderWidth > 0) {
-				ellipseRect -= Margins(borderHalf);
+			if (markerBorderWidth > 0) {
+				ellipseRect -= Margins(markerBorderWidth / 2);
 			}
-			p.drawEllipse(ellipseRect);
+			if (native) {
+				p.setPen(Qt::NoPen);
+				p.setBrush(_overrides.seekBorder ? QBrush(*_overrides.seekBorder) : st::menuSeparatorFg->b);
+				p.drawEllipse(ellipseRect);
+				if (ellipseRect.width() > 2 * markerBorderWidth && ellipseRect.height() > 2 * markerBorderWidth) {
+					p.setBrush(seekFg);
+					p.drawEllipse(QRectF(ellipseRect).marginsRemoved(
+						QMarginsF(markerBorderWidth, markerBorderWidth, markerBorderWidth, markerBorderWidth)));
+				}
+			} else {
+				p.drawEllipse(ellipseRect);
+			}
 		}
 	}
 }

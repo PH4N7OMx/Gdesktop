@@ -190,11 +190,6 @@ not_null<Media::Player::FloatDelegate*> Widget::floatPlayerDelegate() {
 	return static_cast<Media::Player::FloatDelegate*>(this);
 }
 
-auto Widget::floatPlayerSectionDelegate()
--> not_null<Media::Player::FloatSectionDelegate*> {
-	return static_cast<Media::Player::FloatSectionDelegate*>(this);
-}
-
 not_null<Ui::RpWidget*> Widget::floatPlayerWidget() {
 	return this;
 }
@@ -402,7 +397,7 @@ void Widget::historyMove(StackAction action, Animate animate) {
 
 	getStep()->prepareShowAnimated(wasStep);
 	if (wasStep->hasCover() != getStep()->hasCover()) {
-		_nextTopFrom = wasStep->contentTop() + st::introNextTop;
+		_nextTopFrom = wasStep->nextButtonTop();
 		_controlsTopFrom = wasStep->hasCover() ? st::introCoverHeight : 0;
 		_coverShownAnimation.start(
 			[this] { updateControlsGeometry(); },
@@ -851,7 +846,7 @@ void Widget::updateControlsGeometry() {
 	}
 	_back->moveToLeft(0, controlsTop);
 
-	auto nextTopTo = getStep()->contentTop() + st::introNextTop;
+	auto nextTopTo = getStep()->nextButtonTop();
 	auto nextTop = anim::interpolate(_nextTopFrom, nextTopTo, shown);
 	const auto shownAmount = _nextShownAnimation.value(_nextShown ? 1. : 0.);
 	const auto realNextTop = anim::interpolate(
@@ -865,7 +860,7 @@ void Widget::updateControlsGeometry() {
 	if (_changeLanguage) {
 		_changeLanguage->moveToLeft(
 			(width() - _changeLanguage->width()) / 2,
-			_next->y() + _next->height() + _changeLanguage->height());
+			std::max(_next->y() + _next->height(), getStep()->minimumFooterTop()) + _changeLanguage->height());
 	}
 	if (_resetAccount) {
 		_resetAccount->moveToLeft(

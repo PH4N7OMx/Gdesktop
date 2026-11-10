@@ -6,6 +6,8 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "window/window_filters_menu.h"
+#include "jel/ui/macos_interface.h"
+#include "styles/style_jel_styles.h"
 
 #include "menu/menu_mark_as_read.h"
 #include "mainwindow.h"
@@ -148,9 +150,11 @@ void FiltersMenu::setup() {
 		const auto width = st::windowFiltersWidth;
 		_outer.setGeometry({ 0, 0, width, height });
 		_menu.resizeToWidth(width);
-		_menu.move(0, 0);
+		const auto top = Jel::Ui::MacosInterfaceEnabled() ? st::macosTopBarHeight : 0;
+		_menu.move(0, top);
+		const auto contentTop = top + _menu.height();
 		_scroll.setGeometry(
-			{ 0, _menu.height(), width, height - _menu.height() });
+			{ 0, contentTop, width, std::max(0, height - contentTop) });
 		_container->resizeToWidth(width);
 		_container->move(0, 0);
 	}, _outer.lifetime());

@@ -99,6 +99,8 @@ public:
 
 	[[nodiscard]] int contentLeft() const;
 	[[nodiscard]] int contentTop() const;
+	[[nodiscard]] virtual int nextButtonTop() const;
+	[[nodiscard]] virtual int minimumFooterTop() const;
 
 	void setErrorCentered(bool centered);
 	void showError(rpl::producer<QString> text);
@@ -115,9 +117,6 @@ protected:
 	bool paintAnimated(QPainter &p, QRect clip);
 
 	void fillSentCodeData(const MTPDauth_sentCode &type);
-
-	void showDescription();
-	void hideDescription();
 
 	[[nodiscard]] not_null<Data*> getData() const {
 		return _data;

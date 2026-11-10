@@ -189,15 +189,6 @@ int32 ForumGeneralIconColor(const QColor &color) {
 		| (uint32(color.alpha() == 255 ? 0 : color.alpha()) << 24));
 }
 
-QColor ParseForumGeneralIconColor(int32 value) {
-	const auto alpha = uint32(value) >> 24;
-	return QColor(
-		(value >> 16) & 0xFF,
-		(value >> 8) & 0xFF,
-		value & 0xFF,
-		alpha ? alpha : 255);
-}
-
 QString TopicIconEmojiEntity(TopicIconDescriptor descriptor) {
 	return IsForumGeneralIconTitle(descriptor.title)
 		? u"topic_general:"_q + QString::number(uint32(descriptor.colorId))
@@ -340,6 +331,12 @@ bool ForumTopic::canTogglePinned() const {
 	return !creating() && peer()->canManageTopics();
 }
 
+bool ForumTopic::dying() const {
+	const auto botGeneral = isGeneral() && peer()->isBot();
+	return (peer()->forum() != _forum)
+		|| (!botGeneral && _forum->topicDeleted(_rootId));
+}
+
 bool ForumTopic::creating() const {
 	return _forum->creating(_rootId);
 }
@@ -408,6 +405,7 @@ void ForumTopic::applyTopic(const MTPDforumTopic &data) {
 
 	applyIsMy(data.is_my());
 	setClosed(data.is_closed());
+	setHidden(data.is_hidden());
 
 	if (!min) {
 		owner().setPinnedFromEntryList(this, data.is_pinned());
@@ -791,7 +789,9 @@ void ForumTopic::applyTitle(const QString &title) {
 	_title = title;
 	invalidateTitleWithIcon();
 	_defaultIcon = QImage();
+	const auto oldFirstLetters = base::take(_titleFirstLetters);
 	indexTitleParts();
+	_list->indexed()->entryNameChanged(FilterId(), this, oldFirstLetters);
 	updateChatListEntry();
 	session().changes().topicUpdated(this, UpdateFlag::Title);
 }

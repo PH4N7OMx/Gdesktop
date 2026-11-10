@@ -75,6 +75,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 // GummyGram includes
 #include "jel/jel_settings.h"
+#include "jel/ui/macos_interface.h"
 #include "boxes/peers/edit_participants_box.h"
 #include "data/data_chat_filters.h"
 #include "history/admin_log/history_admin_log_section.h"
@@ -250,8 +251,9 @@ TopBarWidget::TopBarWidget(
 		| UpdateFlag::Rights
 		| UpdateFlag::EmojiStatus
 		| UpdateFlag::Name
+		| UpdateFlag::BarSettings
 	) | rpl::on_next([=](const Data::PeerUpdate &update) {
-		if ((update.flags & UpdateFlag::Name)
+		if ((update.flags & (UpdateFlag::Name | UpdateFlag::BarSettings))
 			&& (update.peer == titleNamePeer())) {
 			TopBarWidget::update();
 		}
@@ -1002,6 +1004,13 @@ void TopBarWidget::setActiveChat(
 				update();
 			}, _activeChatLifetime);
 
+			session().changes().topicUpdates(
+				topic,
+				Data::TopicUpdate::Flag::Title
+			) | rpl::on_next([=] {
+				update();
+			}, _activeChatLifetime);
+
 			// _menuToggle visibility depends on "View topic info",
 			// "View topic info" visibility depends on activeChatCurrent.
 			_controller->activeChatChanges(
@@ -1194,7 +1203,8 @@ void TopBarWidget::updateControlsGeometry() {
 	const auto otherButtonsTop = std::max(selectedButtonsTop, searchFieldTop)
 		+ st::topBarHeight;
 	const auto backButtonTop = selectedButtonsTop + st::topBarHeight;
-	auto buttonsLeft = st::topBarActionSkip
+	const auto controlsInset = Jel::Ui::MacosTitleControlsInset(this);
+	auto buttonsLeft = controlsInset + st::topBarActionSkip
 		+ (_controller->adaptive().isOneColumn() ? 0 : st::lineWidth);
 	auto buttonsWidth = (_forward->isHidden() ? 0 : _forward->contentWidth())
 		+ (_sendNow->isHidden() ? 0 : _sendNow->contentWidth())
@@ -1264,13 +1274,13 @@ void TopBarWidget::updateControlsGeometry() {
 	_clear->moveToRight(st::topBarActionSkip, selectedButtonsTop);
 
 	if (!_cancelChoose->isHidden()) {
-		_leftTaken = 0;
+		_leftTaken = controlsInset;
 		_cancelChoose->moveToLeft(_leftTaken, otherButtonsTop);
 		_leftTaken += _cancelChoose->width();
 	} else if (_back->isHidden()) {
-		_leftTaken = st::topBarArrowPadding.right();
+		_leftTaken = controlsInset + st::topBarArrowPadding.right();
 	} else {
-		_leftTaken = anim::interpolate(
+		_leftTaken = controlsInset + anim::interpolate(
 			0,
 			(_narrowWidth - _back->width()) / 2,
 			_narrowRatio);
@@ -1283,7 +1293,7 @@ void TopBarWidget::updateControlsGeometry() {
 			const auto middle = (_narrowWidth - infoSt.photoSize) / 2;
 			_leftTaken = anim::interpolate(
 				_leftTaken,
-				middle - infoSt.photoPosition.x(),
+				controlsInset + middle - infoSt.photoPosition.x(),
 				_narrowRatio);
 		}
 		_info->moveToLeft(_leftTaken, otherButtonsTop);
@@ -1295,7 +1305,7 @@ void TopBarWidget::updateControlsGeometry() {
 
 	if (_searchField) {
 		const auto fieldLeft = _back->isHidden()
-			? st::topBarArrowPadding.right()
+			? controlsInset + st::topBarArrowPadding.right()
 			: _leftTaken;
 		const auto fieldTop = searchFieldTop
 			+ (height() - _searchField->height()) / 2;
@@ -1404,10 +1414,13 @@ void TopBarWidget::updateControlsVisibility() {
 
 
 	const auto isOneColumn = _controller->adaptive().isOneColumn();
+
+	// MainWidget is already gone while the window clears its widgets.
+	const auto main = _controller->widget()->sessionContent();
 	const auto backVisible = !rootChatsListBar()
 		&& (isOneColumn
 			|| (_activeChat.section == Section::ChatsList)
-			|| !_controller->content()->stackIsEmpty());
+			|| (main && !main->stackIsEmpty()));
 	_back->setVisible(backVisible && !_chooseForReportReason);
 	_cancelChoose->setVisible(_chooseForReportReason.has_value());
 	updateInfoButtonVisibility();

@@ -9,6 +9,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "ui/effects/ripple_animation.h"
 #include "styles/style_widgets.h"
+#include <QtGui/QPainterPath>
+#include <QtGui/QKeyEvent>
 
 namespace Ui {
 
@@ -77,13 +79,6 @@ void DiscreteSlider::selectSection(int index) {
 		}
 	}
 	startRipple(index);
-}
-
-void DiscreteSlider::setAdditionalContentWidthToSection(int index, int w) {
-	if (index >= 0 && index < _sections.size()) {
-		auto &section = _sections[index];
-		section.contentWidth = section.label.maxWidth() + w;
-	}
 }
 
 int DiscreteSlider::sectionsCount() const {
@@ -284,6 +279,13 @@ SettingsSlider::SettingsSlider(
 		_barActive.emplace(_st.barRadius, _st.barFgActive);
 	}
 	setSelectOnPress(_st.ripple.showDuration == 0);
+	if (_st.pill) {
+		setFocusPolicy(Qt::StrongFocus);
+		sectionActivated() | rpl::on_next([=] {
+			accessibilityValueChanged();
+		}, lifetime());
+	}
+
 }
 
 const style::SettingsSlider &SettingsSlider::st() const {
@@ -305,7 +307,8 @@ int SettingsSlider::centerOfSection(int section) const {
 
 void SettingsSlider::fitWidthToSections() {
 	const auto widths = countSectionsWidths(0);
-	resizeToWidth(ranges::accumulate(widths, .0) + _st.padding * 2);
+	const auto gaps = _st.pill ? std::max(0, getSectionsCount() - 1) * _st.barSkip : 0;
+	resizeToWidth(ranges::accumulate(widths, .0) + _st.padding * 2 + gaps);
 }
 
 void SettingsSlider::setRippleTopRoundRadius(int radius) {
@@ -375,6 +378,13 @@ std::vector<float64> SettingsSlider::countSectionsWidths(int newWidth) const {
 			return true;
 		});
 	}
+	if (_st.pill && newWidth > 0 && !result.empty()) {
+		const auto naturalWidth = ranges::accumulate(result, 0.);
+		if (naturalWidth > sectionsWidth && naturalWidth > 0.) {
+			const auto scale = std::max(0., double(sectionsWidth)) / naturalWidth;
+			for (auto &width : result) width *= scale;
+		}
+	}
 	return result;
 }
 
@@ -435,11 +445,78 @@ QImage SettingsSlider::prepareRippleMask(
 	});
 }
 
+Qt::FocusPolicy SettingsSlider::accessibilityFocusPolicy() {
+	return _st.pill ? Qt::StrongFocus : DiscreteSlider::accessibilityFocusPolicy();
+}
+
+QString SettingsSlider::accessibilityValue() const {
+	if (!_st.pill) return DiscreteSlider::accessibilityValue();
+	auto result = QString();
+	auto index = 0;
+	enumerateSections([&](const Section &section) {
+		if (index++ != activeSection()) return true;
+		result = section.label.toString();
+		return false;
+	});
+	return result;
+}
+
+void SettingsSlider::keyPressEvent(QKeyEvent *e) {
+	if (!_st.pill || !sectionsCount() || e->modifiers() != Qt::NoModifier) {
+		return DiscreteSlider::keyPressEvent(e);
+	}
+	auto selected = activeSection();
+	switch (e->key()) {
+	case Qt::Key_Left: selected += style::RightToLeft() ? 1 : -1; break;
+	case Qt::Key_Right: selected += style::RightToLeft() ? -1 : 1; break;
+	case Qt::Key_Home: selected = 0; break;
+	case Qt::Key_End: selected = sectionsCount() - 1; break;
+	default: return DiscreteSlider::keyPressEvent(e);
+	}
+	selected = std::clamp(selected, 0, sectionsCount() - 1);
+	if (selected != activeSection()) setActiveSection(selected);
+	e->accept();
+}
+
+void SettingsSlider::focusInEvent(QFocusEvent *e) {
+	DiscreteSlider::focusInEvent(e);
+	if (_st.pill) update();
+}
+
+void SettingsSlider::focusOutEvent(QFocusEvent *e) {
+	DiscreteSlider::focusOutEvent(e);
+	if (_st.pill) update();
+}
+
 void SettingsSlider::paintEvent(QPaintEvent *e) {
 	auto p = QPainter(this);
 
 	const auto clip = e->rect();
 	const auto range = DiscreteSlider::getCurrentActiveRange();
+	if (_st.pill) {
+		auto hq = PainterHighQualityEnabler(p);
+		const auto half = st::lineWidth / 2.;
+		const auto bounds = QRectF(rect()).marginsRemoved(QMarginsF(half, half, half, half));
+		const auto radius = bounds.height() / 2.;
+		auto outline = _st.labelFg->c;
+		outline.setAlphaF(0.08);
+		p.setPen(hasFocus()
+			? QPen(st::windowActiveTextFg->c, st::lineWidth)
+			: QPen(outline, st::lineWidth));
+		p.setBrush(_st.pillBg);
+		p.drawRoundedRect(bounds, radius, radius);
+		auto path = QPainterPath();
+		path.addRoundedRect(bounds, radius, radius);
+		p.setClipPath(path);
+		if (range.width > 0) {
+			const auto inset = _st.pillInset;
+			const auto selection = style::rtlrect(QRectF(range.left + inset, inset,
+				std::max(0, range.width - 2 * inset), std::max(0, height() - 2 * inset)), width());
+			p.setPen(Qt::NoPen);
+			p.setBrush(_st.pillActiveBg);
+			p.drawRoundedRect(selection, selection.height() / 2., selection.height() / 2.);
+		}
+	}
 
 	const auto drawRect = [&](QRect rect, bool active = false) {
 		const auto &bar = active ? _barActive : _bar;
@@ -471,7 +548,7 @@ void SettingsSlider::paintEvent(QPaintEvent *e) {
 				section.ripple.reset();
 			}
 		}
-		if (!_st.barSnapToLabel) {
+		if (!_st.barSnapToLabel && !_st.pill) {
 			auto from = activeLeft;
 			auto tofill = activeWidth;
 			if (range.left > from) {
@@ -496,25 +573,28 @@ void SettingsSlider::paintEvent(QPaintEvent *e) {
 				drawRect(myrtlrect(from, _st.barTop, tofill, _st.barStroke));
 			}
 		}
-		const auto labelLeft = section.left
-			+ (section.width - section.contentWidth) / 2;
+		const auto contentWidth = _st.pill
+			? std::min(section.contentWidth, std::max(0, section.width - style::ConvertScale(16)))
+			: section.contentWidth;
+		const auto labelLeft = section.left + (section.width - contentWidth) / 2;
 		const auto rect = myrtlrect(
 			labelLeft,
 			_st.labelTop,
-			section.contentWidth,
+			contentWidth,
 			_st.labelStyle.font->height);
 		if (rect.intersects(clip)) {
 			p.setPen(anim::pen(_st.labelFg, _st.labelFgActive, active));
 			section.label.draw(p, {
 				.position = QPoint(labelLeft, _st.labelTop),
 				.outerWidth = width(),
-				.availableWidth = section.label.maxWidth(),
+				.availableWidth = _st.pill ? contentWidth : section.label.maxWidth(),
 				.paused = paused(),
+				.elisionLines = _st.pill ? 1 : 0,
 			});
 		}
 		return true;
 	});
-	if (_st.barSnapToLabel) {
+	if (_st.barSnapToLabel && !_st.pill) {
 		const auto add = _st.barStroke / 2;
 		const auto from = std::max(range.left - add, 0);
 		const auto till = std::min(range.left + range.width + add, width());

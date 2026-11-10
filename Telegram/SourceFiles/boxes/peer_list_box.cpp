@@ -47,6 +47,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 // GummyGram includes
 #include "styles/style_jel_icons.h"
 #include "jel/ui/jel_userpic.h"
+#include "jel/ui/macos_interface.h"
+#include "styles/style_jel_styles.h"
 
 
 [[nodiscard]] PeerListRowId UniqueRowIdFromString(const QString &d) {
@@ -437,12 +439,18 @@ PeerListController::PeerListController(
 	}
 }
 
-const style::PeerList &PeerListController::computeListSt() const {
-	return _listSt ? *_listSt : st::peerListBox;
-}
+PeerListController::~PeerListController() = default;
 
-const style::MultiSelect &PeerListController::computeSelectSt() const {
-	return _selectSt ? *_selectSt : st::defaultMultiSelect;
+const style::PeerList &PeerListController::computeListSt() const {
+	const auto &original = _listSt ? *_listSt : st::peerListBox;
+	if (!Jel::Ui::MacosInterfaceEnabled()) return original;
+	if (_macosSource != &original) {
+		_macosSource = &original;
+		auto native = Jel::Ui::PrepareMacosPeerListStyle(original);
+		_macosPrepared = native ? native.get() : &original;
+		if (native) _macosStyles.push_back(std::move(native));
+	}
+	return *_macosPrepared;
 }
 
 void PeerListController::showFinished() {
@@ -1136,7 +1144,8 @@ void PeerListRow::paintDisabledCheckUserpic(
 }
 
 void PeerListRow::setStatusText(const QString &text) {
-	_status.setText(st::defaultTextStyle, text, Ui::NameTextOptions());
+	_status.setText(Jel::Ui::MacosInterfaceEnabled()
+		? st::macosPeerStatusStyle : st::defaultTextStyle, text, Ui::NameTextOptions());
 }
 
 float64 PeerListRow::checkedRatio() {
@@ -1212,7 +1221,10 @@ PeerListContent::PeerListContent(
 
 	using UpdateFlag = Data::PeerUpdate::Flag;
 	_controller->session().changes().peerUpdates(
-		UpdateFlag::Name | UpdateFlag::Photo | UpdateFlag::EmojiStatus
+		UpdateFlag::Name
+		| UpdateFlag::Photo
+		| UpdateFlag::EmojiStatus
+		| UpdateFlag::BarSettings
 	) | rpl::on_next([=](const Data::PeerUpdate &update) {
 		if (update.flags & UpdateFlag::Name) {
 			handleNameChanged(update.peer);
@@ -1220,6 +1232,15 @@ PeerListContent::PeerListContent(
 		if (update.flags & UpdateFlag::Photo) {
 			invalidateLoadedUserpics();
 			this->update();
+		}
+		if (update.flags & UpdateFlag::BarSettings) {
+			const auto byPeer = _rowsByPeer.find(update.peer);
+			if (byPeer != _rowsByPeer.cend()) {
+				for (const auto &row : byPeer->second) {
+					_rowsScrollCache.invalidate(row->id());
+					updateRow(row);
+				}
+			}
 		}
 	}, lifetime());
 
@@ -1627,12 +1648,10 @@ int PeerListContent::labelHeight() const {
 
 void PeerListContent::refreshRows() {
 	if (!_hiddenRows.empty()) {
-		if (!_ignoreHiddenRowsOnSearch || _normalizedSearchQuery.isEmpty()) {
-			_filterResults.clear();
-			for (const auto &row : _rows) {
-				if (!row->hidden()) {
-					_filterResults.push_back(row.get());
-				}
+		_filterResults.clear();
+		for (const auto &row : _rows) {
+			if (!row->hidden()) {
+				_filterResults.push_back(row.get());
 			}
 		}
 	}
@@ -2132,6 +2151,13 @@ void PeerListContent::paintRowContent(
 
 	p.fillRect(0, 0, outerWidth, _rowHeight, bg);
 	row->paintRipple(p, st, 0, 0, outerWidth);
+	if (Jel::Ui::MacosInterfaceEnabled() && st.photoSize == st::macosPeerItem.photoSize
+		&& (st.height == st::macosPeerItem.height || st.height == st::macosRecentCalls.item.height)
+		&& !selected && getRow(RowIndex(index.value + 1))) {
+		const auto left = st.namePosition.x();
+		p.fillRect(style::RightToLeft() ? 0 : left, _rowHeight - st::lineWidth,
+			std::max(0, outerWidth - left), st::lineWidth, st::menuSeparatorFg);
+	}
 	row->paintUserpic(
 		p,
 		st,
@@ -2431,13 +2457,10 @@ void PeerListContent::checkScrollForPreload() {
 void PeerListContent::searchQueryChanged(QString query) {
 	const auto searchWordsList = TextUtilities::PrepareSearchWords(query);
 	const auto normalizedQuery = searchWordsList.join(' ');
-	if (_ignoreHiddenRowsOnSearch && !normalizedQuery.isEmpty()) {
-		_filterResults.clear();
-	}
 	if (_normalizedSearchQuery != normalizedQuery) {
 		setSearchQuery(query, normalizedQuery);
 		if (_controller->searchInLocal() && !searchWordsList.isEmpty()) {
-			Assert(_hiddenRows.empty() || _ignoreHiddenRowsOnSearch);
+			Assert(_hiddenRows.empty());
 
 			auto minimalList = (const std::vector<not_null<PeerListRow*>>*)nullptr;
 			for (const auto &searchWord : searchWordsList) {
@@ -2574,10 +2597,6 @@ PeerListRowId PeerListContent::updateFromParentDrag(QPoint globalPosition) {
 
 void PeerListContent::dragLeft() {
 	clearSelection();
-}
-
-void PeerListContent::setIgnoreHiddenRowsOnSearch(bool value) {
-	_ignoreHiddenRowsOnSearch = value;
 }
 
 void PeerListContent::visibleTopBottomUpdated(

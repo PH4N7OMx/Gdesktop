@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class MacosAssetsTests(unittest.TestCase):
-    def test_window_title_icons_use_explicit_cross_module_references(self):
+    def test_window_title_icons_use_local_literals(self):
         widgets = (ROOT / "Telegram/lib_ui/ui/widgets/widgets.style").read_text(
             encoding="utf-8")
         schema = re.search(r"WindowTitle \{(.*?)\n\}", widgets, re.S).group(1)
@@ -22,9 +22,15 @@ class MacosAssetsTests(unittest.TestCase):
         title = re.search(
             r"macosWindowTitle: WindowTitle\(defaultWindowTitle\) \{(.*?)\n\}",
             native, re.S).group(1)
+        parent = widgets.split("defaultWindowTitle: WindowTitle {", 1)[1].split(
+            "\n}\n", 1)[0]
         for field in fields:
             with self.subTest(field=field):
-                self.assertRegex(title, rf"\b{field}: defaultWindowTitle\.{field};")
+                pattern = rf"(?m)^\t{field}: (icon\s*\{{.*?\}};)"
+                expected = re.search(pattern, parent, re.S).group(1)
+                actual = re.search(pattern, title, re.S)
+                self.assertIsNotNone(actual)
+                self.assertEqual(actual.group(1), expected)
 
     def test_compose_icons_override_foreign_unnamed_icons(self):
         source = (ROOT / "Telegram/SourceFiles/chat_helpers/chat_helpers.style").read_text(
@@ -40,6 +46,23 @@ class MacosAssetsTests(unittest.TestCase):
         for field in fields:
             with self.subTest(field=field):
                 self.assertRegex(child, rf"(?m)^\t{field}:")
+
+    def test_compose_desktop_icons_use_local_literals(self):
+        source = (ROOT / "Telegram/SourceFiles/chat_helpers/chat_helpers.style").read_text(
+            encoding="utf-8")
+        parent = source.split("defaultComposeIcons: ComposeIcons {", 1)[1].split(
+            "\n}\n", 1)[0]
+        native = (ROOT / "Telegram/SourceFiles/jel/ui/jel_styles.style").read_text(
+            encoding="utf-8")
+        child = native.split("macosComposeIcons: ComposeIcons(defaultComposeIcons) {", 1)[1].split(
+            "\n}\n", 1)[0]
+        for field in ("settings", "collectibles", "stripBubble", "stripExpandPanel", "stripExpandDropdown"):
+            with self.subTest(field=field):
+                pattern = rf"(?m)^\t{field}: (icon\s*\{{.*?\}};)"
+                expected = re.search(pattern, parent, re.S).group(1)
+                actual = re.search(pattern, child, re.S)
+                self.assertIsNotNone(actual)
+                self.assertEqual(actual.group(1), expected)
 
     def test_original_assets_match_pinned_source_hashes(self):
         manifest = json.loads(

@@ -379,14 +379,10 @@ jobs:
           # the one above and GitHub rejects the duplicate. The submodules
           # are public repositories and need no credentials.
           #
-          # Not recursive: the only nested submodule any build needs is
-          # cmake/external/glib/cppgir, which cmake/external adds under
-          # if (LINUX) — so Windows and macOS never compile it. Skipping
-          # it keeps gitlab.com, which regularly answers 403 to cloud
-          # runners, out of these jobs; the other nested submodules are
-          # documentation (range-v3 gh-pages, libcbor doxygen-theme).
+          # Initialize the engine without fetching unrelated nested docs or cppgir.
           cd $TBUILD/$REPO_NAME
           git submodule update --init --depth=1
+          git -C Telegram/ThirdParty/widget-sandbox submodule update --init --recursive --depth=1
 
       - name: Read canary configuration.
         shell: bash

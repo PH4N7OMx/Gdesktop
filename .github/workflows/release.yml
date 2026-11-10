@@ -28,7 +28,7 @@ jobs:
         run: |
           python3 Telegram/build/validate_build_inputs.py
           python3 Telegram/build/prepare/tests/test_prepare_options.py
-          python3 Telegram/build/tests/test_patch_codegen.py
+          python3 -m unittest discover -s Telegram/build/tests
           python3 Telegram/build/patch_codegen.py
 
       - name: Patch tgcalls CryptoHelper for Xcode 16 / Clang
@@ -354,7 +354,7 @@ jobs:
         run: |
           python3 Telegram/build/validate_build_inputs.py
           python3 Telegram/build/prepare/tests/test_prepare_options.py
-          python3 Telegram/build/tests/test_patch_codegen.py
+          python3 -m unittest discover -s Telegram/build/tests
           python3 Telegram/build/patch_codegen.py
 
       - name: Patch tgcalls CryptoHelper for Xcode 16 / Clang
@@ -443,6 +443,8 @@ jobs:
         run: |
           git submodule update --init --depth=1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git -C Telegram/ThirdParty/widget-sandbox submodule update --init --recursive --depth=1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
 
@@ -452,9 +454,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python Telegram/build/prepare/tests/test_prepare_options.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python Telegram/build/tests/test_patch_cmake_helpers.py
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python Telegram/build/tests/test_patch_codegen.py
+          python -m unittest discover -s Telegram/build/tests
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python Telegram/build/patch_codegen.py
 

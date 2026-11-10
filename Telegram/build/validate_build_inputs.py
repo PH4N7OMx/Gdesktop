@@ -36,6 +36,17 @@ def main():
             if not relative or not (qrc.parent / relative).is_file():
                 errors.append(f"Missing resource in {qrc.name}: {relative}")
 
+    quickjs_root = telegram / "ThirdParty/widget-sandbox/packages/ios/Sources/CQuickJS"
+    quickjs_cmake = (telegram / "cmake/lib_quickjs.cmake").read_text(encoding="utf-8")
+    quickjs_block = re.search(
+        r"nice_target_sources\(lib_quickjs \$\{quickjs_root\}(.*?)\n\)",
+        quickjs_cmake, re.S).group(1)
+    for relative in quickjs_block.splitlines():
+        relative = relative.strip()
+        if re.fullmatch(r"[\w./-]+\.(?:c|h)", relative):
+            if not (quickjs_root / relative).is_file():
+                errors.append(f"Missing QuickJS source: {relative}; initialize widget-sandbox submodules recursively")
+
     language_keys = set()
     for strings in (telegram / "Resources" / "langs").glob("*.strings"):
         language_keys.update(re.findall(

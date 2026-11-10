@@ -398,16 +398,46 @@ macosPopupMenuWithIcons: PopupMenu(popupMenuWithIcons, macosPopupMenu) {
 }
 
 macosWindowTitle: WindowTitle(defaultWindowTitle) {
-	minimizeIconActive: defaultWindowTitle.minimizeIconActive;
-	minimizeIconActiveOver: defaultWindowTitle.minimizeIconActiveOver;
-	maximizeIconActive: defaultWindowTitle.maximizeIconActive;
-	maximizeIconActiveOver: defaultWindowTitle.maximizeIconActiveOver;
-	restoreIcon: defaultWindowTitle.restoreIcon;
-	restoreIconOver: defaultWindowTitle.restoreIconOver;
-	restoreIconActive: defaultWindowTitle.restoreIconActive;
-	restoreIconActiveOver: defaultWindowTitle.restoreIconActiveOver;
-	closeIconActive: defaultWindowTitle.closeIconActive;
-	closeIconActiveOver: defaultWindowTitle.closeIconActiveOver;
+	minimizeIconActive: icon {
+		{ windowTitleButtonSize, titleButtonBgActive },
+		{ "title_button_minimize", titleButtonFgActive },
+	};
+	minimizeIconActiveOver: icon {
+		{ windowTitleButtonSize, titleButtonBgActiveOver },
+		{ "title_button_minimize", titleButtonFgActiveOver },
+	};
+	maximizeIconActive: icon {
+		{ windowTitleButtonSize, titleButtonBgActive },
+		{ "title_button_maximize", titleButtonFgActive },
+	};
+	maximizeIconActiveOver: icon {
+		{ windowTitleButtonSize, titleButtonBgActiveOver },
+		{ "title_button_maximize", titleButtonFgActiveOver },
+	};
+	restoreIcon: icon {
+		{ windowTitleButtonSize, titleButtonBg },
+		{ "title_button_restore", titleButtonFg },
+	};
+	restoreIconOver: icon {
+		{ windowTitleButtonSize, titleButtonBgOver },
+		{ "title_button_restore", titleButtonFgOver },
+	};
+	restoreIconActive: icon {
+		{ windowTitleButtonSize, titleButtonBgActive },
+		{ "title_button_restore", titleButtonFgActive },
+	};
+	restoreIconActiveOver: icon {
+		{ windowTitleButtonSize, titleButtonBgActiveOver },
+		{ "title_button_restore", titleButtonFgActiveOver },
+	};
+	closeIconActive: icon {
+		{ windowTitleButtonSize, titleButtonCloseBgActive },
+		{ "title_button_close", titleButtonCloseFgActive },
+	};
+	closeIconActiveOver: icon {
+		{ windowTitleButtonSize, titleButtonCloseBgActiveOver },
+		{ "title_button_close", titleButtonCloseFgActiveOver },
+	};
 	height: 32px;
 	bg: dialogsBg;
 	bgActive: dialogsBg;
@@ -481,11 +511,20 @@ macosGallerymore: icon {{ "jel/macos/gallerymore", mediaviewControlFg }};
 macosGalleryrotate: icon {{ "jel/macos/galleryrotate", mediaviewControlFg }};
 
 macosComposeIcons: ComposeIcons(defaultComposeIcons) {
-	settings: defaultComposeIcons.settings;
-	collectibles: defaultComposeIcons.collectibles;
-	stripBubble: defaultComposeIcons.stripBubble;
-	stripExpandPanel: defaultComposeIcons.stripExpandPanel;
-	stripExpandDropdown: defaultComposeIcons.stripExpandDropdown;
+	settings: icon {{ "emoji/emoji_settings", emojiIconFg }};
+	collectibles: icon {{ "menu/unique", emojiIconFg }};
+	stripBubble: icon{
+		{ "chat/reactions_bubble_shadow", windowShadowFg },
+		{ "chat/reactions_bubble", emojiPanBg },
+	};
+	stripExpandPanel: icon{
+		{ "chat/reactions_round_big", windowBgRipple },
+		{ "chat/reactions_expand_panel", windowSubTextFg },
+	};
+	stripExpandDropdown: icon{
+		{ "chat/reactions_round_small", windowBgRipple },
+		{ "chat/reactions_expand_panel", windowSubTextFg },
+	};
 	recent: icon {{ "jel/macos/emojirecent", emojiIconFg }};
 	recentActive: icon {{ "jel/macos/emojirecent", emojiSubIconFgActive }};
 	people: icon {{ "jel/macos/emojipeople", emojiIconFg }};

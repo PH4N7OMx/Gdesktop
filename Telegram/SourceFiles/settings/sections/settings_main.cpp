@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "settings/sections/settings_main.h"
 
+#include "styles/palette.h"
+
 #include "settings/settings_common_session.h"
 
 #include "api/api_cloud_password.h"

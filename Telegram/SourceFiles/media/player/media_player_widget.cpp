@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "media/player/media_player_widget.h"
 
+#include "styles/palette.h"
+
 #include "platform/platform_specific.h"
 #include "jel/ui/macos_interface.h"
 #include "base/event_filter.h"

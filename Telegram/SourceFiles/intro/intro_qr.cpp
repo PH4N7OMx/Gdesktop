@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "intro/intro_qr.h"
 
+#include "styles/palette.h"
+
 #include "boxes/abstract_box.h"
 #include "data/components/passkeys.h"
 #include "data/data_passkey_deserialize.h"

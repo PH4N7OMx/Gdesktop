@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "ui/widgets/discrete_sliders.h"
 
+#include "styles/palette.h"
+
 #include "ui/effects/ripple_animation.h"
 #include "styles/style_widgets.h"
 #include <QtGui/QPainterPath>

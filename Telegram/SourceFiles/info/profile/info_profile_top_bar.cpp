@@ -6,6 +6,8 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "info/profile/info_profile_top_bar.h"
+
+#include "styles/palette.h"
 #include "jel/ui/macos_interface.h"
 
 #include "api/api_peer_colors.h"

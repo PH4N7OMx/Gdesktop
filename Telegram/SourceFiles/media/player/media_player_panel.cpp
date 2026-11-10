@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "media/player/media_player_panel.h"
 
+#include "styles/palette.h"
+
 #include "media/player/media_player_instance.h"
 #include "media/player/media_player_button.h"
 #include "media/media_common.h"

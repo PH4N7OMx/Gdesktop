@@ -1,4 +1,6 @@
 #include "jel/ui/macos_sidebar.h"
+
+#include "styles/palette.h"
 #include "jel/ui/macos_interface.h"
 
 #include "boxes/peer_list_box.h"

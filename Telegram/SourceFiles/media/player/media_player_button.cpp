@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "media/player/media_player_button.h"
 
+#include "styles/palette.h"
+
 #include "media/media_common.h"
 #include "jel/ui/macos_interface.h"
 #include "lottie/lottie_icon.h"

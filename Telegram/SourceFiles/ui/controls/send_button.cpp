@@ -6,6 +6,8 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "ui/controls/send_button.h"
+
+#include "styles/palette.h"
 #include "jel/ui/macos_interface.h"
 #include "jel/ui/macos_recording.h"
 

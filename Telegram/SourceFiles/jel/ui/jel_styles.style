@@ -398,6 +398,16 @@ macosPopupMenuWithIcons: PopupMenu(popupMenuWithIcons, macosPopupMenu) {
 }
 
 macosWindowTitle: WindowTitle(defaultWindowTitle) {
+	minimizeIconActive: defaultWindowTitle.minimizeIconActive;
+	minimizeIconActiveOver: defaultWindowTitle.minimizeIconActiveOver;
+	maximizeIconActive: defaultWindowTitle.maximizeIconActive;
+	maximizeIconActiveOver: defaultWindowTitle.maximizeIconActiveOver;
+	restoreIcon: defaultWindowTitle.restoreIcon;
+	restoreIconOver: defaultWindowTitle.restoreIconOver;
+	restoreIconActive: defaultWindowTitle.restoreIconActive;
+	restoreIconActiveOver: defaultWindowTitle.restoreIconActiveOver;
+	closeIconActive: defaultWindowTitle.closeIconActive;
+	closeIconActiveOver: defaultWindowTitle.closeIconActiveOver;
 	height: 32px;
 	bg: dialogsBg;
 	bgActive: dialogsBg;
@@ -471,6 +481,11 @@ macosGallerymore: icon {{ "jel/macos/gallerymore", mediaviewControlFg }};
 macosGalleryrotate: icon {{ "jel/macos/galleryrotate", mediaviewControlFg }};
 
 macosComposeIcons: ComposeIcons(defaultComposeIcons) {
+	settings: defaultComposeIcons.settings;
+	collectibles: defaultComposeIcons.collectibles;
+	stripBubble: defaultComposeIcons.stripBubble;
+	stripExpandPanel: defaultComposeIcons.stripExpandPanel;
+	stripExpandDropdown: defaultComposeIcons.stripExpandDropdown;
 	recent: icon {{ "jel/macos/emojirecent", emojiIconFg }};
 	recentActive: icon {{ "jel/macos/emojirecent", emojiSubIconFgActive }};
 	people: icon {{ "jel/macos/emojipeople", emojiIconFg }};

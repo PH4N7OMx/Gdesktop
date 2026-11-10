@@ -11,6 +11,36 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class MacosAssetsTests(unittest.TestCase):
+    def test_window_title_icons_use_explicit_cross_module_references(self):
+        widgets = (ROOT / "Telegram/lib_ui/ui/widgets/widgets.style").read_text(
+            encoding="utf-8")
+        schema = re.search(r"WindowTitle \{(.*?)\n\}", widgets, re.S).group(1)
+        fields = re.findall(r"^\s*(\w+): icon;", schema, re.M)
+        self.assertTrue(fields)
+        native = (ROOT / "Telegram/SourceFiles/jel/ui/jel_styles.style").read_text(
+            encoding="utf-8")
+        title = re.search(
+            r"macosWindowTitle: WindowTitle\(defaultWindowTitle\) \{(.*?)\n\}",
+            native, re.S).group(1)
+        for field in fields:
+            with self.subTest(field=field):
+                self.assertRegex(title, rf"\b{field}: defaultWindowTitle\.{field};")
+
+    def test_compose_icons_override_foreign_unnamed_icons(self):
+        source = (ROOT / "Telegram/SourceFiles/chat_helpers/chat_helpers.style").read_text(
+            encoding="utf-8")
+        parent = source.split("defaultComposeIcons: ComposeIcons {", 1)[1].split(
+            "\n}", 1)[0]
+        fields = re.findall(r"^\t(\w+): icon\s*\{", parent, re.M)
+        self.assertTrue(fields)
+        native = (ROOT / "Telegram/SourceFiles/jel/ui/jel_styles.style").read_text(
+            encoding="utf-8")
+        child = native.split("macosComposeIcons: ComposeIcons(defaultComposeIcons) {", 1)[1].split(
+            "\n}", 1)[0]
+        for field in fields:
+            with self.subTest(field=field):
+                self.assertRegex(child, rf"(?m)^\t{field}:")
+
     def test_original_assets_match_pinned_source_hashes(self):
         manifest = json.loads(
             (ROOT / "docs/assets/macos-interface/sources.json").read_text(

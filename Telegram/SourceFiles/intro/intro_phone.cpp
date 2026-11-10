@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "intro/intro_phone.h"
 
+#include "styles/palette.h"
+
 #include "lang/lang_keys.h"
 #include "intro/intro_code.h"
 #include "intro/intro_email.h"

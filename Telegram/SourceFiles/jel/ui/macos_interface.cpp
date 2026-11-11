@@ -6,6 +6,7 @@
 #include "window/themes/window_theme.h"
 #include "window/themes/window_themes_embedded.h"
 #include "ui/style/style_palette_colorizer.h"
+#include "styles/style_boxes.h"
 #include "styles/style_jel_styles.h"
 #include "styles/style_dialogs.h"
 #include "styles/style_dialogs_layout.h"

@@ -16,6 +16,7 @@
 #include "ui/widgets/labels.h"
 #include "ui/widgets/scroll_area.h"
 #include "ui/widgets/popup_menu.h"
+#include "ui/widgets/menu/menu_add_action_callback.h"
 #include "ui/widgets/menu/menu_add_action_callback_factory.h"
 #include "window/window_session_controller.h"
 #include "styles/style_boxes.h"
@@ -284,6 +285,6 @@ void MacosSidebar::keyPressEvent(QKeyEvent *event) {
 }
 void MacosSidebar::showTab(int tab) { _state->show(tab); }
 int MacosSidebar::currentTab() const { return _state->tab; }
-rpl::producer<int> MacosSidebar::tabChanges() const { return _state->changes.events_starting_with(_state->tab); }
+rpl::producer<int> MacosSidebar::tabChanges() const { return _state->changes.events_starting_with_copy(_state->tab); }
 
 } // namespace Jel::Ui

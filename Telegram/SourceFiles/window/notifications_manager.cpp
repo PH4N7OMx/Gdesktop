@@ -215,11 +215,6 @@ struct System::Waiter {
 	crl::time when = 0;
 };
 
-struct System::Alert {
-	NotificationInHistoryKey key;
-	PeerData *notifyBy = nullptr;
-};
-
 System::NotificationInHistoryKey::NotificationInHistoryKey(
 	Data::ItemNotification notification)
 : NotificationInHistoryKey(notification.item->id, notification.type) {

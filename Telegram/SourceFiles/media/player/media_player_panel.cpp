@@ -26,6 +26,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "data/data_document.h"
 #include "data/data_document_media.h"
+#include "data/data_file_origin.h"
 #include "data/data_saved_music.h"
 #include "ui/text/text_utilities.h"
 #include "ui/image/image.h"
@@ -388,7 +389,7 @@ private:
 		updateTrack(state.id);
 		_progress->setBufferedRanges(instance()->bufferedRanges(type));
 		_duration = state.frequency > 0
-			? std::max(crl::time(0), state.length * 1000LL / state.frequency) : 0;
+			? std::max<crl::time>(0, state.length * 1000LL / state.frequency) : 0;
 		_progress->setDisabled(!document || !_duration || document->loading());
 		const auto position = state.frequency > 0 ? state.position * 1000LL / state.frequency : 0;
 		if (!_progress->isChanging()) {

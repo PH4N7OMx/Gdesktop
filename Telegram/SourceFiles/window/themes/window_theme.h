@@ -215,6 +215,7 @@ public:
 	[[nodiscard]] bool tileNight() const;
 	[[nodiscard]] std::optional<QColor> imageMonoColor() const;
 	[[nodiscard]] bool nightModeChangeAllowed() const;
+	[[nodiscard]] bool isNonDefaultThemeOrBackground();
 
 private:
 	struct AdjustableColor {
@@ -247,7 +248,6 @@ private:
 		std::optional<QString> themePath,
 		bool newNightMode);
 	void keepApplied(const Object &object, bool write);
-	[[nodiscard]] bool isNonDefaultThemeOrBackground();
 	[[nodiscard]] bool isNonDefaultBackground();
 	void checkUploadWallPaper();
 	[[nodiscard]] QImage postprocessBackgroundImage(QImage image);

@@ -5638,7 +5638,7 @@ void HistoryInner::mouseActionUpdate() {
 	}
 
 	TextState dragState;
-	ClickHandlerHost *lnkhost = nullptr;
+	auto lnkhost = (ClickHandlerHost*)nullptr;
 	auto dragStateUserpic = false;
 	auto selectingText = (item == _mouseActionItem)
 		&& (view == Element::Hovered())

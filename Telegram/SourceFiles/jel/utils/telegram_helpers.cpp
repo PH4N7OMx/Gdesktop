@@ -822,43 +822,11 @@ void searchPeerInner(const QString &peerId, Main::Session *session, const Userna
 					return &data.vsend_message();
 				});
 
-			const auto text = message->match(
-				[&](const MTPDbotInlineMessageMediaAuto &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageText &data)
-				{
-					return qs(data.vmessage());
-				},
-				[&](const MTPDbotInlineMessageMediaGeo &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageMediaVenue &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageMediaContact &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageMediaInvoice &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageMediaWebPage &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageRichMessage &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageWidget &data)
-				{
-					return QString();
-				});
+			const auto text = message->match([](const MTPDbotInlineMessageText &data) {
+				return qs(data.vmessage());
+			}, [](const auto &) {
+				return QString();
+			});
 
 			if (text.isEmpty() || text.contains(usernameResolverEmpty)) {
 				continue;
@@ -1342,39 +1310,11 @@ void getUserRegistrationDateInner(
 					return &data.vsend_message();
 				});
 
-			const auto text = message->match(
-				[&](const MTPDbotInlineMessageMediaAuto &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageText &data)
-				{
-					return qs(data.vmessage());
-				},
-				[&](const MTPDbotInlineMessageMediaGeo &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageMediaVenue &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageMediaContact &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageMediaInvoice &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageMediaWebPage &data)
-				{
-					return QString();
-				},
-				[&](const MTPDbotInlineMessageRichMessage &data)
-				{
-					return QString();
-				});
+			const auto text = message->match([](const MTPDbotInlineMessageText &data) {
+				return qs(data.vmessage());
+			}, [](const auto &) {
+				return QString();
+			});
 
 			if (text.isEmpty() || text == "failed") {
 				continue;

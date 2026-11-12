@@ -9544,28 +9544,15 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "jel_JellyPlugins" = "Plugins";
 "jel_JellyInstall" = "Install JellyPlugin";
 "jel_JellyInstallNotice" = "The package will be saved without running. Replacing a plugin stops it and requires new permission approval.";
-"jel_JellyPermissions" = "Plugin permissions";
-"jel_JellyPermissionNotice" = "Allow only the capabilities you need. Account keys and system commands are unavailable.";
-"jel_JellyCombinedRisk" = "Reading chats, files or balances together with HTTPS access allows the plugin to send those data to permitted websites.";
-"jel_JellyReadChats" = "Read new messages in these chats";
-"jel_JellySendChats" = "Send messages to these chats";
-"jel_JellyHttpHosts" = "Access these HTTPS websites";
-"jel_JellyStorage" = "Store plugin data locally";
-"jel_JellyTimers" = "Run tasks on a schedule while the app is open";
-"jel_JellyActions" = "Add buttons to the Plugins page";
-"jel_JellyMessageLimit" = "Maximum Telegram operations per hour: ";
 "jel_JellyEnable" = "Enable";
-"jel_JellyDisable" = "Disable and revoke permissions";
 "jel_JellyStopAll" = "Stop all plugins";
 "jel_JellyConfiguration" = "Plugin settings";
-"jel_JellyConfigurationNotice" = "Enter the JSON settings described by the plugin author. Saving stops the plugin; enable it again to apply changes.";
 "jel_JellyLog" = "Activity log";
 "jel_JellyEmpty" = "No JellyPlugins installed. Use Install JellyPlugin to choose a .jelly file.";
 "jel_JellyInvalidPackage" = "Cannot read plugin package (maximum 1 MiB).";
 "jel_JellyRunning" = "Running";
 "jel_JellyDisabled" = "Disabled";
 "jel_JellyRemove" = "Remove plugin";
-"jel_JellyRemoveNotice" = "Remove the plugin, its settings and saved data? This cannot be undone.";
 "jel_SessionTerminated" = "Session **{item}** was terminated. You may still browse cached messages.";
 "jel_InvalidConnectionLayerNote" = "You should re-login due to an error during the update.";
 "jel_LocalPremiumNotice" = "You're using **local** Telegram Premium.\nIt **won't** give you any benefits.\n**Enjoy the star near your nickname!**";
@@ -9619,31 +9606,13 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 "jel_JellyViewCode" = "View code";
 
-"jel_JellyCodeNotice" = "Installed JavaScript. Read-only; TypeScript source may differ from this bundle.";
 
-"jel_JellyJoinChannels" = "Join these channels";
 
-"jel_JellyBotChats" = "Press callback buttons in these chats";
 
-"jel_JellyAttachmentChats" = "Copy attachments from these chats";
 
-"jel_JellyEditChats" = "Edit outgoing messages in these chats";
 
-"jel_JellyReactionChats" = "Set reactions in these chats";
 
-"jel_JellyHistoryChats" = "Read history in these chats";
 
-"jel_JellyFileRead" = "Read files I choose";
-"jel_JellyFileWrite" = "Save files where I choose";
-"jel_JellyMoneyRead" = "Read my Stars / Telegram TON balance";
-"jel_JellyWebviewBots" = "Open Mini Apps of these bots";
-"jel_JellyFileNotice" = "You choose a file for each read or save. The plugin receives its contents, but not its full path. Saved files may replace existing files.";
-"jel_JellyMiniAppsNotice" = "Mini Apps receive your Telegram profile through Telegram. The plugin cannot read the app, sign in to it or approve payments.";
-"jel_JellyMenuChats" = "Add menu actions and read messages I click in these chats";
-"jel_JellyDialogs" = "Show notifications and confirmation dialogs";
-"jel_JellySettingsNotice" = "Change the settings below. Saving stops the plugin; enable it again to apply changes.";
-"jel_JellyInvalidSettings" = "Check the highlighted settings and allowed ranges.";
-"jel_JellyEditJson" = "Edit JSON";
 
 "jel_InterfaceStyle" = "Interface style";
 "jel_InterfaceStyleDescription" = "Choose the layout and icon set separately. Automatic icons follow the interface style. Restart the app to apply changes. The macOS layout is experimental.";
@@ -9654,3 +9623,48 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 "jel_PlayerAddToProfile" = "Add to Profile";
 "jel_PlayerRemoveFromProfile" = "Remove";
+
+"jel_JellyV2LocalPackage" = "Local package · publisher not verified";
+"jel_JellyV2ModeInherit" = "Use global settings";
+"jel_JellyV2ModeAsk" = "Ask before each action";
+"jel_JellyV2ModeRemember" = "Remember allowed actions";
+"jel_JellyV2ModeFull" = "Full access to client API";
+"jel_JellyV2GlobalMode" = "Global plugin access";
+"jel_JellyV2PluginMode" = "Plugin access";
+"jel_JellyV2GlobalNotice" = "Applies to all accounts and plugins using global settings. Individual overrides remain in effect.";
+"jel_JellyV2ModeNotice" = "Choose how this plugin can use the client API. Saved denials take priority over full access.";
+"jel_JellyV2FullNotice" = "Allow sending text and reading chat history without individual confirmations. Saved denials, rate limits and process isolation remain in effect.";
+"jel_JellyV2Affected" = "Plugins in this account using global settings: ";
+"jel_JellyV2FuturePlugins" = "This also applies to future plugins that use global settings, after you enable them.";
+"jel_JellyV2Waiting" = "Waiting for approval";
+"jel_JellyV2Starting" = "Starting host";
+"jel_JellyV2Activating" = "Activating";
+"jel_JellyV2Stopping" = "Stopping";
+"jel_JellyV2Failed" = "Stopped with an error";
+"jel_JellyV2ReviewAction" = "Review actual action";
+"jel_JellyV2ActualNotice" = "The client generated these details from the actual API request. The plugin description is not used as evidence.";
+"jel_JellyV2RequestedBy" = "Requested by plugin: ";
+"jel_JellyV2Account" = "Account: ";
+"jel_JellyV2SendText" = "Send this exact text:";
+"jel_JellyV2ReadHistory" = "Read chat history. Maximum messages: ";
+"jel_JellyV2Silent" = "Send without a notification";
+"jel_JellyV2Notify" = "Send with normal notification settings";
+"jel_JellyV2NoPreview" = "Link previews are disabled";
+"jel_JellyV2RememberExact" = "Remember this exact action or denial";
+"jel_JellyV2RememberChat" = "When remembering an allowance, allow any text in this chat with the same notification setting";
+"jel_JellyV2RememberNotice" = "Remembering an allowance switches this plugin from Ask to Remember when necessary. Closing this window leaves the request pending until it expires.";
+"jel_JellyV2Allow" = "Allow";
+"jel_JellyV2Deny" = "Deny";
+"jel_JellyV2Pending" = "Pending actions";
+"jel_JellyV2NoPending" = "No actions need approval.";
+"jel_JellyV2NeedsApproval" = "A plugin needs approval. Open Plugins → Pending actions to review the actual request.";
+"jel_JellyV2Rules" = "Saved rules and denials";
+"jel_JellyV2NoRules" = "No saved rules. The selected access mode applies.";
+"jel_JellyV2ClearRules" = "Remove all saved rules and denials";
+"jel_JellyV2SettingsNotice" = "Edit this plugin's JSON settings. Saving restarts an enabled plugin. Actions are checked again using their actual parameters.";
+"jel_JellyV2AppOpen" = "Plugins run only while GummyGram is open.";
+"jel_JellyV2NextRun" = "Next scheduled event: ";
+"jel_JellyV2Rollback" = "Restore previous revision";
+"jel_JellyV2RollbackNotice" = "Restore the previous package and its data snapshot? The plugin will be stopped and must be enabled again. Current saved permissions will be cleared.";
+"jel_JellyV2RemoveData" = "Also delete this plugin's settings and saved data. Permissions are always removed.";
+"jel_JellyV2Disable" = "Disable";

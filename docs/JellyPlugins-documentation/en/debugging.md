@@ -1,44 +1,7 @@
-# Debugging and troubleshooting
+# Debugging
 
-Start in the plugin card: check its status, open the action log, then repeat one specific step. Use `jelly.log()`. The client currently provides no browser console, Node.js debugger or TypeScript breakpoints.
+Check the new client version, API 2 package and bundled host. Inspect status and log first: installed, activating and ready are different states. Use `api.log.info/error` for diagnostics.
 
-| Symptom | Check |
-|---|---|
-| Package cannot be installed | JSON `.jelly` produced by the packer, up to 1 MiB; valid manifest and `apiVersion: 1` |
-| Installed but inactive | Installation does not execute code. Enable and approve permissions |
-| No action button | Manifest requests `ui: true`, user approved it, activation reached `ui.addAction` |
-| Stops after saving settings | Settings stop execution; enable again |
-| `PERMISSION_DENIED` | Requested and granted permissions include the exact chat ID / host |
-| `CHAT_UNAVAILABLE` | Chat is known to this account; open it in the client |
-| `BUTTON_UNAVAILABLE` / `ATTACHMENT_UNAVAILABLE` | Message loaded, supported type; attachment source and destination approved |
-| `RATE_LIMIT` / `FLOOD_WAIT` | Wait `retryAfter`. History reads also consume Telegram limits |
-| No new message events | Need `readChats`. The event is for incoming messages; use `getHistory` for older messages |
-| Lost state during rapid events | Async handlers overlap; use a busy flag or a queue |
-| Old behavior after changing TypeScript | Check types, repack, import the new `.jelly` and approve permissions |
-| OS refuses execution | Windows AppContainer required; check status in the card. Other platforms cannot run plugins yet |
+Windows/Linux: adjacent `jelly-runtime`; macOS: `.app/Contents/Helpers`. The main executable is not copied to AppData. A missing host needs a complete installation rather than disabling isolation.
 
-## Log an API failure
-
-Use this fragment inside activation or an event handler; `chatId` and `text` are values from your workflow.
-
-```typescript
-try {
-  await jelly.telegram.sendMessage(chatId, text);
-} catch (cause) {
-  const error = cause as PluginError;
-  jelly.log(JSON.stringify({ code: error.code, retryAfter: error.retryAfter }));
-}
-```
-
-For projects inside `examples/`, import the type with `import type { PluginError } from "../sdk-types";`. Avoid logging passwords or complete conversations.
-
-## Verify a change
-
-1. Run `npm run check` in the SDK.
-2. Pack with `node scripts/pack.mjs examples/my-plugin`.
-3. Import the package with the same ID to replace the previous version, then approve access.
-4. Exercise one workflow and inspect its log. Start with a button or preview before sending messages.
-
-View code shows installed JavaScript rather than original TypeScript. Use it to confirm which package is installed. Stopping cannot guarantee cancellation of a request already submitted to a server; inspect the outcome before retrying.
-
-See [errors and limits](errors.md) for codes and [lifecycle](lifecycle.md) for persistence.
+Run SDK `npm run check` and `npm test`. Native evidence comes from `JellyPlugins v2 build and isolation` Actions and full client tests. Do not automatically send live messages for testing or log session secrets/private chats.

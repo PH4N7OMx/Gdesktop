@@ -1,34 +1,9 @@
-# Plugin lifecycle
+# Lifecycle
 
-`TypeScript → pack → .jelly → install → permissions → activation → events`
+The default export is `(api) => void | cleanup`; activation and cleanup may be async. Ready follows completion of activation and its Promise. Cleanup has a bounded stop deadline.
 
-## Activation
+Activation can read settings/storage and register intervals. `api.settings` is a readonly JSON snapshot; saving changed settings restarts an enabled instance. There is no `onMessage`, arbitrary timer API or Node.js event loop.
 
-Installation stores a package. Enabling starts an isolated process and calls its default export with `jelly` and `settings`. Register handlers, action buttons and timers on every activation. Activation failure stops the plugin; handler failures are logged.
+Disable, error, update and uninstall end the instance. Late replies from old generations never reach new instances. Do not rely on new API calls during cleanup after stop. An external watchdog kills a stuck host.
 
-Registered handlers receive `message.new`, `timer` and `action` events. Async work can overlap. `jelly.on(...)` returns an unsubscribe function.
-
-## Where to keep state
-
-| Data | After stop / restart | Purpose |
-|---|---|---|
-| JavaScript variable | Lost | Current queue or busy flag |
-| `settings` | Retained | User JSON configuration, per account and plugin ID |
-| `storage` | Retained | Counters, processed IDs, workflow state |
-| Timers, handlers and buttons | Register again | Work for the current instance |
-| Log | Not written to disk | Last 100 entries in client memory |
-| Telegram budgets and FloodWait | Retained | Limits across restart and update |
-
-The same ID on two accounts does not share storage or permissions. Settings cannot expand manifest grants.
-
-## Changes and stopping
-
-- Saving settings stops the plugin; enable it again.
-- A new package with the same ID replaces code, retains settings/storage and requires access approval again.
-- Disabling revokes access and stops timers and pending work.
-- Removal deletes package, settings and storage; the shared account budget remains.
-- After a client crash, check status and enable manually.
-
-Do not automatically resend when the outcome is unknown. Keep processed IDs and inspect history when needed. Treat website and message content as workflow input.
-
-Next: [API](api.md), [permissions](security.md), [debugging](debugging.md).
+Normal shutdown preserves the enabled revision for next startup. Unexpected shutdown requires manual enabling. Missed interval events are not replayed.

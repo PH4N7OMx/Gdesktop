@@ -142,6 +142,7 @@ def resource_content(path):
 
 
 def assemble(builds, destination, toolchain, target, configuration):
+    root = pathlib.Path(__file__).resolve().parents[2]
     binary_name = 'Telegram Lite' if target == 'macstore' else 'Telegram'
     app_name = binary_name + '.app'
     apps = {arch: folder / app_name for arch, folder in builds.items()}
@@ -203,6 +204,7 @@ def assemble(builds, destination, toolchain, target, configuration):
         if info['CFBundleIdentifier'] != identifier or info['CFBundleExecutable'] != binary_name:
             raise RuntimeError('The app bundle does not match the selected distribution target.')
         resources = ['Contents/MacOS/' + binary_name,
+            'Contents/Helpers/jelly-plugin-host',
             'Contents/Resources/Icon.icns', 'Contents/Resources/Assets.car',
             'Contents/Resources/Telegram.rcc',
             'Contents/Resources/lib_ui.rcc', 'Contents/Resources/lib_spellcheck.rcc',
@@ -222,8 +224,7 @@ def assemble(builds, destination, toolchain, target, configuration):
             if target == 'macstore':
                 run(['codesign', '--force', '--sign', '-', bundle
                     / 'Contents/Frameworks/Breakpad.framework/Versions/A/Resources/breakpadUtilities.dylib'])
-            run(['codesign', '--force', '--deep', '--sign', '-', bundle])
-            run(['codesign', '--verify', '--deep', '--strict', bundle])
+            run([sys.executable, root / 'Telegram/build/sign_jelly_host.py', '--bundle', bundle, '--identity', '-'])
         result = destination / app_name
         if result.exists():
             shutil.rmtree(result)

@@ -259,6 +259,7 @@ call :sign "%BinaryName%.exe"
 
 if %BuildUWP% equ 0 (
   call :sign "Updater.exe"
+  call :sign "jelly-runtime\jelly-plugin-host.exe"
 
   if %AlphaVersion% equ 0 (
     iscc /dMyAppVersion=%AppVersionStrSmall% /dMyAppVersionZero=%AppVersionStr% /dMyAppVersionFull=%AppVersionStrFull% "/dReleasePath=%ReleasePath%" "/dMyBuildTarget=%BuildTarget%" %IsccNameParam% "%FullScriptPath%setup.iss" || goto error
@@ -266,9 +267,9 @@ if %BuildUWP% equ 0 (
   )
 
   if %BuildARM% neq 0 (
-    call Packer.exe -version %VersionForPacker% -path %BinaryName%.exe -path Updater.exe -target %BuildTarget% -channel %UpdateChannel% -keys-loc "%ResourcesPath%\update" -emit-signing-input signing-input.bin || goto error
+    call Packer.exe -version %VersionForPacker% -path %BinaryName%.exe -path Updater.exe -path "jelly-runtime" -target %BuildTarget% -channel %UpdateChannel% -keys-loc "%ResourcesPath%\update" -emit-signing-input signing-input.bin || goto error
   ) else (
-    call Packer.exe -version %VersionForPacker% -path %BinaryName%.exe -path Updater.exe -path "modules\%Platform%\d3d\d3dcompiler_47.dll" -target %BuildTarget% -channel %UpdateChannel% -keys-loc "%ResourcesPath%\update" -emit-signing-input signing-input.bin || goto error
+    call Packer.exe -version %VersionForPacker% -path %BinaryName%.exe -path Updater.exe -path "jelly-runtime" -path "modules\%Platform%\d3d\d3dcompiler_47.dll" -target %BuildTarget% -channel %UpdateChannel% -keys-loc "%ResourcesPath%\update" -emit-signing-input signing-input.bin || goto error
   )
   call :signupdate
   call Packer.exe -channel %UpdateChannel% -keys-loc "%ResourcesPath%\update" -unsigned "%UpdateFile%.unsigned" -embed-signatures %ReleaseCloudKeyId%:release-cloud.sig -local-key "%ReleaseLocalKey%" -local-key-id %ReleaseLocalKeyId% || goto error
@@ -348,6 +349,7 @@ if %BuildUWP% neq 0 (
   )
 
   move "%ReleasePath%\%BinaryName%.exe" "%DeployPath%\%BinaryName%\" || goto error
+  move "%ReleasePath%\jelly-runtime" "%DeployPath%\%BinaryName%\" || goto error
   if %BuildARM% equ 0 (
     xcopy "%ReleasePath%\modules\%Platform%\d3d\d3dcompiler_47.dll" "%DeployPath%\%BinaryName%\modules\%Platform%\d3d\" || goto error
   )

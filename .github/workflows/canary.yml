@@ -119,6 +119,9 @@ permissions:
   contents: read
 
 jobs:
+  jellyplugins:
+    uses: ./.github/workflows/jellyplugins-v2.yml
+
 
   version:
     name: Version
@@ -313,7 +316,7 @@ jobs:
   windows:
     name: Windows x64 (${{ needs.version.outputs.channel }})
     runs-on: depot-windows-latest-32
-    needs: version
+    needs: [version, jellyplugins]
     environment: canary
 
     permissions:
@@ -649,11 +652,13 @@ jobs:
           export SM_CLIENT_CERT_FILE=/tmp/keylocker.p12
           smctl sign --keypair-alias "$SM_KEYPAIR_ALIAS" --input Telegram.exe
           smctl sign --keypair-alias "$SM_KEYPAIR_ALIAS" --input Updater.exe
+          smctl sign --keypair-alias "$SM_KEYPAIR_ALIAS" --input jelly-runtime/jelly-plugin-host.exe
           # Both binaries are verified here, on the exact bytes that get
           # packed: Updater.exe travels only inside the update envelope,
           # the publish job can re-check just the portable's Telegram.exe.
           signtool verify /pa /all Telegram.exe
           signtool verify /pa /all Updater.exe
+          signtool verify /pa /all jelly-runtime/jelly-plugin-host.exe
           echo "signed=true" >> $GITHUB_OUTPUT
 
       - name: Azure login for update signing.
@@ -673,7 +678,8 @@ jobs:
           # the release copy is a pinned known-good build for Windows 7,
           # while CI would grab whatever the runner's SDK ships. Canary
           # machines use the system compiler dll.
-          ./Packer.exe -path Telegram.exe -path Updater.exe \
+          python ../../Telegram/build/verify_jelly_runtime.py .
+          ./Packer.exe -path Telegram.exe -path Updater.exe -path jelly-runtime \
             -target win64 \
             -version $BASE \
             -channel canary-${{ needs.version.outputs.channel }} \
@@ -707,6 +713,7 @@ jobs:
           mkdir -p portable/$CANARY_FOLDER/TelegramForcePortable
           touch portable/$CANARY_FOLDER/TelegramForcePortable/.keep
           cp Telegram.exe portable/$CANARY_FOLDER/
+          cp -R jelly-runtime portable/$CANARY_FOLDER/
           (cd portable && 7z a -mx9 ../$PORTABLE $CANARY_FOLDER/)
 
           mkdir -p artifact/update artifact/portable
@@ -736,7 +743,7 @@ jobs:
   macos-build:
     name: macOS ${{ matrix.arch }} (${{ needs.version.outputs.channel }})
     runs-on: depot-macos-latest
-    needs: version
+    needs: [version, jellyplugins]
     environment: canary
 
     permissions:
@@ -896,7 +903,7 @@ jobs:
           done
 
           # Stripped here: the universal app is lipo'd from these.
-          for BINARY in MacOS/Telegram Frameworks/Updater Helpers/crashpad_handler; do
+          for BINARY in MacOS/Telegram Frameworks/Updater Helpers/crashpad_handler Helpers/jelly-plugin-host; do
             strip Telegram.app/Contents/$BINARY
           done
 
@@ -989,7 +996,7 @@ jobs:
 
           # Same Mach-O list as build.sh, everything else is the same in
           # both halves, so the arm64 bundle is the template.
-          BINARIES="MacOS/Telegram Frameworks/Updater Helpers/crashpad_handler"
+          BINARIES="MacOS/Telegram Frameworks/Updater Helpers/crashpad_handler Helpers/jelly-plugin-host"
           rm -rf Telegram.app
           cp -R Telegram.arm64.app Telegram.app
           for BINARY in $BINARIES; do
@@ -1043,10 +1050,10 @@ jobs:
             -s -k "$KEYCHAIN_PASSWORD" build.keychain
 
           for BUNDLE in Telegram.x86_64.app Telegram.arm64.app Telegram.app; do
-            codesign --force --deep --timestamp --options runtime \
-              --sign "$SIGN_IDENTITY" \
-              --entitlements ../../Telegram/Telegram/Telegram.entitlements \
-              "$BUNDLE"
+            python3 ../../Telegram/build/verify_jelly_runtime.py "$BUNDLE" --bundle
+            python3 ../../Telegram/build/sign_jelly_host.py --bundle "$BUNDLE" \
+              --identity "$SIGN_IDENTITY" --timestamp --runtime \
+              --app-entitlements ../../Telegram/Telegram/Telegram.entitlements
             codesign --verify --deep --strict "$BUNDLE"
             ditto -c -k --keepParent "$BUNDLE" notarize.zip
             xcrun notarytool submit notarize.zip --wait \
@@ -1142,7 +1149,7 @@ jobs:
   linux:
     name: Linux x64 (${{ needs.version.outputs.channel }})
     runs-on: depot-ubuntu-latest-32
-    needs: version
+    needs: [version, jellyplugins]
     environment: canary
 
     permissions:
@@ -1346,7 +1353,8 @@ jobs:
       - name: Pack v2 update.
         run: |
           cd out/Release
-          ./Packer -path Telegram -path Updater \
+          python3 ../../Telegram/build/verify_jelly_runtime.py .
+          ./Packer -path Telegram -path Updater -path jelly-runtime \
             -version ${{ needs.version.outputs.base }} \
             -channel canary-${{ needs.version.outputs.channel }} \
             -counter $CANARY_COUNTER \
@@ -1377,6 +1385,7 @@ jobs:
           mkdir -p portable/$CANARY_FOLDER/TelegramForcePortable
           touch portable/$CANARY_FOLDER/TelegramForcePortable/.keep
           cp Telegram Updater portable/$CANARY_FOLDER/
+          cp -R jelly-runtime portable/$CANARY_FOLDER/
           tar -cJf $PORTABLE -C portable $CANARY_FOLDER
 
           mkdir -p artifact/update artifact/portable

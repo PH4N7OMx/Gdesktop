@@ -248,6 +248,7 @@ if [ "$BuildTarget" == "linux" ]; then
   cp "$ReleasePath/root/$BinaryName" "$ReleasePath/$BinaryName"
   cp "$ReleasePath/root/Updater" "$ReleasePath/Updater"
   cp "$ReleasePath/root/Packer" "$ReleasePath/Packer"
+  cp -R "$ReleasePath/root/jelly-runtime" "$ReleasePath/"
 
   echo "Dumping debug symbols.."
   "$ReleasePath/dump_syms" "$ReleasePath/$BinaryName" > "$ReleasePath/$BinaryName.sym"
@@ -259,7 +260,8 @@ if [ "$BuildTarget" == "linux" ]; then
 
   echo "Preparing version $AppVersionStrFull, executing Packer.."
   cd "$ReleasePath"
-  PackUpdate -path "$BinaryName" -path Updater
+  python3 "$FullScriptPath/verify_jelly_runtime.py" "$ReleasePath"
+  PackUpdate -path "$BinaryName" -path Updater -path jelly-runtime
   echo "Packer done!"
 
   if [ "$AlphaVersion" != "0" ]; then
@@ -294,6 +296,7 @@ if [ "$BuildTarget" == "linux" ]; then
   mkdir "$DeployPath/$BinaryName"
   mv "$ReleasePath/$BinaryName" "$DeployPath/$BinaryName/"
   mv "$ReleasePath/Updater" "$DeployPath/$BinaryName/"
+  mv "$ReleasePath/jelly-runtime" "$DeployPath/$BinaryName/"
   mv "$ReleasePath/$UpdateFile" "$DeployPath/"
   if [ "$AlphaVersion" != "0" ]; then
     mv "$ReleasePath/$AlphaKeyFile" "$DeployPath/"
@@ -330,6 +333,7 @@ if [ "$BuildTarget" == "mac" ] || [ "$BuildTarget" == "macstore" ]; then
     lipo -thin $MacArch $BinaryName.app/Contents/MacOS/$BinaryName -output $BundleName/Contents/MacOS/$BinaryName
     lipo -thin $MacArch $BinaryName.app/Contents/Frameworks/Updater -output $BundleName/Contents/Frameworks/Updater
     lipo -thin $MacArch $BinaryName.app/Contents/Helpers/crashpad_handler -output $BundleName/Contents/Helpers/crashpad_handler
+    lipo -thin $MacArch $BinaryName.app/Contents/Helpers/jelly-plugin-host -output $BundleName/Contents/Helpers/jelly-plugin-host
     echo "Done!"
   elif [ "$NotarizeRequestId" == "" ]; then
     if [ "$NotarizeRequestIdAMD64" == "" ] && [ "$NotarizeRequestIdARM64" == "" ]; then
@@ -403,6 +407,7 @@ if [ "$BuildTarget" == "mac" ] || [ "$BuildTarget" == "macstore" ]; then
 
     echo "Stripping the executable.."
     strip "$ReleasePath/$BundleName/Contents/MacOS/$BinaryName"
+    strip "$ReleasePath/$BundleName/Contents/Helpers/jelly-plugin-host"
     if [ "$BuildTarget" == "mac" ]; then
       strip "$ReleasePath/$BundleName/Contents/Frameworks/Updater"
       strip "$ReleasePath/$BundleName/Contents/Helpers/crashpad_handler"
@@ -411,10 +416,10 @@ if [ "$BuildTarget" == "mac" ] || [ "$BuildTarget" == "macstore" ]; then
 
     echo "Signing the application.."
     if [ "$BuildTarget" == "mac" ]; then
-      codesign --force --deep --timestamp --options runtime --sign "Developer ID Application: Telegram FZ-LLC (C67CF9S4VU)" "$ReleasePath/$BundleName" --entitlements "$HomePath/Telegram/Telegram.entitlements"
+      python3 "$FullScriptPath/sign_jelly_host.py" --bundle "$ReleasePath/$BundleName" --identity "Developer ID Application: Telegram FZ-LLC (C67CF9S4VU)" --timestamp --runtime --app-entitlements "$HomePath/Telegram/Telegram.entitlements"
     elif [ "$BuildTarget" == "macstore" ]; then
       codesign --force --timestamp --options runtime --sign "3rd Party Mac Developer Application: Telegram FZ-LLC (C67CF9S4VU)" "$ReleasePath/$BundleName/Contents/Frameworks/Breakpad.framework/Versions/A/Resources/breakpadUtilities.dylib" --entitlements "$HomePath/Telegram/Breakpad.entitlements"
-      codesign --force --deep --timestamp --options runtime --sign "3rd Party Mac Developer Application: Telegram FZ-LLC (C67CF9S4VU)" "$ReleasePath/$BundleName" --entitlements "$HomePath/Telegram/Telegram Lite.entitlements"
+      python3 "$FullScriptPath/sign_jelly_host.py" --bundle "$ReleasePath/$BundleName" --identity "3rd Party Mac Developer Application: Telegram FZ-LLC (C67CF9S4VU)" --timestamp --runtime --app-entitlements "$HomePath/Telegram/Telegram Lite.entitlements"
       echo "Making an installer.."
       productbuild --sign "3rd Party Mac Developer Installer: Telegram FZ-LLC (C67CF9S4VU)" --component "$ReleasePath/$BundleName" /Applications "$ReleasePath/$BinaryName.pkg"
     fi

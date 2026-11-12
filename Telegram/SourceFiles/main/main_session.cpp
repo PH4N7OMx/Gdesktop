@@ -72,7 +72,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 // GummyGram includes
 #include "jel/jel_settings.h"
-#include "jel/plugins/plugin_manager.h"
+#include "jel/plugins/plugin_service.h"
 #include "api/api_blocked_peers.h"
 
 
@@ -324,7 +324,7 @@ Session::Session(
 	}, _lifetime);
 
 	InitializeBlockedPeers(this);
-	_plugins = std::make_unique<JellyPlugins::Manager>(this);
+	_plugins = std::make_unique<JellyPlugins::Service>(this);
 }
 
 void Session::appConfigRefreshed() {

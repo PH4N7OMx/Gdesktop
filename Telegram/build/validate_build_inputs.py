@@ -4,9 +4,23 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
+def check_jelly_inputs(telegram, errors):
+    root = telegram.parent / "jellyplugins/v2"
+    module = (telegram / "cmake/jelly_plugins.cmake").read_text(encoding="utf-8")
+    sources = set(re.findall(r'\$\{jelly_root\}/([\w./-]+\.(?:cpp|h|entitlements))', module))
+    client = (root / "client/CMakeLists.txt").read_text(encoding="utf-8")
+    block = re.search(r'add_library\(jelly_client_core STATIC(.*?)\)', client, re.S).group(1)
+    sources.update("client/" + path for path in re.findall(r'[\w.-]+\.(?:cpp|h)\b', block))
+    for relative in sorted(sources):
+        if not (root / relative).is_file():
+            errors.append(f"Missing JellyPlugins source: {relative}")
+    return len(sources)
+
+
 def main():
     telegram = Path(__file__).resolve().parents[1]
     errors = []
+    jelly_count = check_jelly_inputs(telegram, errors)
     source_count = 0
     resource_count = 0
     cmake = (telegram / "CMakeLists.txt").read_text(encoding="utf-8")
@@ -93,7 +107,7 @@ def main():
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
-    print(f"Build inputs OK: {source_count} sources, {resource_count} resources, version {name}.")
+    print(f"Build inputs OK: {source_count} client sources, {jelly_count} JellyPlugins inputs, {resource_count} resources, version {name}.")
     return 0
 
 

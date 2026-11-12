@@ -85,11 +85,8 @@ include(cmake/test_wallet_phrase_shares.cmake)
 
 set_target_properties(Telegram PROPERTIES AUTOMOC ON)
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Qml)
-target_link_libraries(Telegram PRIVATE Qt::Qml)
-if (WIN32)
-    target_link_libraries(Telegram PRIVATE userenv advapi32)
-endif()
+add_subdirectory("${CMAKE_SOURCE_DIR}/jellyplugins/v2/client" "${CMAKE_CURRENT_BINARY_DIR}/jelly-client")
+target_link_libraries(Telegram PRIVATE jelly_client_core)
 
 target_link_libraries(Telegram
 PRIVATE
@@ -142,14 +139,10 @@ PRIVATE
 set(gummygram_files
         jel/jel_worker.cpp
         jel/jel_worker.h
-        jel/plugins/plugin_package.cpp
-        jel/plugins/plugin_package.h
-        jel/plugins/plugin_sandbox.cpp
-        jel/plugins/plugin_sandbox.h
-        jel/plugins/plugin_worker.cpp
-        jel/plugins/plugin_worker.h
-        jel/plugins/plugin_manager.cpp
-        jel/plugins/plugin_manager.h
+        jel/plugins/plugin_service.cpp
+        jel/plugins/plugin_service.h
+        jel/plugins/plugin_telegram.cpp
+        jel/plugins/plugin_telegram.h
         jel/ui/settings/settings_plugins.cpp
         jel/ui/settings/settings_plugins.h
         jel/jel_url_handlers.cpp
@@ -3078,7 +3071,7 @@ set_target_properties(Telegram PROPERTIES
     XCODE_ATTRIBUTE_COPY_PHASE_STRIP NO
     XCODE_ATTRIBUTE_ALWAYS_SEARCH_USER_PATHS NO
     XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY libc++
-    XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS --deep
+    XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "--deep --preserve-metadata=entitlements"
     XCODE_ATTRIBUTE_CLANG_DEBUG_INFORMATION_LEVEL $<IF:$<CONFIG:Debug>,default,line-tables-only>
 )
 set(entitlement_sources
@@ -3109,6 +3102,7 @@ else()
 endif()
 
 set_target_properties(Telegram PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${output_folder})
+include(cmake/jelly_plugins.cmake)
 
 if (MSVC)
     target_link_libraries(Telegram

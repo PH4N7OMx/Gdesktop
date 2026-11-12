@@ -17,8 +17,8 @@
 
 * [Manifest and packages](manifest.md)
 * [API](api.md)
-* [Message menus, dialogs and settings](ui-and-settings.md)
-* [Files, balance and Mini Apps](account-and-files.md)
+* [Interface and settings](ui-and-settings.md)
+* [Account and file access](account-and-files.md)
 * [Permissions and security](security.md)
 * [Errors and limits](errors.md)
 * [Versions](versions.md)

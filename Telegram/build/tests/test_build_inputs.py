@@ -14,6 +14,17 @@ spec.loader.exec_module(module)
 
 
 class BuildInputsTests(unittest.TestCase):
+    def test_missing_embedded_contract_fails_before_configuration(self):
+        original = Path.is_file
+
+        def is_file(path):
+            return False if path.name == "contract.generated.h" else original(path)
+
+        output = io.StringIO()
+        with patch.object(Path, "is_file", is_file), contextlib.redirect_stderr(output):
+            self.assertEqual(module.main(), 1)
+        self.assertIn("Missing JellyPlugins source: client/contract.generated.h", output.getvalue())
+
     def test_uninitialized_quickjs_fails_before_configuration(self):
         original = Path.is_file
 

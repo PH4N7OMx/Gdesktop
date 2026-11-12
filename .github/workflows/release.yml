@@ -12,9 +12,13 @@ permissions:
   contents: read
 
 jobs:
+  jellyplugins:
+    uses: ./.github/workflows/jellyplugins-v2.yml
+
   build-linux:
     name: Build Linux
     runs-on: ubuntu-latest
+    needs: jellyplugins
     env:
       IMAGE_TAG: tdesktop:centos_env
     steps:
@@ -156,7 +160,8 @@ jobs:
             BIN_NAME=$(basename "$BIN_PATH")
             BIN_DIR=$(dirname "$BIN_PATH")
             cd "$BIN_DIR"
-            FILES="$BIN_NAME"
+            python3 "$GITHUB_WORKSPACE/Telegram/build/verify_jelly_runtime.py" .
+            FILES="$BIN_NAME jelly-runtime"
             test -f Updater && FILES="$FILES Updater"
             tar -czvf Linux.tar.gz $FILES
             if [ "$(realpath .)" != "$(realpath $GITHUB_WORKSPACE/out/Release)" ]; then
@@ -178,6 +183,7 @@ jobs:
   build-macos:
     name: Build macOS
     runs-on: macos-15
+    needs: jellyplugins
     env:
       CMAKE_GENERATOR: "Ninja"
       CMAKE_BUILD_TYPE: "Release"
@@ -225,7 +231,7 @@ jobs:
 
       - name: Install dependencies via Homebrew
         run: |
-          libs="autoconf automake boost ccache cmake libtool ninja pkg-config python ada-url ffmpeg@6 jpeg-xl libavif libheif minizip openal-soft openh264 openssl@3 opus qtbase qtdeclarative qtimageformats qtshadertools qtsvg xz"
+          libs="autoconf automake boost ccache cmake libtool ninja pkg-config python ada-url ffmpeg@6 jpeg-xl libavif libheif minizip openal-soft openh264 openssl@3 opus qtbase qtimageformats qtshadertools qtsvg xz"
           # Runner images may link OpenSSL 1.1 into paths needed by newer dependencies.
           if brew list --versions openssl@1.1 >/dev/null 2>&1; then
             brew unlink openssl@1.1
@@ -486,7 +492,8 @@ jobs:
             APP_NAME=$(basename "$APP_PATH")
             echo "Found $APP_NAME at $APP_PATH"
             /opt/homebrew/opt/qtbase/bin/macdeployqt "$APP_PATH" || macdeployqt "$APP_PATH"
-            codesign --remove-signature "$APP_PATH" || true
+            python3 Telegram/build/verify_jelly_runtime.py "$APP_PATH" --bundle
+            python3 Telegram/build/sign_jelly_host.py --bundle "$APP_PATH" --identity -
             mkdir -p out/Release
             hdiutil create -volname "GummyGram" -srcfolder "$APP_PATH" -ov -format UDZO out/Release/macOS.dmg
           else
@@ -503,6 +510,7 @@ jobs:
           if-no-files-found: error
 
   build-windows:
+    needs: jellyplugins
     name: Build Windows x64
     runs-on: windows-2022
     permissions:
@@ -741,6 +749,9 @@ jobs:
           $package = Join-Path $env:RUNNER_TEMP 'GummyGram-Windows\GummyGram'
           New-Item -ItemType Directory -Path $package -Force | Out-Null
           Copy-Item -LiteralPath $binary -Destination $package
+          python Telegram/build/verify_jelly_runtime.py $output
+          if ($LASTEXITCODE -ne 0) { throw 'JellyPlugins host verification failed.' }
+          Copy-Item -LiteralPath (Join-Path $output 'jelly-runtime') -Destination $package -Recurse
           $modules = Join-Path $output 'modules'
           $directXCompiler = Join-Path $modules 'x64\d3d\d3dcompiler_47.dll'
           if (-not (Test-Path -LiteralPath $directXCompiler -PathType Leaf)) {

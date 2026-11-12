@@ -1,48 +1,17 @@
-# Manifest and packages
-
-A `.jelly` package is JSON with `manifest` and `code` fields. It is not a ZIP archive. The SDK packer emits JavaScript defining `JellyPlugin.default`.
+# Manifest and package
 
 ```json
-{"manifest":{"apiVersion":1,"id":"author.plugin","name":"Example","author":"Author","version":"1.0.0","permissions":{"readChats":["-1001234567890"],"sendChats":["123456789"],"historyChats":["-1001234567890"],"httpHosts":["example.com"],"storage":true,"timers":true,"ui":true,"maxMessagesPerHour":20}},"code":"var JellyPlugin = ..."}
+{
+  "id": "jelly.hello",
+  "name": "Hello JellyPlugins v2",
+  "version": "2.0.0",
+  "apiVersion": 2,
+  "capabilities": []
+}
 ```
 
-| Field | Requirement |
-|---|---|
-| `apiVersion` | Integer `1` |
-| `id` | 3–64 characters; lowercase letter first, then lowercase letters, digits, dots or hyphens |
-| `name` | Nonempty string, at most 80 characters |
-| `author` | Optional string, at most 80 characters |
-| `description` | Optional string, at most 2000 characters |
-| `version` | Three numeric components, such as `1.2.0` |
-| `permissions` | Required object; unknown fields rejected |
+Required: `id`, `name`, `version`, `apiVersion: 2`, `capabilities`. Optional strings: `author`, `description`. Unknown fields are rejected. ID: `[a-z][a-z0-9.-]{2,63}`; version: three dotted integers; name: up to 80 characters.
 
-Chat scopes use strings in Bot API ID format: positive for users, negative for groups, `-100…` for channels/supergroups. Never convert IDs to JavaScript numbers. Each scope permits at most 32 IDs or hosts. Omitted permissions grant no access.
+Categories `telegram.send`, `telegram.read`, `schedule`, `storage` declare intent and do not grant access. Author metadata is not verified publisher identity.
 
-| Permission | Access |
-|---|---|
-| `readChats` | New incoming messages |
-| `sendChats` | Text sends and attachment destinations |
-| `joinChannels` | Join specified channels/supergroups |
-| `botChats` | Inline callback buttons |
-| `attachmentChats` | Sources of copied photos/documents |
-| `editChats` | Edit outgoing messages |
-| `reactionChats` | Set reactions |
-| `historyChats` | Read older messages |
-| `httpHosts` | Exact HTTPS hostnames |
-| `storage`, `timers`, `ui` | Boolean feature permissions |
-| `maxMessagesPerHour` | All Telegram operations, 1–60 per hour; default 20 |
-
-Permissions do not imply each other. Attachment copying needs both the source scope and `sendChats` for the destination. `httpHosts` does not accept paths, ports or wildcards; `example.com` does not permit `api.example.com`.
-
-Approval is bound to the package SHA-256 hash. This is integrity checking, not an author signature or malware verdict.
-
-| Additional permission | Access |
-|---|---|
-| `fileRead` | Read a selected file |
-| `fileWrite` | Save a file through a picker |
-| `moneyRead` | Read Stars / Telegram TON balance |
-| `webviewBots` | Up to 32 positive bot IDs for Mini Apps |
-
-Details: [files, balance and Mini Apps](account-and-files.md).
-
-See [message menus, dialogs and settings](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` and the Message Tools example.
+The JSON container contains `formatVersion: 2`, `manifest` and one ESM bundle in `code`, up to 1 MiB. External imports, bytecode, archives, resources and top-level await are unsupported. SHA-256 identifies content revision, not authenticity.

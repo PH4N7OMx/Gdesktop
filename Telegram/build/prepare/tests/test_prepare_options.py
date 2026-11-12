@@ -102,34 +102,31 @@ class PrepareOptionsTests(unittest.TestCase):
         self.assertIn('git apply "', filtered)
         self.assertIn('qt5-static-angle.patch"\nif errorlevel 1 exit /b 1', filtered)
 
-    def test_windows_qt6_keeps_js_engine_without_quick_controls(self):
+    def test_windows_qt6_does_not_prepare_legacy_plugin_engine(self):
         for platform in ('win32', 'win64', 'winarm'):
             recipes = [commands for name, commands in stage_commands(platform, ('skip-debug',))
                 if name == 'qt_6.11.2' and '-feature-c++20' in commands]
             self.assertEqual(len(recipes), 1)
             with self.subTest(platform=platform):
                 commands = recipes[0]
-                self.assertIn('-no-feature-qml-animation', commands)
-                self.assertIn('-no-feature-qml-labs', commands)
-                self.assertNotIn('-skip qtdeclarative', commands)
-                self.assertRegex(commands, r'git submodule update[^\n]*\bqtdeclarative\b')
+                self.assertNotIn('-no-feature-qml-', commands)
+                self.assertNotRegex(commands, r'git submodule update[^\n]*\bqtdeclarative\b')
 
-    def test_plugin_engine_dependency_is_prepared(self):
+    def test_plugin_host_uses_the_shared_pinned_engine(self):
         telegram = SOURCE.parents[2]
-        self.assertIn('#include <QJSEngine>',
-            (telegram / 'SourceFiles/jel/plugins/plugin_worker.cpp').read_text())
-        self.assertIn('REQUIRED COMPONENTS Qml',
-            (telegram / 'CMakeLists.txt').read_text())
+        self.assertFalse((telegram / 'SourceFiles/jel/plugins/plugin_worker.cpp').exists())
+        self.assertNotIn('REQUIRED COMPONENTS Qml', (telegram / 'CMakeLists.txt').read_text())
+        self.assertIn('tdesktop::lib_quickjs', (telegram / 'cmake/jelly_plugins.cmake').read_text())
         for platform in ('win32', 'win64', 'winarm', 'mac'):
             qt_recipes = [commands for name, commands in stage_commands(platform)
                 if name.startswith('qt_')]
             self.assertTrue(qt_recipes)
             for commands in qt_recipes:
                 with self.subTest(platform=platform):
-                    self.assertRegex(commands,
+                    self.assertNotRegex(commands,
                         r'git submodule update[^\n]*\bqtdeclarative\b')
         dockerfile = (telegram / 'build/docker/centos_env/Dockerfile').read_text()
-        self.assertRegex(dockerfile,
+        self.assertNotRegex(dockerfile,
             r'git submodule update[^\n]*\\\n[^\n]*\bqtdeclarative\b')
 
     def test_release_only_has_no_debug_builds(self):

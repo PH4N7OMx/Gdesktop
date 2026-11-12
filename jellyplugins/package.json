@@ -1,16 +1,18 @@
 {
   "name": "@jellyplugins/sdk",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "types": "sdk/index.d.ts",
+  "types": "v2/sdk.d.ts",
   "scripts": {
-    "check": "tsc --noEmit",
-    "test": "node --test tests/runtime.test.mjs tests/package.test.mjs tests/examples.test.mjs",
-    "pack:hello": "node scripts/pack.mjs examples/hello",
-    "pack:feed": "node scripts/pack.mjs examples/feed-to-chat",
-    "pack:giveaways": "node scripts/pack.mjs examples/giveaway-watch",
-    "pack:tools": "node scripts/pack.mjs examples/message-tools"
+    "generate": "node v2/generate.mjs",
+    "check": "node v2/generate.mjs --check && tsc --noEmit",
+    "generate:v2": "node v2/generate.mjs",
+    "check:v2": "node v2/generate.mjs --check && tsc --noEmit -p v2/tsconfig.json",
+    "test:v2": "node --test v2/tests/contract.test.mjs v2/tests/runtime.test.mjs",
+    "pack:hello:v2": "node v2/pack.mjs v2/examples/hello",
+    "test": "node --test v2/tests/contract.test.mjs v2/tests/runtime.test.mjs",
+    "pack:hello": "node v2/pack.mjs v2/examples/hello"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

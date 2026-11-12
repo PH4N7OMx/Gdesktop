@@ -17,8 +17,8 @@
 
 * [Манифест и пакет](manifest.md)
 * [API](api.md)
-* [Меню сообщений, диалоги и настройки](ui-and-settings.md)
-* [Файлы, баланс и Mini Apps](account-and-files.md)
+* [Интерфейс и настройки](ui-and-settings.md)
+* [Доступ к аккаунту и файлам](account-and-files.md)
 * [Разрешения и безопасность](security.md)
 * [Ошибки и лимиты](errors.md)
 * [Версии и совместимость](versions.md)

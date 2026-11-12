@@ -1,15 +1,14 @@
-# Permissions and security
+# Permissions and isolation
 
-Plugins run as untrusted JavaScript in a separate Windows AppContainer process. The worker has no direct network access, Node.js, DOM, system commands, native modules, direct device file access, session keys, login codes or 2FA password. It talks to the client through JSON; the client checks permissions and parameters on each operation.
+| Mode | Behavior |
+|---|---|
+| Ask | Every protected operation needs a decision |
+| Saved rules | Matching allows execute; unfamiliar actions ask |
+| Full access | Implemented client API without new questions |
+| Inherit | Per-plugin only: use global mode |
 
-Approve chats and exact HTTPS domains individually. Storage, timers and interface actions have separate grants. New Telegram actions require separate chat scopes. A plugin update always requires renewed approval. Disabling stops execution and revokes access; signing out stops that account's plugins.
+Explicit saved denials override full mode too. One-time choices do not create rules. Save exact normalized parameters, or explicitly allow varying text in one chat with the same `silent` setting. A different chat/notification setting needs another rule. History uses separate rules. Rules are bound to account, plugin, package revision and API contract.
 
-Reading new messages, history, selected files or balances together with HTTP access allows a plugin to send those data to approved websites. Review both grants together. Copying attachments can also disclose their captions and contents to the destination chat.
+Saving an allow in Ask mode switches that plugin to Saved rules. Global full mode affects inheriting plugins and future installations; confirmation states this scope. Per-plugin mode overrides global mode.
 
-Plugin JSON storage is isolated by account and plugin ID, but is not separately encrypted. Avoid storing secrets. The author field is not verified and the API provides no audited marketplace or antivirus scanning.
-
-The client copies its own executable and DLLs to a versioned `GummyGram/plugin-runtime` directory under Windows local application data for AppContainer execution. This uses additional disk space; old runtime copies are not automatically removed. It does not grant access to the original client folder or `tdata`.
-
-Isolation does not remove all engine, OS or host vulnerabilities. Keep the client updated and install plugins from sources you trust.
-
-Selected files, balance reads and Mini App opening require [separate grants](account-and-files.md). File paths are never exposed, and every read/save asks the user to select a file. File/balance/Mini App grants start unchecked.
+Each instance has a separate host: Windows AppContainer/Job Object, Linux no_new_privs/seccomp, macOS independently signed App Sandbox. No unsandboxed fallback. Native validation remains required before release; source code alone is not sandbox security proof.

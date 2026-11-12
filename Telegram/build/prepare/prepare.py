@@ -1697,7 +1697,7 @@ if qt < '6':
     stage('qt_' + qt, """
     git clone -b v$QT-lts-lgpl https://github.com/qt/qt5.git qt_$QT
     cd qt_$QT
-    git submodule update --init --recursive --progress qtbase qtdeclarative qtimageformats qtsvg
+    git submodule update --init --recursive --progress qtbase qtimageformats qtsvg
 depends:patches/qtbase_""" + qt + """/*.patch
 depends:patches/qtsvg_""" + qt + """/*.patch
 win:
@@ -1778,7 +1778,7 @@ else: # qt > '6'
     stage('qt_' + qt, """
     git clone -b """ + branch + """ https://github.com/qt/qt5.git qt_$QT
     cd qt_$QT
-    git submodule update --init --recursive --progress qtbase qtdeclarative qtimageformats qtshadertools qtsvg
+    git submodule update --init --recursive --progress qtbase qtimageformats qtshadertools qtsvg
 depends:patches/qtbase_""" + qt + """/*.patch
 depends:patches/qtsvg_""" + qt + """/*.patch
 win32_win64:
@@ -1879,8 +1879,6 @@ win:
         -static ^
         -static-runtime ^
         -feature-c++20 ^
-        -no-feature-qml-animation ^
-        -no-feature-qml-labs ^
         -openssl linked ^
         -system-webp ^
         -system-zlib ^

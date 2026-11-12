@@ -1,458 +1,409 @@
 #include "jel/ui/settings/settings_plugins.h"
 
-#include "jel/plugins/plugin_manager.h"
+#include "jel/plugins/plugin_service.h"
 #include "jel/ui/settings/settings_main.h"
-#include "lang/lang_text_entity.h"
 #include "main/main_session.h"
 #include "settings/settings_builder.h"
-#include "ui/boxes/confirm_box.h"
 #include "ui/layers/generic_box.h"
 #include "ui/widgets/fields/input_field.h"
-#include "ui/widgets/checkbox.h"
 #include "ui/widgets/buttons.h"
-#include "ui/basic_click_handlers.h"
+#include "ui/widgets/checkbox.h"
 #include "ui/widgets/labels.h"
 #include "ui/wrap/vertical_layout.h"
 #include "window/window_session_controller.h"
 #include "lang_auto.h"
 
-#include "styles/style_boxes.h"
-#include "styles/style_layers.h"
-#include "styles/style_menu_icons.h"
-#include "styles/style_settings.h"
-
+#include <QDateTime>
+#include <QDesktopServices>
 #include <QFile>
 #include <QFileDialog>
 #include <QFontDatabase>
 #include <QJsonDocument>
 #include <QPointer>
-#include <QTimer>
+#include <QTextCharFormat>
+#include <QTextCursor>
 #include <QTextEdit>
-#include <tuple>
-#include <cmath>
+#include <QTimer>
+#include <QUrl>
+
+#include "styles/style_boxes.h"
+#include "styles/style_layers.h"
+#include "styles/style_menu_icons.h"
+#include "styles/style_settings.h"
+#include "styles/style_widgets.h"
 
 namespace Settings {
 namespace {
 
 using namespace Builder;
+using JellyPlugins::ApprovalChoice;
+using JellyPlugins::PendingAction;
 using JellyPlugins::PluginInfo;
+using JellyPlugins::Service;
+using JellyPlugins::Client::AccessMode;
+using JellyPlugins::Client::RuntimeState;
 
-void AddLabel(not_null<Ui::GenericBox*> box, const QString &text) {
-	box->addRow(object_ptr<Ui::FlatLabel>(box, rpl::single(text), st::boxLabel));
+void Label(not_null<Ui::GenericBox*> box, const QString &text, bool secondary = false) {
+	if (text.isEmpty()) return;
+	const auto label = box->addRow(object_ptr<Ui::FlatLabel>(box, rpl::single(text), secondary ? st::boxDividerLabel : st::boxLabel));
+	label->setBreakEverywhere(true);
+	label->setSelectable(true);
+	box->addSkip(st::boxLittleSkip);
 }
 
-void ShowPermissions(not_null<Window::SessionController*> controller, PluginInfo info) {
-	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
-	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
-		box->setTitle(tr::jel_JellyPermissions());
-		box->setWidth(st::boxWideWidth);
-		AddLabel(box, info.package.name + u" · "_q + info.package.version);
-		AddLabel(box, tr::jel_JellyPermissionNotice(tr::now));
-		if ((!info.package.permissions.readChats.isEmpty()
-			|| !info.package.permissions.historyChats.isEmpty()
-			|| info.package.permissions.fileRead || info.package.permissions.moneyRead
-			|| !info.package.permissions.menuChats.isEmpty())
-			&& !info.package.permissions.httpHosts.isEmpty()) {
-			AddLabel(box, tr::jel_JellyCombinedRisk(tr::now));
-		}
-		const auto checks = std::make_shared<std::map<QString, std::vector<Ui::Checkbox*>>>();
-		const auto addScopes = [&](const QString &title, const QString &key, const QStringList &values, bool checked = true) {
-			if (values.isEmpty()) return;
-			AddLabel(box, title);
-			for (const auto &value : values) {
-				const auto check = box->addRow(object_ptr<Ui::Checkbox>(
-					box, value, checked, st::defaultCheckbox));
-				check->setChecked(checked);
-				(*checks)[key].push_back(check);
-			}
-		};
-		addScopes(tr::jel_JellyMenuChats(tr::now), u"menuChats"_q, info.package.permissions.menuChats, false);
-		addScopes(tr::jel_JellyReadChats(tr::now), u"readChats"_q, info.package.permissions.readChats);
-		addScopes(tr::jel_JellySendChats(tr::now), u"sendChats"_q, info.package.permissions.sendChats);
-		addScopes(tr::jel_JellyJoinChannels(tr::now), u"joinChannels"_q, info.package.permissions.joinChannels);
-		addScopes(tr::jel_JellyBotChats(tr::now), u"botChats"_q, info.package.permissions.botChats);
-		addScopes(tr::jel_JellyAttachmentChats(tr::now), u"attachmentChats"_q, info.package.permissions.attachmentChats);
-		addScopes(tr::jel_JellyEditChats(tr::now), u"editChats"_q, info.package.permissions.editChats);
-		addScopes(tr::jel_JellyReactionChats(tr::now), u"reactionChats"_q, info.package.permissions.reactionChats);
-		addScopes(tr::jel_JellyHistoryChats(tr::now), u"historyChats"_q, info.package.permissions.historyChats);
-		if (info.package.permissions.fileRead || info.package.permissions.fileWrite) {
-			AddLabel(box, tr::jel_JellyFileNotice(tr::now));
-		}
-		if (!info.package.permissions.webviewBots.isEmpty()) {
-			AddLabel(box, tr::jel_JellyMiniAppsNotice(tr::now));
-		}
-		addScopes(tr::jel_JellyWebviewBots(tr::now), u"webviewBots"_q, info.package.permissions.webviewBots, false);
-		addScopes(tr::jel_JellyHttpHosts(tr::now), u"httpHosts"_q, info.package.permissions.httpHosts);
-		for (const auto &[key, allowed, title] : {
-			std::tuple(u"storage"_q, info.package.permissions.storage, tr::jel_JellyStorage(tr::now)),
-			std::tuple(u"timers"_q, info.package.permissions.timers, tr::jel_JellyTimers(tr::now)),
-			std::tuple(u"ui"_q, info.package.permissions.ui, tr::jel_JellyActions(tr::now)),
-			std::tuple(u"fileRead"_q, info.package.permissions.fileRead, tr::jel_JellyFileRead(tr::now)),
-			std::tuple(u"fileWrite"_q, info.package.permissions.fileWrite, tr::jel_JellyFileWrite(tr::now)),
-			std::tuple(u"moneyRead"_q, info.package.permissions.moneyRead, tr::jel_JellyMoneyRead(tr::now)),
-			std::tuple(u"uiDialogs"_q, info.package.permissions.uiDialogs, tr::jel_JellyDialogs(tr::now)),
-		}) {
-			if (!allowed) continue;
-			const auto check = box->addRow(object_ptr<Ui::Checkbox>(box, title, true, st::defaultCheckbox));
-			check->setChecked(key == u"storage"_q || key == u"timers"_q || key == u"ui"_q);
-			(*checks)[key].push_back(check);
-		}
-		AddLabel(box, tr::jel_JellyMessageLimit(tr::now)
-			+ QString::number(info.package.permissions.maxMessagesPerHour));
-		box->addButton(tr::jel_JellyEnable(), [=] {
-			if (!manager) return;
-			auto grant = info.package.permissions;
-			const auto selected = [&](const QString &key, const QStringList &values) {
-				auto result = QStringList();
-				for (auto i = 0; i < values.size(); ++i) {
-					if ((*checks)[key][i]->checked()) result.push_back(values[i]);
-				}
-				return result;
-			};
-			grant.readChats = selected(u"readChats"_q, grant.readChats);
-			grant.sendChats = selected(u"sendChats"_q, grant.sendChats);
-			grant.joinChannels = selected(u"joinChannels"_q, grant.joinChannels);
-			grant.botChats = selected(u"botChats"_q, grant.botChats);
-			grant.attachmentChats = selected(u"attachmentChats"_q, grant.attachmentChats);
-			grant.editChats = selected(u"editChats"_q, grant.editChats);
-			grant.reactionChats = selected(u"reactionChats"_q, grant.reactionChats);
-			grant.historyChats = selected(u"historyChats"_q, grant.historyChats);
-			grant.menuChats = selected(u"menuChats"_q, grant.menuChats);
-			grant.uiDialogs = grant.uiDialogs && (*checks)[u"uiDialogs"_q][0]->checked();
-			grant.webviewBots = selected(u"webviewBots"_q, grant.webviewBots);
-			grant.fileRead = grant.fileRead && (*checks)[u"fileRead"_q][0]->checked();
-			grant.fileWrite = grant.fileWrite && (*checks)[u"fileWrite"_q][0]->checked();
-			grant.moneyRead = grant.moneyRead && (*checks)[u"moneyRead"_q][0]->checked();
-			grant.httpHosts = selected(u"httpHosts"_q, grant.httpHosts);
-			grant.storage = grant.storage && (*checks)[u"storage"_q][0]->checked();
-			grant.timers = grant.timers && (*checks)[u"timers"_q][0]->checked();
-			grant.ui = grant.ui && (*checks)[u"ui"_q][0]->checked();
-			auto error = QString();
-			if (!manager->enable(info.package.id, info.package.digest, grant, error)) {
-				controller->showToast(error);
-			} else {
-				box->closeBox();
-			}
-		});
-		box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
-	}));
+void Heading(not_null<Ui::GenericBox*> box, const PluginInfo &info) {
+	box->addRow(object_ptr<Ui::FlatLabel>(box, rpl::single(info.package.name), st::defaultSubsectionTitle));
+	box->addSkip(st::boxLittleSkip);
+	Label(box, info.package.version + (info.package.author.isEmpty() ? QString() : u" · "_q + info.package.author), true);
+	Label(box, tr::jel_JellyV2LocalPackage(tr::now), true);
 }
 
-void ShowJsonConfiguration(not_null<Window::SessionController*> controller, PluginInfo info) {
-	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
-	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
-		box->setTitle(tr::jel_JellyConfiguration());
-		box->setWidth(st::boxWideWidth);
-		AddLabel(box, tr::jel_JellyConfigurationNotice(tr::now));
-		const auto field = box->addRow(object_ptr<Ui::InputField>(
-			box, st::defaultInputField, Ui::InputField::Mode::MultiLine,
-			rpl::single(u"JSON"_q), QString::fromUtf8(QJsonDocument(info.settings).toJson())));
-		box->addButton(tr::lng_settings_save(), [=] {
-			if (!manager) return;
-			auto parseError = QJsonParseError();
-			const auto document = QJsonDocument::fromJson(field->getLastText().toUtf8(), &parseError);
-			if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
-				field->showError();
-				return;
-			}
-			auto error = QString();
-			if (manager->configure(info.package.id, document.object(), error)) {
-				box->closeBox();
-			} else {
-				controller->showToast(error);
-			}
-		});
-		box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
-	}));
+Ui::Checkbox *Check(not_null<Ui::GenericBox*> box, const QString &text, bool checked = false) {
+	const auto result = box->addRow(object_ptr<Ui::Checkbox>(box, text, checked, st::defaultCheckbox));
+	result->setAllowTextLines();
+	result->setTextBreakEverywhere();
+	box->addSkip(st::boxLittleSkip);
+	return result;
 }
 
-void ShowConfiguration(not_null<Window::SessionController*> controller, PluginInfo info) {
-	if (info.package.settingsSchema.isEmpty()) {
-		ShowJsonConfiguration(controller, info);
-		return;
+void Row(not_null<Ui::GenericBox*> box, rpl::producer<QString> text, Fn<void()> callback) {
+	box->addRow(object_ptr<Ui::SettingsButton>(box, std::move(text), st::settingsButton))->setClickedCallback(std::move(callback));
+}
+
+Ui::InputField *Text(not_null<Ui::GenericBox*> box, const QString &value, bool readOnly, bool code = false) {
+	const auto field = box->addRow(object_ptr<Ui::InputField>(box, st::defaultInputField, Ui::InputField::Mode::MultiLine, rpl::single(QString()), value));
+	field->setMinHeight(st::boxWideWidth / 2);
+	field->setMaxHeight(st::boxWideWidth);
+	field->rawTextEdit()->setReadOnly(readOnly);
+	if (code) {
+		auto font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+		font.setPixelSize(st::boxLabel.style.font->f.pixelSize());
+		auto format = QTextCharFormat();
+		format.setFont(font);
+		auto cursor = QTextCursor(field->rawTextEdit()->document());
+		cursor.select(QTextCursor::Document);
+		cursor.mergeCharFormat(format);
 	}
-	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
+	return field;
+}
+
+QString ModeName(AccessMode mode) {
+	switch (mode) {
+	case AccessMode::Inherit: return tr::jel_JellyV2ModeInherit(tr::now);
+	case AccessMode::Ask: return tr::jel_JellyV2ModeAsk(tr::now);
+	case AccessMode::Remember: return tr::jel_JellyV2ModeRemember(tr::now);
+	case AccessMode::Full: return tr::jel_JellyV2ModeFull(tr::now);
+	}
+	Unexpected("Invalid plugin access mode");
+}
+
+QString Status(const PluginInfo &info) {
+	if (info.waiting) return tr::jel_JellyV2Waiting(tr::now) + u" ("_q + QString::number(info.waiting) + ')';
+	switch (info.state) {
+	case RuntimeState::Starting: return tr::jel_JellyV2Starting(tr::now);
+	case RuntimeState::Activating: return tr::jel_JellyV2Activating(tr::now);
+	case RuntimeState::Ready: return tr::jel_JellyRunning(tr::now);
+	case RuntimeState::Stopping: return tr::jel_JellyV2Stopping(tr::now);
+	case RuntimeState::Failed: return tr::jel_JellyV2Failed(tr::now);
+	case RuntimeState::Stopped: return tr::jel_JellyDisabled(tr::now);
+	}
+	Unexpected("Invalid plugin runtime state");
+}
+
+void ShowMode(not_null<Window::SessionController*> controller, const QString &id = {}, const QString &digest = {}) {
+	const auto service = QPointer<Service>(&controller->session().plugins());
 	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
-		box->setTitle(tr::jel_JellyConfiguration());
+		box->setTitle(id.isEmpty() ? tr::jel_JellyV2GlobalMode() : tr::jel_JellyV2PluginMode());
 		box->setWidth(st::boxWideWidth);
-		AddLabel(box, tr::jel_JellySettingsNotice(tr::now));
-		const auto values = std::make_shared<std::vector<std::pair<QString, Fn<QJsonValue()>>>>();
-		for (const auto &row : info.package.settingsSchema) {
-			const auto definition = row.toObject();
-			const auto key = definition[u"key"_q].toString();
-			const auto label = definition[u"label"_q].toString();
-			const auto type = definition[u"type"_q].toString();
-			const auto initial = info.settings.contains(key) ? info.settings.value(key) : definition[u"default"_q];
-			if (type == u"boolean"_q) {
-				const auto check = box->addRow(object_ptr<Ui::Checkbox>(
-					box, label, initial.toBool(definition[u"default"_q].toBool()), st::defaultCheckbox));
-				values->emplace_back(key, [=] { return QJsonValue(check->checked()); });
-			} else if (type == u"select"_q) {
-				AddLabel(box, label);
-				const auto options = definition[u"options"_q].toArray();
-				auto index = 0;
-				for (auto i = 0; i < options.size(); ++i) {
-					if (options[i] == initial) index = i;
-				}
-				const auto group = std::make_shared<Ui::RadiobuttonGroup>(index);
-				for (auto i = 0; i < options.size(); ++i) {
-					box->addRow(object_ptr<Ui::Radiobutton>(
-						box, group, i, options[i].toString(), st::defaultCheckbox));
-				}
-				values->emplace_back(key, [=] { return options[group->current()]; });
-			} else {
-				AddLabel(box, label);
-				const auto number = (type == u"number"_q);
-				const auto initialText = number
-					? QString::number(initial.toDouble(definition[u"default"_q].toDouble()), 'g', 17)
-					: initial.toString(definition[u"default"_q].toString());
-				const auto field = box->addRow(object_ptr<Ui::InputField>(
-					box, st::defaultInputField, Ui::InputField::Mode::SingleLine,
-					rpl::single(label), initialText));
-				values->emplace_back(key, [=]() -> QJsonValue {
-					const auto text = field->getLastText();
-					if (!number) {
-						if (text.size() <= definition[u"maxLength"_q].toInt(512)) return text;
-					} else {
-						auto valid = false;
-						const auto value = text.toDouble(&valid);
-						if (valid && std::isfinite(value)
-							&& value >= definition[u"min"_q].toDouble(-1e9)
-							&& value <= definition[u"max"_q].toDouble(1e9)) return value;
-					}
-					field->showError();
-					return QJsonValue(QJsonValue::Undefined);
-				});
-			}
+		Label(box, id.isEmpty() ? tr::jel_JellyV2GlobalNotice(tr::now) : tr::jel_JellyV2ModeNotice(tr::now));
+		const auto guardedBox = QPointer<Ui::GenericBox>(box.get());
+		if (service) {
+			auto current = service->globalMode();
+			for (const auto &info : service->plugins()) if (info.package.id == id) current = info.mode;
+			Label(box, tr::jel_JellyV2PluginMode(tr::now) + u": "_q + ModeName(current), true);
 		}
-		box->addButton(tr::lng_settings_save(), [=] {
-			if (!manager) return;
-			auto settings = info.settings;
-			for (const auto &[key, get] : *values) {
-				const auto value = get();
-				if (value.isUndefined()) {
-					controller->showToast(tr::jel_JellyInvalidSettings(tr::now));
-					return;
-				}
-				settings[key] = value;
-			}
+		for (const auto mode : { AccessMode::Inherit, AccessMode::Ask, AccessMode::Remember, AccessMode::Full }) {
+			if (id.isEmpty() && mode == AccessMode::Inherit) continue;
+			Row(box, rpl::single(ModeName(mode)), [=] {
+				if (!service) return;
+				const auto apply = [=] {
+					if (!service) return;
+					auto error = QString();
+					if (id.isEmpty()) service->setGlobalMode(mode);
+					else if (!service->setMode(id, digest, mode, error)) { controller->showToast(error); return; }
+					if (guardedBox) guardedBox->closeBox();
+				};
+				if (mode != AccessMode::Full) { apply(); return; }
+				controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> confirm) {
+					confirm->setTitle(tr::jel_JellyV2ModeFull());
+					confirm->setWidth(st::boxWideWidth);
+					Label(confirm, tr::jel_JellyV2FullNotice(tr::now));
+					if (id.isEmpty() && service) {
+						auto count = 0;
+						for (const auto &info : service->plugins()) if (info.mode == AccessMode::Inherit) ++count;
+						Label(confirm, tr::jel_JellyV2Affected(tr::now) + QString::number(count));
+						Label(confirm, tr::jel_JellyV2FuturePlugins(tr::now), true);
+					}
+					confirm->addButton(tr::lng_box_ok(), [=] { apply(); confirm->closeBox(); });
+					confirm->addButton(tr::lng_cancel(), [=] { confirm->closeBox(); });
+				}));
+			});
+		}
+		box->addButton(tr::lng_close(), [=] { box->closeBox(); });
+	}));
+}
+
+void ShowAction(not_null<Window::SessionController*> controller, PendingAction pending) {
+	const auto service = QPointer<Service>(&controller->session().plugins());
+	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
+		const auto guardedBox = QPointer<Ui::GenericBox>(box.get());
+		box->setTitle(tr::jel_JellyV2ReviewAction());
+		box->setWidth(st::boxWideWidth);
+		Label(box, tr::jel_JellyV2ActualNotice(tr::now), true);
+		Label(box, tr::jel_JellyV2RequestedBy(tr::now) + pending.pluginName, true);
+		Label(box, tr::jel_JellyV2Account(tr::now) + pending.account);
+		Label(box, pending.recipient);
+		Label(box, u"Chat ID: "_q + pending.action.params.value(u"chatId"_q).toString(), true);
+		const auto sending = pending.action.method == u"telegram.sendText"_q;
+		if (sending) {
+			Label(box, tr::jel_JellyV2SendText(tr::now));
+			Text(box, pending.action.params.value(u"text"_q).toString(), true);
+			Label(box, pending.action.params.value(u"silent"_q).toBool() ? tr::jel_JellyV2Silent(tr::now) : tr::jel_JellyV2Notify(tr::now), true);
+			Label(box, tr::jel_JellyV2NoPreview(tr::now), true);
+		} else Label(box, tr::jel_JellyV2ReadHistory(tr::now) + QString::number(pending.action.params.value(u"limit"_q).toInt()));
+		const auto remember = Check(box, tr::jel_JellyV2RememberExact(tr::now));
+		const auto broad = sending ? Check(box, tr::jel_JellyV2RememberChat(tr::now)) : nullptr;
+		if (broad) {
+			broad->setEnabled(remember->checked());
+			remember->checkedChanges() | rpl::on_next([=](bool checked) { broad->setEnabled(checked); }, broad->lifetime());
+		}
+		Label(box, tr::jel_JellyV2RememberNotice(tr::now), true);
+		const auto submit = [=](bool allow) {
+			if (!service) return;
+			const auto choice = allow
+				? remember->checked() ? (broad && broad->checked() ? ApprovalChoice::RememberChat : ApprovalChoice::RememberExact) : ApprovalChoice::Once
+				: remember->checked() ? ApprovalChoice::DenyAlways : ApprovalChoice::DenyOnce;
 			auto error = QString();
-			if (manager->configure(info.package.id, settings, error)) box->closeBox();
+			if (service->approve(pending.token, choice, error)) { if (guardedBox) guardedBox->closeBox(); }
+			else controller->showToast(error);
+		};
+		box->addButton(tr::jel_JellyV2Allow(), [=] { submit(true); });
+		box->addButton(tr::jel_JellyV2Deny(), [=] { submit(false); });
+		service->changes() | rpl::on_next([=] {
+			if (!service) return;
+			for (const auto &current : service->pending()) if (current.token == pending.token) return;
+			box->closeBox();
+		}, box->lifetime());
+	}));
+}
+
+void ShowPending(not_null<Window::SessionController*> controller) {
+	const auto service = QPointer<Service>(&controller->session().plugins());
+	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
+		box->setTitle(tr::jel_JellyV2Pending());
+		box->setWidth(st::boxWideWidth);
+		if (!service) return;
+		const auto pending = service->pending();
+		if (pending.empty()) Label(box, tr::jel_JellyV2NoPending(tr::now));
+		for (const auto &action : pending) Row(box, rpl::single(action.pluginName + u" · "_q + action.action.method), [=] { ShowAction(controller, action); });
+		box->addButton(tr::lng_close(), [=] { box->closeBox(); });
+	}));
+}
+
+void ShowRules(not_null<Window::SessionController*> controller, PluginInfo info) {
+	const auto service = QPointer<Service>(&controller->session().plugins());
+	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
+		box->setTitle(tr::jel_JellyV2Rules());
+		box->setWidth(st::boxWideWidth);
+		if (info.rules.isEmpty()) Label(box, tr::jel_JellyV2NoRules(tr::now));
+		for (const auto &item : info.rules) {
+			const auto rule = item.toObject();
+			Label(box, (rule.value(u"allow"_q).toBool() ? tr::jel_JellyV2Allow(tr::now) : tr::jel_JellyV2Deny(tr::now)) + u" · "_q + rule.value(u"method"_q).toString());
+			if (rule.value(u"scope"_q).toString() == u"chat-text"_q) {
+				Label(box, tr::jel_JellyV2RememberChat(tr::now));
+				Label(box, u"Chat ID: "_q + rule.value(u"chatId"_q).toString(), true);
+				Label(box, rule.value(u"silent"_q).toBool() ? tr::jel_JellyV2Silent(tr::now) : tr::jel_JellyV2Notify(tr::now), true);
+			} else Text(box, QString::fromUtf8(QJsonDocument(rule.value(u"params"_q).toObject()).toJson()), true, true);
+			Row(box, tr::lng_box_delete(), [=] {
+				if (!service) return;
+				auto error = QString();
+				if (service->removeRule(info.package.id, info.package.digest, rule, error)) box->closeBox();
+				else controller->showToast(error);
+			});
+		}
+		if (!info.rules.isEmpty()) Row(box, tr::jel_JellyV2ClearRules(), [=] {
+			if (!service) return;
+			auto error = QString();
+			if (service->clearRules(info.package.id, info.package.digest, error)) box->closeBox();
 			else controller->showToast(error);
 		});
-		box->addLeftButton(tr::jel_JellyEditJson(), [=] {
-			box->closeBox();
-			ShowJsonConfiguration(controller, info);
+		box->addButton(tr::lng_close(), [=] { box->closeBox(); });
+	}));
+}
+
+void ShowSettings(not_null<Window::SessionController*> controller, PluginInfo info) {
+	const auto service = QPointer<Service>(&controller->session().plugins());
+	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
+		box->setTitle(tr::jel_JellyConfiguration());
+		box->setWidth(st::boxWideWidth);
+		Label(box, tr::jel_JellyV2SettingsNotice(tr::now));
+		const auto field = Text(box, QString::fromUtf8(QJsonDocument(info.settings).toJson()), false, true);
+		box->addButton(tr::lng_settings_save(), [=] {
+			if (!service) return;
+			const auto document = QJsonDocument::fromJson(field->getLastText().toUtf8());
+			if (!document.isObject()) { field->showError(); return; }
+			auto error = QString();
+			if (service->configure(info.package.id, info.package.digest, document.object(), error)) box->closeBox();
+			else controller->showToast(error);
 		});
 		box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
 	}));
 }
 
 void ShowDetails(not_null<Window::SessionController*> controller, PluginInfo info) {
-	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
+	const auto service = QPointer<Service>(&controller->session().plugins());
 	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
-		box->setTitle(rpl::single(info.package.name));
+		const auto guardedBox = QPointer<Ui::GenericBox>(box.get());
+		box->setTitle(tr::jel_JellyPlugins());
 		box->setWidth(st::boxWideWidth);
-		AddLabel(box, info.package.author + u" · "_q + info.package.version);
-		AddLabel(box, info.package.description);
-		AddLabel(box, info.status);
-		if (info.enabled) {
-			AddLabel(box, tr::jel_JellyPermissions(tr::now));
-			AddLabel(box, tr::jel_JellyReadChats(tr::now) + u": "_q + info.granted.readChats.join(u", "_q));
-			AddLabel(box, tr::jel_JellySendChats(tr::now) + u": "_q + info.granted.sendChats.join(u", "_q));
-			AddLabel(box, tr::jel_JellyJoinChannels(tr::now) + u": "_q + info.granted.joinChannels.join(u", "_q));
-			AddLabel(box, tr::jel_JellyBotChats(tr::now) + u": "_q + info.granted.botChats.join(u", "_q));
-			AddLabel(box, tr::jel_JellyAttachmentChats(tr::now) + u": "_q + info.granted.attachmentChats.join(u", "_q));
-			AddLabel(box, tr::jel_JellyEditChats(tr::now) + u": "_q + info.granted.editChats.join(u", "_q));
-			AddLabel(box, tr::jel_JellyReactionChats(tr::now) + u": "_q + info.granted.reactionChats.join(u", "_q));
-			AddLabel(box, tr::jel_JellyHistoryChats(tr::now) + u": "_q + info.granted.historyChats.join(u", "_q));
-			if (info.granted.uiDialogs) AddLabel(box, tr::jel_JellyDialogs(tr::now));
-			AddLabel(box, tr::jel_JellyMenuChats(tr::now) + u": "_q + info.granted.menuChats.join(u", "_q));
-			if (info.granted.fileRead) AddLabel(box, tr::jel_JellyFileRead(tr::now));
-			if (info.granted.fileWrite) AddLabel(box, tr::jel_JellyFileWrite(tr::now));
-			if (info.granted.moneyRead) AddLabel(box, tr::jel_JellyMoneyRead(tr::now));
-			AddLabel(box, tr::jel_JellyWebviewBots(tr::now) + u": "_q + info.granted.webviewBots.join(u", "_q));
-			AddLabel(box, tr::jel_JellyHttpHosts(tr::now) + u": "_q + info.granted.httpHosts.join(u", "_q));
-		}
-		box->addButton(info.enabled ? tr::jel_JellyDisable() : tr::jel_JellyEnable(), [=] {
-			if (!manager) return;
-			box->closeBox();
-			if (info.enabled) {
-				auto error = QString();
-				if (!manager->disable(info.package.id, error)) controller->showToast(error);
-			} else {
-				ShowPermissions(controller, info);
-			}
+		Heading(box, info);
+		Label(box, Status(info));
+		Label(box, info.status);
+		Label(box, info.package.description, true);
+		Label(box, tr::jel_JellyV2AppOpen(tr::now), true);
+		if (info.nextRun) Label(box, tr::jel_JellyV2NextRun(tr::now) + QDateTime::fromMSecsSinceEpoch(info.nextRun).toLocalTime().toString(u"dd.MM HH:mm:ss"_q));
+		Row(box, rpl::single(tr::jel_JellyV2PluginMode(tr::now) + u": "_q + ModeName(info.mode)), [=] { ShowMode(controller, info.package.id, info.package.digest); });
+		Row(box, tr::jel_JellyV2Rules(), [=] { ShowRules(controller, info); });
+		Row(box, tr::jel_JellyConfiguration(), [=] { ShowSettings(controller, info); });
+		Row(box, tr::jel_JellyViewCode(), [=] {
+			controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> codeBox) {
+				codeBox->setTitle(tr::jel_JellyViewCode());
+				codeBox->setWidth(2 * st::boxWideWidth);
+				Label(codeBox, u"SHA-256: "_q + info.package.digest, true);
+				Text(codeBox, info.package.code, true, true);
+				codeBox->addButton(tr::lng_close(), [=] { codeBox->closeBox(); });
+			}));
 		});
-		box->addButton(tr::jel_JellyConfiguration(), [=] {
-			box->closeBox();
-			ShowConfiguration(controller, info);
-		});
-		box->addRow(object_ptr<Ui::SettingsButton>(box, tr::jel_JellyViewCode(), st::settingsButton))
-			->setClickedCallback([=] {
-				controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> codeBox) {
-					codeBox->setTitle(tr::jel_JellyViewCode());
-					codeBox->setWidth(st::boxWideWidth);
-					AddLabel(codeBox, tr::jel_JellyCodeNotice(tr::now));
-					const auto field = codeBox->addRow(object_ptr<Ui::InputField>(
-						codeBox, st::defaultInputField, Ui::InputField::Mode::MultiLine,
-						rpl::single(QString()), info.package.code));
-					field->setMinHeight(st::boxWideWidth / 2);
-					field->setMaxHeight(st::boxWideWidth / 2);
-					field->rawTextEdit()->setReadOnly(true);
-					field->rawTextEdit()->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-					codeBox->addButton(tr::lng_close(), [=] { codeBox->closeBox(); });
-				}));
-			});
-		box->addButton(tr::jel_JellyLog(), [=] {
+		Row(box, tr::jel_JellyLog(), [=] {
 			controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> logBox) {
 				logBox->setTitle(tr::jel_JellyLog());
-				logBox->setWidth(st::boxWideWidth);
-				if (!manager) return;
-				for (const auto &current : manager->plugins()) {
-					if (current.package.id == info.package.id) {
-						AddLabel(logBox, current.log.join('\n'));
-					}
-				}
+				logBox->setWidth(2 * st::boxWideWidth);
+				if (service) for (const auto &current : service->plugins()) if (current.package.id == info.package.id) Text(logBox, current.log.join('\n'), true, true);
 				logBox->addButton(tr::lng_close(), [=] { logBox->closeBox(); });
 			}));
 		});
-		box->addLeftButton(tr::jel_JellyRemove(), [=] {
-			controller->show(Ui::MakeConfirmBox({
-				.text = tr::jel_JellyRemoveNotice(tr::marked),
-				.confirmed = [=](Fn<void()> &&close) {
-					if (!manager) return;
+		if (info.canRollback) Row(box, tr::jel_JellyV2Rollback(), [=] {
+			controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> confirm) {
+				confirm->setTitle(tr::jel_JellyV2Rollback());
+				confirm->setWidth(st::boxWideWidth);
+				Label(confirm, tr::jel_JellyV2RollbackNotice(tr::now));
+				confirm->addButton(tr::jel_JellyV2Rollback(), [=] {
+					if (!service) return;
 					auto error = QString();
-					if (manager->uninstall(info.package.id, error)) box->closeBox();
+					if (service->rollback(info.package.id, info.package.digest, error)) { confirm->closeBox(); if (guardedBox) guardedBox->closeBox(); }
 					else controller->showToast(error);
-					close();
-				},
-				.confirmText = tr::jel_JellyRemove(),
+				});
+				confirm->addButton(tr::lng_cancel(), [=] { confirm->closeBox(); });
 			}));
+		});
+		Row(box, tr::jel_JellyRemove(), [=] {
+			controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> confirm) {
+				confirm->setTitle(tr::jel_JellyRemove());
+				confirm->setWidth(st::boxWideWidth);
+				const auto removeData = Check(confirm, tr::jel_JellyV2RemoveData(tr::now), true);
+				confirm->addButton(tr::jel_JellyRemove(), [=] {
+					if (!service) return;
+					auto error = QString();
+					if (service->uninstall(info.package.id, info.package.digest, removeData->checked(), error)) { confirm->closeBox(); if (guardedBox) guardedBox->closeBox(); }
+					else controller->showToast(error);
+				});
+				confirm->addButton(tr::lng_cancel(), [=] { confirm->closeBox(); });
+			}));
+		});
+		box->addButton(info.enabled ? tr::jel_JellyV2Disable() : tr::jel_JellyEnable(), [=] {
+			if (!service) return;
+			auto error = QString();
+			const auto success = info.enabled ? service->disable(info.package.id, error) : service->enable(info.package.id, info.package.digest, error);
+			if (success) box->closeBox();
+			else controller->showToast(error);
 		});
 		box->addButton(tr::lng_close(), [=] { box->closeBox(); });
 	}));
 }
 
-const auto kMeta = BuildHelper({
-	.id = JelPlugins::Id(),
-	.parentId = JelMain::Id(),
-	.title = &tr::jel_JellyPlugins,
-	.icon = &st::menuIconBot,
+QMargins ListMargins() {
+	return QMargins(st::settingsCheckboxPadding.left(), 0, st::settingsCheckboxPadding.left(), st::settingsCheckboxPadding.bottom());
+}
+
+const auto kMeta = BuildSectionMeta({
+	.id = JelPlugins::Id(), .parentId = JelMain::Id(), .title = &tr::jel_JellyPlugins, .icon = &st::menuIconBot,
 }, [](SectionBuilder &builder) {
 	const auto controller = builder.controller();
-	if (!controller) {
-		return;
-	}
-	const auto manager = QPointer<JellyPlugins::Manager>(&controller->session().plugins());
+	if (!controller) return;
+	const auto service = QPointer<Service>(&controller->session().plugins());
 	builder.addSkip();
-	builder.addButton({
-		.id = u"jelly/plugins/install"_q,
-		.title = tr::jel_JellyInstall(),
-		.icon = { &st::menuIconFile },
-		.onClick = [=] {
-			const auto path = QFileDialog::getOpenFileName(nullptr,
-				tr::jel_JellyInstall(tr::now), {}, u"JellyPlugins (*.jelly *.jellyplugin)"_q);
-			if (path.isEmpty() || !manager) return;
-			auto file = QFile(path);
-			if (!file.open(QIODevice::ReadOnly) || file.size() > JellyPlugins::kPackageLimit) {
-				controller->showToast(tr::jel_JellyInvalidPackage(tr::now));
-				return;
-			}
-			const auto data = file.read(JellyPlugins::kPackageLimit + 1);
-			auto package = JellyPlugins::Package();
-			auto error = QString();
-			if (!JellyPlugins::ParsePackage(data, package, error)) {
-				controller->showToast(error);
-				return;
-			}
-			controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
-				box->setTitle(tr::jel_JellyInstall());
-				AddLabel(box, package.name + u" · "_q + package.version + u"\n"_q + package.author);
-				AddLabel(box, package.description);
-				AddLabel(box, tr::jel_JellyInstallNotice(tr::now));
-				box->addButton(tr::jel_JellyInstall(), [=] {
-					if (!manager) return;
-					auto installError = QString();
-					if (manager->install(data, installError)) box->closeBox();
-					else controller->showToast(installError);
-				});
-				box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
-			}));
-		},
-	});
-	builder.addButton({
-		.id = u"jelly/plugins/stop"_q,
-		.title = tr::jel_JellyStopAll(),
-		.icon = { &st::menuIconCancel },
-		.onClick = [=] { if (manager) manager->stopAll(); },
-	});
+	builder.addButton({ .id = u"jelly/v2/install"_q, .title = tr::jel_JellyInstall(), .icon = { &st::menuIconFile }, .onClick = [=] {
+		const auto path = QFileDialog::getOpenFileName(nullptr, tr::jel_JellyInstall(tr::now), {}, u"JellyPlugins (*.jelly)"_q);
+		if (path.isEmpty() || !service) return;
+		auto file = QFile(path);
+		if (!file.open(QIODevice::ReadOnly) || file.size() > JellyPlugins::Client::Limit("packageBytes")) { controller->showToast(tr::jel_JellyInvalidPackage(tr::now)); return; }
+		const auto data = file.read(JellyPlugins::Client::Limit("packageBytes") + 1);
+		auto package = JellyPlugins::Client::Package();
+		auto error = QString();
+		if (!JellyPlugins::Client::ParsePackage(data, package, error)) { controller->showToast(error); return; }
+		controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
+			box->setTitle(tr::jel_JellyInstall());
+			box->setWidth(st::boxWideWidth);
+			auto info = PluginInfo();
+			info.package = package;
+			Heading(box, info);
+			Label(box, package.description);
+			Label(box, tr::jel_JellyInstallNotice(tr::now), true);
+			box->addButton(tr::jel_JellyInstall(), [=] {
+				if (!service) return;
+				auto error = QString();
+				if (service->install(data, error)) box->closeBox();
+				else controller->showToast(error);
+			});
+			box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
+		}));
+	} });
+	builder.addButton({ .id = u"jelly/v2/mode"_q, .title = tr::jel_JellyV2GlobalMode(), .icon = { &st::menuIconPermissions },
+		.label = rpl::single(ModeName(service->globalMode())), .onClick = [=] { ShowMode(controller); } });
+	builder.addButton({ .id = u"jelly/v2/pending"_q, .title = tr::jel_JellyV2Pending(), .icon = { &st::menuIconInfo },
+		.label = rpl::single(QString::number(service->pending().size())), .onClick = [=] { ShowPending(controller); } });
+	builder.addButton({ .id = u"jelly/v2/stop"_q, .title = tr::jel_JellyStopAll(), .icon = { &st::menuIconCancel }, .onClick = [=] { if (service) service->stopAll(); } });
+	builder.addButton({ .id = u"jelly/v2/docs"_q, .title = tr::jel_JellyDocumentation(), .icon = { &st::menuIconInfo }, .onClick = [] {
+		QDesktopServices::openUrl(QUrl(u"https://jellygram.gitbook.io/jelly-plugins/"_q));
+	} });
 	builder.addSkip();
 	builder.addDivider();
-	builder.addSkip();
-	builder.addButton({
-		.id = u"jelly/plugins/documentation"_q,
-		.title = tr::jel_JellyDocumentation(),
-		.icon = { &st::menuIconInfo },
-		.onClick = [=] {
-			UrlClickHandler::Open(u"https://jellygram.gitbook.io/jelly-plugins/"_q);
-		},
-	});
-	builder.addSkip();
 	builder.addSubsectionTitle(tr::jel_JellyPlugins());
-	const auto plugins = manager->plugins();
-	if (plugins.empty()) {
-		builder.add([](const WidgetContext &ctx) -> SectionBuilder::WidgetToAdd {
-			return { .widget = object_ptr<Ui::FlatLabel>(ctx.container,
-				tr::jel_JellyEmpty(), st::boxLabel),
-				.margin = QMargins(st::settingsCheckboxPadding.left(), 0,
-					st::settingsCheckboxPadding.left(), st::settingsCheckboxPadding.bottom()) };
-		});
-	}
-	for (const auto &info : plugins) {
-		builder.addButton({
-			.id = u"jelly/plugin/"_q + info.package.id,
-			.title = rpl::single(info.package.name),
-			.icon = { &st::menuIconBot },
-			.label = rpl::single(info.enabled ? tr::jel_JellyRunning(tr::now) : tr::jel_JellyDisabled(tr::now)),
-			.onClick = [=] { ShowDetails(controller, info); },
-		});
-		for (auto action = info.actions.begin(); action != info.actions.end(); ++action) {
-			const auto id = action.key();
-			builder.addButton({
-				.id = u"jelly/action/"_q + info.package.id + '/' + id,
-				.title = rpl::single(action.value().toString()),
-				.icon = { &st::menuIconBotCommands },
-				.onClick = [=] { if (manager) manager->runAction(info.package.id, id); },
-			});
-		}
-	}
+	for (const auto &error : service->diagnostics()) builder.add([=](const WidgetContext &ctx) -> SectionBuilder::WidgetToAdd {
+		return { .widget = object_ptr<Ui::FlatLabel>(ctx.container, rpl::single(error), st::boxLabel), .margin = ListMargins() };
+	});
+	for (const auto &info : service->plugins()) builder.addButton({ .id = u"jelly/v2/plugin/"_q + info.package.id,
+		.title = rpl::single(info.package.name), .icon = { &st::menuIconBot }, .label = rpl::single(Status(info) + u" · "_q + ModeName(info.mode)),
+		.onClick = [=] { ShowDetails(controller, info); } });
+	if (service->plugins().empty()) builder.add([](const WidgetContext &ctx) -> SectionBuilder::WidgetToAdd {
+		return { .widget = object_ptr<Ui::FlatLabel>(ctx.container, tr::jel_JellyEmpty(), st::boxLabel), .margin = ListMargins() };
+	});
 });
 
 } // namespace
 
-JelPlugins::JelPlugins(QWidget *parent, not_null<Window::SessionController*> controller)
-: Section(parent, controller) {
+JelPlugins::JelPlugins(QWidget *parent, not_null<Window::SessionController*> controller) : Section(parent, controller) {
 	_content = Ui::CreateChild<Ui::VerticalLayout>(this);
 	refresh();
 	Ui::ResizeFitChild(this, _content);
 	controller->session().plugins().changes() | rpl::on_next([=] {
 		if (_refreshPending) return;
 		_refreshPending = true;
-		QTimer::singleShot(0, this, [=] {
-			_refreshPending = false;
-			refresh();
-		});
+		QTimer::singleShot(0, this, [=] { _refreshPending = false; refresh(); });
 	}, lifetime());
 }
 
-rpl::producer<QString> JelPlugins::title() {
-	return tr::jel_JellyPlugins();
-}
-
-void JelPlugins::refresh() {
-	_content->clear();
-	build(_content, kMeta.build);
-}
+rpl::producer<QString> JelPlugins::title() { return tr::jel_JellyPlugins(); }
+void JelPlugins::refresh() { _content->clear(); build(_content, kMeta.build); }
 
 } // namespace Settings

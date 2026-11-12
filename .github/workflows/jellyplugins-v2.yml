@@ -1,0 +1,129 @@
+name: JellyPlugins v2 build and isolation
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  pull_request:
+    paths:
+      - jellyplugins/v2/**
+      - jellyplugins/package*.json
+      - Telegram/ThirdParty/widget-sandbox
+      - Telegram/SourceFiles/jel/plugins/**
+      - Telegram/SourceFiles/jel/ui/settings/settings_plugins.cpp
+      - Telegram/cmake/jelly_plugins.cmake
+      - Telegram/build/sign_jelly_host.py
+      - Telegram/build/verify_jelly_runtime.py
+      - Telegram/build/tests/test_jelly_packaging.py
+      - Telegram/build/build.sh
+      - Telegram/build/build.bat
+      - Telegram/build/build_mac.py
+      - Telegram/build/setup.iss
+      - .github/actionlint.yaml
+      - .github/workflows/release.yml
+      - .github/workflows/canary.yml
+      - .github/workflows/jellyplugins-v2.yml
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            qt_host: linux
+            qt_arch: gcc_64
+            qt_archives: qtbase icu
+          - os: windows-2022
+            qt_host: windows
+            qt_arch: win64_msvc2022_64
+            qt_archives: qtbase
+          - os: macos-15
+            qt_host: mac
+            qt_arch: clang_64
+            qt_archives: qtbase
+          - os: macos-15-intel
+            qt_host: mac
+            qt_arch: clang_64
+            qt_archives: qtbase
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize the shared engine
+        shell: bash
+        run: |
+          git submodule update --init Telegram/ThirdParty/widget-sandbox
+          git -C Telegram/ThirdParty/widget-sandbox submodule update --init packages/ios/Sources/CQuickJS/quickjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: jellyplugins/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        id: qt-cache
+        with:
+          path: ${{ runner.temp }}/jelly-qt
+          key: jelly-qt-6.8.3-${{ runner.os }}-${{ runner.arch }}-v2
+      - name: Install Qt Core test SDK
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install aqtinstall==3.3.0
+          python -m aqt install-qt ${{ matrix.qt_host }} desktop 6.8.3 ${{ matrix.qt_arch }} --archives ${{ matrix.qt_archives }} --outputdir "${{ runner.temp }}/jelly-qt"
+      - name: Locate the test SDK
+        shell: bash
+        env:
+          JELLY_QT_ROOT: ${{ runner.temp }}/jelly-qt
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          matches = list(Path(os.environ['JELLY_QT_ROOT']).rglob('Qt6Config.cmake'))
+          if len(matches) != 1:
+              raise RuntimeError('Expected one Qt Core SDK, found ' + str(matches))
+          prefix = matches[0].parents[3]
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as file:
+              file.write('JELLY_QT_PREFIX=' + str(prefix) + '\n')
+              if os.name != 'nt':
+                  file.write('LD_LIBRARY_PATH=' + str(prefix / 'lib') + '\n')
+          with open(os.environ['GITHUB_PATH'], 'a', encoding='utf-8') as file:
+              file.write(str(prefix / 'bin') + '\n')
+          PY
+      - name: Validate SDK and embedded bootstrap
+        working-directory: jellyplugins
+        run: |
+          npm ci
+          npm run check:v2
+          npm run test:v2
+      - name: Check packaging and signing helpers
+        run: python -m unittest discover -s Telegram/build/tests -p test_jelly_packaging.py -v
+      - name: Configure standalone host
+        run: cmake -S jellyplugins/v2/host -B out/jellyplugins-v2 -DCMAKE_BUILD_TYPE=Debug -DJELLYPLUGINS_HOST_TESTS=ON -DJELLYPLUGINS_CLIENT_TESTS=ON "-DCMAKE_PREFIX_PATH=${{ env.JELLY_QT_PREFIX }}"
+      - name: Build standalone host and native test tools
+        run: cmake --build out/jellyplugins-v2 --config Debug --parallel 2
+      - name: Sign macOS host and test fixtures with their own sandbox
+        if: runner.os == 'macOS'
+        run: |
+          codesign --force --sign - --entitlements jellyplugins/v2/host/host.entitlements out/jellyplugins-v2/jelly-plugin-host
+          codesign --force --sign - --entitlements jellyplugins/v2/host/host.entitlements out/jellyplugins-v2/jelly-sandbox-probe
+          codesign --force --sign - --entitlements jellyplugins/v2/host/host.entitlements out/jellyplugins-v2/jelly-stall-host
+      - name: Native client policy, persistence, scheduler and supervisor
+        run: ctest --test-dir out/jellyplugins-v2 -C Debug --output-on-failure
+      - name: Native Windows isolation and protocol tests
+        if: runner.os == 'Windows'
+        run: python jellyplugins/v2/tests/host_smoke.py out/jellyplugins-v2/Debug/jelly-plugin-host.exe --driver out/jellyplugins-v2/Debug/jelly-host-driver.exe --probe out/jellyplugins-v2/Debug/jelly-sandbox-probe.exe
+      - name: Native Linux and macOS isolation and protocol tests
+        if: runner.os != 'Windows'
+        run: python jellyplugins/v2/tests/host_smoke.py out/jellyplugins-v2/jelly-plugin-host --probe out/jellyplugins-v2/jelly-sandbox-probe
+      - name: Upload native test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jellyplugins-tests-${{ matrix.os }}
+          path: out/jellyplugins-v2/Testing/Temporary/
+          if-no-files-found: ignore

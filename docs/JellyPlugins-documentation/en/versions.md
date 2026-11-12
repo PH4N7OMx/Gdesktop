@@ -1,18 +1,7 @@
 # Versions and compatibility
 
-## API 1
+Package, API and IPC versions are 2. Old packages/API 1 are rejected. No settings/permission migration or compatibility runtime.
 
-JellyPlugins uses TypeScript/JavaScript and `.jelly` packages.
+Windows/Linux/macOS launcher, host and packaging are connected in source. Native and visual validation remain required. CI: Windows x64, Linux x64, macOS arm64/x64. Other architectures and Store/Flatpak/AppImage are not validated by this matrix.
 
-- New message events, text sends, HTTPS GET, JSON storage, timers and UI actions.
-- Separate permissions for joining channels, callback buttons, attachment copying, editing outgoing messages, reactions and history.
-- Read-only installed JavaScript viewer.
-- Russian and English documentation.
-
-`apiVersion: 1` identifies the client contract; `version` identifies a plugin release. New permission fields are optional. Existing packages receive no additional grants automatically. Updates require approval again.
-
-Python plugins for ExteraGram are not compatible. Pack TypeScript with the SDK before installing.
-
-File pickers for text/binary reads and saves, Stars/Telegram TON balance reads, and main Mini Apps use separate opt-in grants. These additions require a client version that implements them; older clients reject unknown permissions.
-
-See [message menus, dialogs and settings](ui-and-settings.md): `menuChats`, `uiDialogs`, `settingsSchema` and the Message Tools example.
+Contract changes invalidate previous full consent and rules. Package changes require enabling the new revision, clear permissions and keep one rollback snapshot. Manifest version is not a substitute for content SHA-256.

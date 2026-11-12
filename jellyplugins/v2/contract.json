@@ -1,0 +1,79 @@
+{
+  "packageVersion": 2,
+  "apiVersion": 2,
+  "protocolVersion": 2,
+  "limits": {
+    "packageBytes": 1048576,
+    "frameBytes": 2097152,
+    "memoryBytes": 67108864,
+    "stackBytes": 524288,
+    "turnMilliseconds": 250,
+    "jobsPerTurn": 10000,
+    "pendingRequests": 32,
+    "schedules": 16,
+    "jsonBytes": 65536,
+    "jsonDepth": 32,
+    "jsonNodes": 16384,
+    "framesPerTurn": 100,
+    "logCharacters": 2000,
+    "startupMilliseconds": 10000,
+    "activationMilliseconds": 30000,
+    "transportMilliseconds": 3000,
+    "stopMilliseconds": 1000,
+    "requestMilliseconds": 30000,
+    "approvalMilliseconds": 300000,
+    "installedPlugins": 16,
+    "savedRules": 64,
+    "pluginOperationsPerHour": 20,
+    "accountOperationsPerHour": 60
+  },
+  "methods": {
+    "telegram.sendText": {
+      "category": "telegram.send",
+      "access": "protected",
+      "params": {
+        "chatId": { "type": "chat" },
+        "text": { "type": "string", "min": 1, "max": 4096 },
+        "silent": { "type": "boolean", "default": false }
+      },
+      "result": "{ messageId: string }"
+    },
+    "telegram.readHistory": {
+      "category": "telegram.read",
+      "access": "protected",
+      "params": {
+        "chatId": { "type": "chat" },
+        "limit": { "type": "integer", "min": 1, "max": 100, "default": 20 }
+      },
+      "result": "ReadonlyArray<{ id: string; text: string }>"
+    },
+    "schedule.every": {
+      "category": "schedule",
+      "access": "local",
+      "params": {
+        "id": { "type": "key" },
+        "seconds": { "type": "integer", "min": 60, "max": 604800 },
+        "first": { "type": "enum", "values": ["after-period", "immediate"], "default": "after-period" }
+      },
+      "result": "boolean"
+    },
+    "schedule.cancel": {
+      "category": "schedule",
+      "access": "local",
+      "params": { "id": { "type": "key" } },
+      "result": "boolean"
+    },
+    "storage.get": {
+      "category": "storage",
+      "access": "local",
+      "params": { "key": { "type": "key" } },
+      "result": "JsonValue"
+    },
+    "storage.set": {
+      "category": "storage",
+      "access": "local",
+      "params": { "key": { "type": "key" }, "value": { "type": "json" } },
+      "result": "boolean"
+    }
+  }
+}

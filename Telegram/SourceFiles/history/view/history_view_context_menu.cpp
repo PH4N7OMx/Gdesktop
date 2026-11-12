@@ -6,7 +6,6 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/view/history_view_context_menu.h"
-#include "jel/plugins/plugin_manager.h"
 #include <QPointer>
 
 #include "jel/features/filters/filters_controller.h"
@@ -1999,16 +1998,6 @@ void FillContextMenuItems(
 				result,
 				item,
 				list->controller());
-		}
-	}
-	if (item && !hasSelection) {
-		const auto manager = QPointer<JellyPlugins::Manager>(&item->history()->session().plugins());
-		const auto actions = manager->messageActions(item);
-		if (!actions.empty()) result->addSeparator();
-		for (const auto &action : actions) {
-			result->addAction(action.title, [=] {
-				if (manager) manager->runMessageAction(action, itemId);
-			}, &st::menuIconBot);
 		}
 	}
 }

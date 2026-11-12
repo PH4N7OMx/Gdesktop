@@ -149,6 +149,8 @@ void Runtime(const QString &path, const QString &stalled) {
 } // namespace
 
 int main(int argc, char **argv) {
+	std::setvbuf(stdout, nullptr, _IONBF, 0);
+	std::setvbuf(stderr, nullptr, _IONBF, 0);
 	auto application = QCoreApplication(argc, argv);
 	Check(argc == 3, "host and stall-fixture paths required");
 	Policy();

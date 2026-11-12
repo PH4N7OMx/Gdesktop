@@ -10,19 +10,19 @@ namespace JellyPlugins::Client {
 
 Supervisor::Supervisor(RuntimeCallbacks callbacks) : _callbacks(std::move(callbacks)) {
 	_watchdog.setInterval(50);
-	QObject::connect(&_watchdog, &QTimer::timeout, this, [=] { tick(); });
-	QObject::connect(&_process, &QProcess::readyReadStandardOutput, this, [=] { receive(); });
-	QObject::connect(&_process, &QProcess::bytesWritten, this, [=](qint64) { pump(); });
-	QObject::connect(&_process, &QProcess::readyReadStandardError, this, [=] {
+	QObject::connect(&_watchdog, &QTimer::timeout, this, [this] { tick(); });
+	QObject::connect(&_process, &QProcess::readyReadStandardOutput, this, [this] { receive(); });
+	QObject::connect(&_process, &QProcess::bytesWritten, this, [this](qint64) { pump(); });
+	QObject::connect(&_process, &QProcess::readyReadStandardError, this, [this] {
 		_stderr += _process.readAllStandardError();
 		if (_stderr.size() > 4096) _stderr = _stderr.right(4096);
 	});
-	QObject::connect(&_process, &QProcess::errorOccurred, this, [=](QProcess::ProcessError) {
+	QObject::connect(&_process, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
 		if (_state != RuntimeState::Stopping && _state != RuntimeState::Stopped && _state != RuntimeState::Failed) {
 			fail(_process.errorString() + QStringLiteral(": ") + QString::fromUtf8(_stderr).left(500));
 		}
 	});
-	QObject::connect(&_process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this, [=](int code, QProcess::ExitStatus) {
+	QObject::connect(&_process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this, [this](int code, QProcess::ExitStatus) {
 		if (_state == RuntimeState::Stopping) transition(RuntimeState::Stopped);
 		else if (_state != RuntimeState::Failed && _state != RuntimeState::Stopped) {
 			fail(QStringLiteral("Plugin host exited (%1): %2").arg(code).arg(QString::fromUtf8(_stderr).left(500)));

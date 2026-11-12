@@ -33,18 +33,22 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
+            build_type: Debug
             qt_host: linux
             qt_arch: linux_gcc_64
             qt_archives: qtbase icu
           - os: windows-2022
+            build_type: RelWithDebInfo
             qt_host: windows
             qt_arch: win64_msvc2022_64
             qt_archives: qtbase
           - os: macos-15
+            build_type: Debug
             qt_host: mac
             qt_arch: clang_64
             qt_archives: qtbase
           - os: macos-15-intel
+            build_type: Debug
             qt_host: mac
             qt_arch: clang_64
             qt_archives: qtbase
@@ -103,9 +107,9 @@ jobs:
       - name: Check packaging and signing helpers
         run: python -m unittest discover -s Telegram/build/tests -p test_jelly_packaging.py -v
       - name: Configure standalone host
-        run: cmake -S jellyplugins/v2/host -B out/jellyplugins-v2 -DCMAKE_BUILD_TYPE=Debug -DJELLYPLUGINS_HOST_TESTS=ON -DJELLYPLUGINS_CLIENT_TESTS=ON "-DCMAKE_PREFIX_PATH=${{ env.JELLY_QT_PREFIX }}"
+        run: cmake -S jellyplugins/v2/host -B out/jellyplugins-v2 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DJELLYPLUGINS_HOST_TESTS=ON -DJELLYPLUGINS_CLIENT_TESTS=ON "-DCMAKE_PREFIX_PATH=${{ env.JELLY_QT_PREFIX }}"
       - name: Build standalone host and native test tools
-        run: cmake --build out/jellyplugins-v2 --config Debug --parallel 2
+        run: cmake --build out/jellyplugins-v2 --config ${{ matrix.build_type }} --parallel 2
       - name: Sign macOS host and test fixtures with their own sandbox
         if: runner.os == 'macOS'
         run: |
@@ -113,10 +117,10 @@ jobs:
           codesign --force --sign - --entitlements jellyplugins/v2/host/host.entitlements out/jellyplugins-v2/jelly-sandbox-probe
           codesign --force --sign - --entitlements jellyplugins/v2/host/host.entitlements out/jellyplugins-v2/jelly-stall-host
       - name: Native client policy, persistence, scheduler and supervisor
-        run: ctest --test-dir out/jellyplugins-v2 -C Debug --output-on-failure
+        run: ctest --test-dir out/jellyplugins-v2 -C ${{ matrix.build_type }} --output-on-failure
       - name: Native Windows isolation and protocol tests
         if: runner.os == 'Windows'
-        run: python jellyplugins/v2/tests/host_smoke.py out/jellyplugins-v2/Debug/jelly-plugin-host.exe --driver out/jellyplugins-v2/Debug/jelly-host-driver.exe --probe out/jellyplugins-v2/Debug/jelly-sandbox-probe.exe
+        run: python jellyplugins/v2/tests/host_smoke.py out/jellyplugins-v2/${{ matrix.build_type }}/jelly-plugin-host.exe --driver out/jellyplugins-v2/${{ matrix.build_type }}/jelly-host-driver.exe --probe out/jellyplugins-v2/${{ matrix.build_type }}/jelly-sandbox-probe.exe
       - name: Native Linux and macOS isolation and protocol tests
         if: runner.os != 'Windows'
         run: python jellyplugins/v2/tests/host_smoke.py out/jellyplugins-v2/jelly-plugin-host --probe out/jellyplugins-v2/jelly-sandbox-probe

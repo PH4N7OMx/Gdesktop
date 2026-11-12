@@ -109,6 +109,7 @@ jobs:
       - name: Configure standalone host
         run: cmake -S jellyplugins/v2/host -B out/jellyplugins-v2 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DJELLYPLUGINS_HOST_TESTS=ON -DJELLYPLUGINS_CLIENT_TESTS=ON "-DCMAKE_PREFIX_PATH=${{ env.JELLY_QT_PREFIX }}"
       - name: Build standalone host and native test tools
+        id: native-build
         run: cmake --build out/jellyplugins-v2 --config ${{ matrix.build_type }} --parallel 2
       - name: Sign macOS host and test fixtures with their own sandbox
         if: runner.os == 'macOS'
@@ -119,15 +120,22 @@ jobs:
       - name: Native client policy, persistence, scheduler and supervisor
         run: ctest --test-dir out/jellyplugins-v2 -C ${{ matrix.build_type }} --output-on-failure
       - name: Native Windows isolation and protocol tests
-        if: runner.os == 'Windows'
+        if: always() && runner.os == 'Windows' && steps.native-build.outcome == 'success'
         run: python jellyplugins/v2/tests/host_smoke.py out/jellyplugins-v2/${{ matrix.build_type }}/jelly-plugin-host.exe --driver out/jellyplugins-v2/${{ matrix.build_type }}/jelly-host-driver.exe --probe out/jellyplugins-v2/${{ matrix.build_type }}/jelly-sandbox-probe.exe
       - name: Native Linux and macOS isolation and protocol tests
-        if: runner.os != 'Windows'
+        if: always() && runner.os != 'Windows' && steps.native-build.outcome == 'success'
         run: python jellyplugins/v2/tests/host_smoke.py out/jellyplugins-v2/jelly-plugin-host --probe out/jellyplugins-v2/jelly-sandbox-probe
+      - name: Collect macOS runtime diagnostics
+        if: always() && runner.os == 'macOS' && steps.native-build.outcome == 'success'
+        run: |
+          mkdir -p out/jellyplugins-v2/Testing/Temporary
+          /usr/bin/log show --style compact --last 5m --predicate 'process BEGINSWITH "jelly-" OR (process == "kernel" AND eventMessage CONTAINS "jelly-")' > out/jellyplugins-v2/Testing/Temporary/macos-runtime.log
       - name: Upload native test diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: jellyplugins-tests-${{ matrix.os }}
-          path: out/jellyplugins-v2/Testing/Temporary/
+          path: |
+            out/jellyplugins-v2/Testing/Temporary/
+            ~/Library/Logs/DiagnosticReports/*jelly*
           if-no-files-found: ignore

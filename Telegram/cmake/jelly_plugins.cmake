@@ -1,4 +1,5 @@
 set(jelly_root "${CMAKE_SOURCE_DIR}/jellyplugins/v2")
+include("${jelly_root}/host/macos_identity.cmake")
 
 add_executable(JellyPluginHost
     "${jelly_root}/host/main.cpp"
@@ -9,6 +10,7 @@ add_executable(JellyPluginHost
     "${jelly_root}/host/bootstrap.generated.h"
 )
 target_compile_features(JellyPluginHost PRIVATE cxx_std_20)
+jelly_macos_identity(JellyPluginHost org.gummygram.jellyplugins.runtime)
 target_include_directories(JellyPluginHost SYSTEM PRIVATE "${quickjs_loc}")
 target_link_libraries(JellyPluginHost PRIVATE tdesktop::lib_quickjs)
 set_target_properties(JellyPluginHost PROPERTIES

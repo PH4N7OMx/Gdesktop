@@ -35,8 +35,30 @@ int main(int argc, char **argv) {
 	address.sin_addr.s_addr = htonl(0x7f000001);
 	const auto connection = socket(AF_INET, SOCK_STREAM, 0);
 #ifdef _WIN32
-	const auto networkDenied = connection == INVALID_SOCKET
-		|| connect(connection, reinterpret_cast<const sockaddr*>(&address), sizeof(address)) != 0;
+	auto networkDenied = true;
+	if (connection != INVALID_SOCKET) {
+		auto nonblocking = u_long(1);
+		if (ioctlsocket(connection, FIONBIO, &nonblocking) != 0) return 70;
+		const auto connected = connect(connection, reinterpret_cast<const sockaddr*>(&address), sizeof(address));
+		if (connected == 0) networkDenied = false;
+		else if (WSAGetLastError() == WSAEWOULDBLOCK) {
+			auto writable = fd_set();
+			auto failed = fd_set();
+			FD_ZERO(&writable);
+			FD_ZERO(&failed);
+			FD_SET(connection, &writable);
+			FD_SET(connection, &failed);
+			auto timeout = timeval{ 2, 0 };
+			const auto selected = select(0, nullptr, &writable, &failed, &timeout);
+			if (selected == SOCKET_ERROR) return 70;
+			if (selected > 0) {
+				auto error = int(0);
+				auto length = int(sizeof(error));
+				if (getsockopt(connection, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&error), &length) != 0) return 70;
+				networkDenied = error != 0;
+			}
+		}
+	}
 	if (connection != INVALID_SOCKET) closesocket(connection);
 #else
 	const auto networkDenied = connection < 0

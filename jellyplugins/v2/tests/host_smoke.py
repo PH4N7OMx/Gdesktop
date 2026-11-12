@@ -187,8 +187,19 @@ def check_isolation(probe):
         with socket.socket() as server:
             server.bind(("127.0.0.1", 0))
             server.listen(1)
-            result = subprocess.run(command(probe, sensitive, server.getsockname()[1]),
-                capture_output=True, text=True, timeout=10)
+            try:
+                result = subprocess.run(command(probe, sensitive, server.getsockname()[1]),
+                    capture_output=True, text=True, timeout=10)
+            except subprocess.TimeoutExpired as error:
+                raise AssertionError(("Sandbox probe timed out", error.stdout, error.stderr)) from error
+            server.settimeout(0.2)
+            try:
+                connection, _ = server.accept()
+            except socket.timeout:
+                pass
+            else:
+                connection.close()
+                raise AssertionError("Sandbox probe reached the loopback server")
         assert result.returncode == 0, (result.stdout, result.stderr, result.returncode)
         assert json.loads(result.stdout) == {"readDenied": True, "writeDenied": True, "networkDenied": True}
     print("Native sandbox: fixture read/write and loopback connection denied", flush=True)

@@ -41,7 +41,7 @@ for (const [name, content] of [["sdk.d.ts", types], ["host/bootstrap.generated.h
   const path = new URL(name, import.meta.url);
   const normalized = content.replace(/\r?\n/g, "\r\n");
   if (process.argv.includes("--check")) {
-    if (await readFile(path, "utf8") !== normalized) throw new Error(`Regenerate ${name}: npm run generate:v2`);
+    if ((await readFile(path, "utf8")).replace(/\r\n/g, "\n") !== content) throw new Error(`Regenerate ${name}: npm run generate:v2`);
   } else {
     await writeFile(path, normalized, "utf8");
   }

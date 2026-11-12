@@ -91,7 +91,7 @@ int Run() {
 	JS_SetContextOpaque(context, &execution);
 	JS_SetInterruptHandler(runtime, &Interrupt, &execution);
 	const auto factory = JS_Eval(context, kBootstrap, std::strlen(kBootstrap), "jelly-runtime", JS_EVAL_TYPE_GLOBAL);
-	const auto native = JS_NewCFunction(context, &Send, "send", 1);
+	auto native = JS_NewCFunction(context, &Send, "send", 1);
 	const auto bridge = JS_IsException(factory) ? JS_EXCEPTION : JS_Call(context, factory, JS_UNDEFINED, 1, &native);
 	JS_FreeValue(context, native);
 	JS_FreeValue(context, factory);

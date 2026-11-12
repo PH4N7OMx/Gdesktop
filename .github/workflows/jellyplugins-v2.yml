@@ -34,7 +34,7 @@ jobs:
         include:
           - os: ubuntu-24.04
             qt_host: linux
-            qt_arch: gcc_64
+            qt_arch: linux_gcc_64
             qt_archives: qtbase icu
           - os: windows-2022
             qt_host: windows
@@ -69,7 +69,7 @@ jobs:
         id: qt-cache
         with:
           path: ${{ runner.temp }}/jelly-qt
-          key: jelly-qt-6.8.3-${{ runner.os }}-${{ runner.arch }}-v2
+          key: jelly-qt-6.8.3-${{ runner.os }}-${{ runner.arch }}-${{ matrix.qt_arch }}-v3
       - name: Install Qt Core test SDK
         if: steps.qt-cache.outputs.cache-hit != 'true'
         run: |

@@ -3996,7 +3996,7 @@ FullMsgId ApiWrap::forwardMessages(
 		crl::async([=] {
 			JelForward::forwardMessages(_session, action, false, draft);
 		});
-		return;
+		return {};
 	}
 
 	const auto jelIntelligentForwardNeeded = JelForward::isJelForwardNeeded(draft.items);
@@ -4004,7 +4004,7 @@ FullMsgId ApiWrap::forwardMessages(
 		crl::async([=] {
 			JelForward::intelligentForward(_session, action, draft);
 		});
-		return;
+		return {};
 	}
 
 	auto &histories = _session->data().histories();

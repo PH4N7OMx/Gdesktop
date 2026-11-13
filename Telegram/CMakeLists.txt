@@ -181,8 +181,6 @@ set(gummygram_files
         jel/ui/utils/color_utils.h
         jel/ui/utils/palette.cpp
         jel/ui/utils/palette.h
-        jel/ui/utils/itunes_search.cpp
-        jel/ui/utils/itunes_search.h
         jel/ui/settings/jel_builder.cpp
         jel/ui/settings/jel_builder.h
         jel/ui/settings/settings_appearance.cpp
@@ -241,8 +239,6 @@ set(gummygram_files
         jel/ui/components/avatar_corners_preview.h
         jel/ui/components/message_preview.cpp
         jel/ui/components/message_preview.h
-        jel/ui/components/saved_music.cpp
-        jel/ui/components/saved_music.h
         jel/libs/json.hpp
         jel/libs/json_ext.hpp
         jel/libs/sqlite/sqlite3.c
@@ -1602,7 +1598,6 @@ PRIVATE
     info/reactions_list/info_reactions_list_widget.h
     info/requests_list/info_requests_list_widget.cpp
     info/requests_list/info_requests_list_widget.h
-    info/saved/info_saved_music_common.cpp
     info/saved/info_saved_music_common.h
     info/saved/info_saved_music_provider.cpp
     info/saved/info_saved_music_provider.h

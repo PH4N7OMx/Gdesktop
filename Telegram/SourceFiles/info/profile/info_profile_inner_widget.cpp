@@ -26,7 +26,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "info/profile/info_profile_actions.h"
 #include "info/profile/info_profile_values.h"
 #include "info/saved/info_saved_music_widget.h"
-#include "info/saved/info_saved_music_common.h"
 #include "data/data_changes.h"
 #include "data/data_channel.h"
 #include "data/data_forum_topic.h"
@@ -203,11 +202,6 @@ object_ptr<Ui::RpWidget> InnerWidget::setupContent(
 		}
 	}
 	AddAboutVerification(result.data(), _peer);
-	if (!_savedMessages && !_topic && !_sublist) {
-		Info::Saved::SetupSavedMusic(
-			result.data(), _controller, _peer,
-			rpl::single(std::optional<QColor>()));
-	}
 
 	auto stack = SectionStack(result.data());
 	if (_topic && _topic->creating()) {

@@ -335,7 +335,7 @@ QMargins ListMargins() {
 	return QMargins(st::settingsCheckboxPadding.left(), 0, st::settingsCheckboxPadding.left(), st::settingsCheckboxPadding.bottom());
 }
 
-const auto kMeta = BuildSectionMeta({
+const auto kMeta = BuildHelper({
 	.id = JelPlugins::Id(), .parentId = JelMain::Id(), .title = &tr::jel_JellyPlugins, .icon = &st::menuIconBot,
 }, [](SectionBuilder &builder) {
 	const auto controller = builder.controller();

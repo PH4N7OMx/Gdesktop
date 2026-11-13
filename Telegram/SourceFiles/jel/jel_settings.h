@@ -378,7 +378,6 @@ public:
 	[[nodiscard]] bool voiceConfirmation() const { return _voiceConfirmation.current(); }
 	[[nodiscard]] bool roundConfirmation() const { return _roundConfirmation.current(); }
 	[[nodiscard]] TranslationProvider translationProvider() const { return _translationProvider.current(); }
-	[[nodiscard]] bool adaptiveCoverColor() const { return _adaptiveCoverColor.current(); }
 	[[nodiscard]] bool improveLinkPreviews() const { return _improveLinkPreviews.current(); }
 	[[nodiscard]] bool crashReporting() const { return _crashReporting.current(); }
 	[[nodiscard]] int avatarCorners() const { return _avatarCorners.current(); }
@@ -467,7 +466,6 @@ public:
 	void setVoiceConfirmation(bool val);
 	void setRoundConfirmation(bool val);
 	void setTranslationProvider(TranslationProvider val);
-	void setAdaptiveCoverColor(bool val);
 	void setImproveLinkPreviews(bool val);
 	void setCrashReporting(bool val);
 	void setAvatarCorners(int val);
@@ -640,8 +638,6 @@ public:
 	[[nodiscard]] rpl::producer<bool> roundConfirmationChanges() const { return _roundConfirmation.changes(); }
 	[[nodiscard]] rpl::producer<TranslationProvider> translationProviderValue() const { return _translationProvider.value(); }
 	[[nodiscard]] rpl::producer<TranslationProvider> translationProviderChanges() const { return _translationProvider.changes(); }
-	[[nodiscard]] rpl::producer<bool> adaptiveCoverColorValue() const { return _adaptiveCoverColor.value(); }
-	[[nodiscard]] rpl::producer<bool> adaptiveCoverColorChanges() const { return _adaptiveCoverColor.changes(); }
 	[[nodiscard]] rpl::producer<bool> improveLinkPreviewsValue() const { return _improveLinkPreviews.value(); }
 	[[nodiscard]] rpl::producer<bool> improveLinkPreviewsChanges() const { return _improveLinkPreviews.changes(); }
 	[[nodiscard]] rpl::producer<bool> crashReportingValue() const { return _crashReporting.value(); }
@@ -758,7 +754,6 @@ private:
 	rpl::variable<bool> _voiceConfirmation = false;
 	rpl::variable<bool> _roundConfirmation = false;
 	rpl::variable<TranslationProvider> _translationProvider = TranslationProvider::Telegram;
-	rpl::variable<bool> _adaptiveCoverColor = true;
 	rpl::variable<bool> _improveLinkPreviews = false;
 	rpl::variable<bool> _crashReporting = true;
 	rpl::variable<int> _avatarCorners = 23;

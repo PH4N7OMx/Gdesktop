@@ -314,7 +314,7 @@ void Credits::setupHistory(not_null<Ui::VerticalLayout*> container) {
 					st::creditsHistoryTabsSlider)),
 			st::creditsHistoryTabsSliderPadding);
 		slider->toggle(!hasOneTab, anim::type::instant);
-		if (!hasOneTab && !st::creditsHistoryTabsSlider.pill) {
+		if (!hasOneTab) {
 			const auto shadow = Ui::CreateChild<Ui::RpWidget>(inner);
 			shadow->paintRequest() | rpl::on_next([=] {
 				auto p = QPainter(shadow);
@@ -345,16 +345,11 @@ void Credits::setupHistory(not_null<Ui::VerticalLayout*> container) {
 
 		{
 			const auto &st = st::creditsHistoryTabsSlider;
-			if (st.pill) {
-				slider->entity()->fitWidthToSections();
-				slider->entity()->setNaturalWidth(slider->entity()->width());
-			} else {
-				slider->entity()->setNaturalWidth(0
-					+ st.labelStyle.font->width(fullTabText)
-					+ (hasIn ? st.labelStyle.font->width(inTabText) : 0)
-					+ (hasOut ? st.labelStyle.font->width(outTabText) : 0)
-					+ rect::m::sum::h(st::creditsHistoryTabsSliderPadding));
-			}
+			slider->entity()->setNaturalWidth(0
+				+ st.labelStyle.font->width(fullTabText)
+				+ (hasIn ? st.labelStyle.font->width(inTabText) : 0)
+				+ (hasOut ? st.labelStyle.font->width(outTabText) : 0)
+				+ rect::m::sum::h(st::creditsHistoryTabsSliderPadding));
 		}
 
 		const auto tabs = inner->add(

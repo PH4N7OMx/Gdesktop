@@ -23,7 +23,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 // GummyGram includes
 #include "jel/jel_settings.h"
-#include "jel/ui/components/saved_music.h"
 #include "jel/utils/telegram_helpers.h"
 #include "ui/toast/toast.h"
 #include "ui/wrap/slide_wrap.h"

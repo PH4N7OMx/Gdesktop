@@ -1198,12 +1198,6 @@ void JelSettings::setTranslationProvider(TranslationProvider val) {
 	save();
 }
 
-void JelSettings::setAdaptiveCoverColor(bool val) {
-	if (_adaptiveCoverColor.current() == val) return;
-	_adaptiveCoverColor = val;
-	save();
-}
-
 void JelSettings::setImproveLinkPreviews(bool val) {
 	if (_improveLinkPreviews.current() == val) return;
 	_improveLinkPreviews = val;
@@ -1460,7 +1454,6 @@ void to_json(nlohmann::json &j, const JelSettings &s) {
 		{"voiceConfirmation", s._voiceConfirmation.current()},
 		{"roundConfirmation", s._roundConfirmation.current()},
 		{"translationProvider", s._translationProvider.current()},
-		{"adaptiveCoverColor", s._adaptiveCoverColor.current()},
 		{"improveLinkPreviews", s._improveLinkPreviews.current()},
 		{"crashReporting", s._crashReporting.current()},
 		{"avatarCorners", s._avatarCorners.current()},
@@ -1596,7 +1589,6 @@ void from_json(const nlohmann::json &j, JelSettings &s) {
 	s._voiceConfirmation = j.value("voiceConfirmation", defaults._voiceConfirmation.current());
 	s._roundConfirmation = j.value("roundConfirmation", defaults._roundConfirmation.current());
 	s._translationProvider = j.value("translationProvider", defaults._translationProvider.current());
-	s._adaptiveCoverColor = j.value("adaptiveCoverColor", defaults._adaptiveCoverColor.current());
 	s._improveLinkPreviews = j.value("improveLinkPreviews", defaults._improveLinkPreviews.current());
 	s._crashReporting = j.value("crashReporting", defaults._crashReporting.current());
 	s._avatarCorners = j.value("avatarCorners", defaults._avatarCorners.current());

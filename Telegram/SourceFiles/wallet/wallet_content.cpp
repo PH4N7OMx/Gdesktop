@@ -15299,7 +15299,7 @@ void Content::setupTabs(rpl::producer<bool> collectiblesShown) {
 		}
 		_tabsShown = sections.first;
 		_tabsWrap->toggle(sections.first, anim::type::instant);
-		_tabsShadow->setVisible(sections.first && !st::walletTabsSlider.pill);
+		_tabsShadow->setVisible(sections.first);
 		if (!sections.second) {
 			title->toggle(false, anim::type::instant);
 		}

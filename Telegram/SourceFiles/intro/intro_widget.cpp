@@ -397,7 +397,7 @@ void Widget::historyMove(StackAction action, Animate animate) {
 
 	getStep()->prepareShowAnimated(wasStep);
 	if (wasStep->hasCover() != getStep()->hasCover()) {
-		_nextTopFrom = wasStep->nextButtonTop();
+		_nextTopFrom = wasStep->contentTop() + st::introNextTop;
 		_controlsTopFrom = wasStep->hasCover() ? st::introCoverHeight : 0;
 		_coverShownAnimation.start(
 			[this] { updateControlsGeometry(); },
@@ -846,7 +846,7 @@ void Widget::updateControlsGeometry() {
 	}
 	_back->moveToLeft(0, controlsTop);
 
-	auto nextTopTo = getStep()->nextButtonTop();
+	auto nextTopTo = getStep()->contentTop() + st::introNextTop;
 	auto nextTop = anim::interpolate(_nextTopFrom, nextTopTo, shown);
 	const auto shownAmount = _nextShownAnimation.value(_nextShown ? 1. : 0.);
 	const auto realNextTop = anim::interpolate(
@@ -860,7 +860,7 @@ void Widget::updateControlsGeometry() {
 	if (_changeLanguage) {
 		_changeLanguage->moveToLeft(
 			(width() - _changeLanguage->width()) / 2,
-			std::max(_next->y() + _next->height(), getStep()->minimumFooterTop()) + _changeLanguage->height());
+			_next->y() + _next->height() + _changeLanguage->height());
 	}
 	if (_resetAccount) {
 		_resetAccount->moveToLeft(

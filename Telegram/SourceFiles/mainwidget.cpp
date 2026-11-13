@@ -982,15 +982,6 @@ void MainWidget::createPlayer() {
 			_controller->showMessage(item);
 		});
 
-		_player->entity()->playlistButtonRequests(
-		) | rpl::on_next([=](QRect anchor) {
-			const auto position = mapFromGlobal(anchor.center()).x();
-			auto best = _playerPlaylist->bestPositionFor(position);
-			if (rtl()) best = position + 2 * (position - best) - _playerPlaylist->width();
-			updateMediaPlaylistPosition(best);
-			_playerPlaylist->toggleFromButton(anchor);
-		}, _player->lifetime());
-
 		_player->entity()->togglePlaylistRequests(
 		) | rpl::on_next([=](bool shown) {
 			if (!shown) {

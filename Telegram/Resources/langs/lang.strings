@@ -9247,8 +9247,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "jel_CrashReportingDescription" = "When this option is enabled, you'll be prompted to send a report after the app crashes. You can decide whether to send it or not.";
 "jel_ResetSettings" = "Reset Settings";
 "jel_ResetSettingsConfirmation" = "Are you sure you want to reset **all** GummyGram preferences to their defaults?";
-"jel_DisableColorfulCover" = "Disable adaptive color";
-"jel_EnableColorfulCover" = "Enable adaptive color";
 "jel_CustomizationHeader" = "Customization";
 "jel_DeletedMarkText" = "Deleted Mark";
 "jel_DeletedMarkNothing" = "Nothing";

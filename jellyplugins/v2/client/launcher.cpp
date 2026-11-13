@@ -63,7 +63,7 @@ void GrantRead(const QString &path, PSID sid) {
 
 QString HostPath() {
 	const auto folder = QCoreApplication::applicationDirPath();
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 	return QDir::cleanPath(folder + QStringLiteral("/../Helpers/jelly-plugin-host"));
 #else
 #ifdef Q_OS_WIN
@@ -161,7 +161,7 @@ std::shared_ptr<void> PrepareLaunch(QProcess &process, const QString &path, cons
 #else
 	environment.insert(QStringLiteral("LANG"), QStringLiteral("C.UTF-8"));
 	environment.insert(QStringLiteral("TZ"), QStringLiteral("UTC"));
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 	environment.insert(QStringLiteral("HOME"), QDir::homePath());
 	environment.insert(QStringLiteral("TMPDIR"), QDir::tempPath());
 #endif

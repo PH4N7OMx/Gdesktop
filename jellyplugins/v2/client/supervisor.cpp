@@ -150,7 +150,7 @@ void Supervisor::consume(const QJsonObject &frame) {
 	if (!_hello) {
 #ifdef Q_OS_WIN
 		const auto sandbox = QStringLiteral("windows-appcontainer");
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
 		const auto sandbox = QStringLiteral("macos-app-sandbox");
 #else
 		const auto sandbox = QStringLiteral("linux-seccomp");

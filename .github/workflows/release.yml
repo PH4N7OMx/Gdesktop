@@ -593,6 +593,13 @@ jobs:
           sdk: ${{ steps.configuration.outputs.sdk }}
           toolset: '14.44'
 
+      - name: Fingerprint Windows SDK headers
+        id: sdk
+        run: |
+          $winrt = python Telegram/build/windows_sdk.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "winrt=$winrt" >> $env:GITHUB_OUTPUT
+
       - name: Install compiler cache
         run: |
           $version = '4.13.6'
@@ -650,10 +657,10 @@ jobs:
           path: |
             ${{ env.LibrariesPath }}\[qQ]t[_-]*
             ${{ env.LibrariesPath }}\cache_keys\[qQ]t[_-]*
-          key: windows-2022-x64-release-qt-${{ steps.configuration.outputs.sdk }}-${{ hashFiles('TBuild/GummyGram/Telegram/build/prepare/**', 'TBuild/GummyGram/Telegram/build/qt_version.py', 'TBuild/GummyGram/cmake/external/angle/qt.cmake') }}
+          key: windows-2022-x64-release-qt-v2-${{ steps.configuration.outputs.sdk }}-${{ steps.sdk.outputs.winrt }}-${{ hashFiles('TBuild/GummyGram/Telegram/build/prepare/**', 'TBuild/GummyGram/Telegram/build/qt_version.py', 'TBuild/GummyGram/Telegram/build/windows_sdk.py', 'TBuild/GummyGram/cmake/external/angle/qt.cmake') }}
           restore-keys: |
-            windows-2022-x64-release-qt-${{ steps.configuration.outputs.sdk }}-${{ hashFiles('TBuild/GummyGram/Telegram/build/prepare/**', 'TBuild/GummyGram/Telegram/build/qt_version.py', 'TBuild/GummyGram/cmake/external/angle/qt.cmake') }}-partial-
-            windows-2022-x64-release-qt-
+            windows-2022-x64-release-qt-v2-${{ steps.configuration.outputs.sdk }}-${{ steps.sdk.outputs.winrt }}-${{ hashFiles('TBuild/GummyGram/Telegram/build/prepare/**', 'TBuild/GummyGram/Telegram/build/qt_version.py', 'TBuild/GummyGram/Telegram/build/windows_sdk.py', 'TBuild/GummyGram/cmake/external/angle/qt.cmake') }}-partial-
+            windows-2022-x64-release-qt-v2-${{ steps.configuration.outputs.sdk }}-${{ steps.sdk.outputs.winrt }}-
 
       - name: Prepare tools
         id: prepare-tools

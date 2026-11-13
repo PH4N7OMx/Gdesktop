@@ -7,6 +7,7 @@ sys.path.append(scriptPath + '/..')
 import qt_version
 import build_mac
 import msvc
+import windows_sdk
 
 def finish(code):
     global executePath
@@ -1770,6 +1771,7 @@ win:
     jom -j%NUMBER_OF_PROCESSORS% install
 """)
 else: # qt > '6'
+    qtWinrtKey = windows_sdk.winrt_fingerprint() if win else '0'
     qtAngleCmake = os.path.realpath(os.path.join(
         scriptPath, '../../../cmake/external/angle/qt.cmake')).replace('\\', '/')
     # checkouts share Libraries, so the cache key gets the content, not the path
@@ -1781,6 +1783,8 @@ else: # qt > '6'
     git submodule update --init --recursive --progress qtbase qtimageformats qtshadertools qtsvg
 depends:patches/qtbase_""" + qt + """/*.patch
 depends:patches/qtsvg_""" + qt + """/*.patch
+win:
+version:""" + qtWinrtKey + """
 win32_win64:
 depends:qt6_windows7/*.patch
 version:""" + computeFileHash(qtAngleCmake) + """

@@ -24,6 +24,7 @@ def functions(platform='win64', options=()):
         branch='v$QT', rustToolchain='1.90.0', modifiedEnv={},
         scriptPath=str(SOURCE.parent),
         qtAngleCmake=str(SOURCE.parents[3] / 'cmake/external/angle/qt.cmake'),
+        qtWinrtKey='winrt-sdk-fingerprint',
         computeFileHash=lambda path: hashlib.sha1(Path(path).read_bytes()).hexdigest(),
         subprocess=types.SimpleNamespace(run=lambda *a, **k:
             types.SimpleNamespace(stdout='Python 3.12.10')),
@@ -87,6 +88,23 @@ class PrepareOptionsTests(unittest.TestCase):
                 self.assertIn(namespace['computeFileHash'](namespace['qtAngleCmake']), version)
                 self.assertIn('qt6_windows7/*.patch', dependencies)
                 self.assertIn('CMAKE_PROJECT_QtBase_INCLUDE', filtered)
+
+    def test_qt6_cache_tracks_serviced_winrt_headers_on_each_windows_arch(self):
+        recipe = next(node for node in ast.walk(TREE)
+            if isinstance(node, ast.Call) and getattr(node.func, 'id', '') == 'stage'
+            and 'QT_ANGLE_CMAKE' in ast.unparse(node))
+        for platform in ('win32', 'win64', 'winarm', 'mac'):
+            namespace = functions(platform, ('skip-debug',))
+            versions = []
+            for fingerprint in ('sdk-before-servicing', 'sdk-after-servicing'):
+                namespace['qtWinrtKey'] = fingerprint
+                commands = eval(compile(ast.Expression(recipe.args[1]), str(SOURCE), 'eval'), namespace)
+                versions.append(namespace['filterByPlatform'](commands)[2])
+            with self.subTest(platform=platform):
+                if platform == 'mac':
+                    self.assertEqual(*versions)
+                else:
+                    self.assertNotEqual(*versions)
 
     def test_qt5_patch_invalidates_the_preparation_cache(self):
         recipe = next(node for node in ast.walk(TREE)

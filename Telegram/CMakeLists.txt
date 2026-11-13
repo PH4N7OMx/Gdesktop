@@ -149,14 +149,6 @@ set(gummygram_files
         jel/jel_url_handlers.h
         jel/jel_state.cpp
         jel/jel_state.h
-        jel/ui/macos_sidebar.cpp
-        jel/ui/macos_sidebar.h
-        jel/ui/macos_recording.cpp
-        jel/ui/macos_recording.h
-        jel/ui/macos_bubble.cpp
-        jel/ui/macos_bubble.h
-        jel/ui/macos_interface.cpp
-        jel/ui/macos_interface.h
         jel/jel_settings.cpp
         jel/jel_settings.h
         jel/jel_lang.cpp

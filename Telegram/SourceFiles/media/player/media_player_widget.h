@@ -9,7 +9,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "data/data_audio_msg_id.h"
 #include "ui/rp_widget.h"
-#include "ui/effects/animations.h"
 #include "base/object_ptr.h"
 
 class AudioMsgId;
@@ -66,10 +65,6 @@ public:
 		return _togglePlaylistRequests.events();
 	}
 
-	[[nodiscard]] rpl::producer<QRect> playlistButtonRequests() const {
-		return _playlistButtonRequests.events();
-	}
-
 private:
 	void resizeEvent(QResizeEvent *e) override;
 	void paintEvent(QPaintEvent *e) override;
@@ -118,7 +113,6 @@ private:
 	void updateTimeText(const TrackState &state);
 	void updateTimeLabel();
 	void markOver(bool over);
-	void updateExpansion();
 
 	void saveOrder(OrderMode mode);
 	[[nodiscard]] float64 speedLookup(bool lastNonDefault) const;
@@ -142,22 +136,15 @@ private:
 	Fn<void()> _closeCallback;
 	Fn<void(not_null<const HistoryItem*>)> _showItemCallback;
 
-	bool _hasArtist = false;
 	bool _labelsOver = false;
 	bool _labelsDown = false;
 	rpl::event_stream<bool> _togglePlaylistRequests;
-	rpl::event_stream<QRect> _playlistButtonRequests;
 	bool _narrow = false;
 	bool _over = false;
 	bool _wontBeOver = false;
 	bool _volumeHidden = false;
-	bool _shadowSuppressed = false;
-	bool _expanded = false;
-	float64 _expansionProgress = 0.;
-	Ui::Animations::Simple _expansionAnimation;
 
 	object_ptr<Ui::FlatLabel> _nameLabel;
-	object_ptr<Ui::FlatLabel> _artistLabel;
 	object_ptr<Ui::FadeWrap<Ui::RpWidget>> _rightControls;
 	object_ptr<Ui::LabelSimple> _timeLabel;
 	object_ptr<Ui::IconButton> _previousTrack = { nullptr };

@@ -8,6 +8,7 @@
 
 #include "jel/jel_lang.h"
 #include "jel/jel_settings.h"
+#include "jel/jel_ui_settings.h"
 #include "jel/jel_worker.h"
 #include "jel/data/jel_database.h"
 #include "jel/ui/jel_logo.h"
@@ -36,6 +37,7 @@ void initLang() {
 void initUiSettings() {
 	const auto &settings = JelSettings::getInstance();
 	Ui::SetAppliedBubbleRadius(settings.messageBubbleRadius());
+	JelUiSettings::setRoundedSwitches(settings.roundedSwitches());
 }
 
 void initDatabase() {

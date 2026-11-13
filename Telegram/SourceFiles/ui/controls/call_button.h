@@ -32,7 +32,6 @@ public:
 		const style::CallButton *stTo = nullptr);
 
 	void setProgress(float64 progress);
-	void setImageOverride(QImage from, QImage to = {});
 	void setOuterValue(float64 value);
 	void setText(rpl::producer<QString> text);
 	void setLabelShown(bool shown);
@@ -83,7 +82,6 @@ private:
 
 	QImage _bgMask, _bg;
 	QPixmap _bgFrom, _bgTo;
-	QImage _imageFrom, _imageTo, _imageMixed;
 	QImage _iconMixedMask, _iconFrom, _iconTo, _iconMixed;
 
 	float64 _outerValue = 0.;

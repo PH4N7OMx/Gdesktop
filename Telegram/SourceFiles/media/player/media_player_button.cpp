@@ -7,11 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "media/player/media_player_button.h"
 
-#include "styles/palette.h"
-
 #include "media/media_common.h"
-#include "jel/ui/macos_interface.h"
-#include "lottie/lottie_icon.h"
 #include "ui/effects/ripple_animation.h"
 #include "ui/painter.h"
 #include "styles/style_media_player.h"
@@ -251,66 +247,18 @@ PlayButton::PlayButton(
 	setCursor(style::cur_pointer);
 }
 
-PlayButton::~PlayButton() = default;
-
-void PlayButton::enableMacosIcons() {
-	if (_macosIcons) {
-		return;
-	}
-	_macosIcons = true;
-	updateMacosIcon(false);
-}
-
 void PlayButton::setState(State state) {
 	_layout.setState(state);
-	if (_state != state) {
-		_state = state;
-		if (_macosIcons) {
-			updateMacosIcon(true);
-		}
-	}
-}
-
-void PlayButton::updateMacosIcon(bool animated) {
-	if (_state == State::Cancel) {
-		_macosIcon = nullptr;
-		return;
-	}
-	const auto previousValid = _macosIcon && _macosIcon->valid();
-	const auto current = previousValid ? _macosIcon->frameIndex() : 0;
-	const auto total = previousValid ? _macosIcon->framesCount() : 0;
-	const auto side = std::min(width(), height());
-	_macosIcon = Lottie::MakeIcon({
-		.path = (_state == State::Pause)
-			? u":/animations/jel/macos/playlist_play_pause.tgs"_q
-			: u":/animations/jel/macos/playlist_pause_play.tgs"_q,
-		.sizeOverride = QSize(side, side),
-		.colorizeUsingAlpha = true,
-	});
-	if (_macosIcon && _macosIcon->valid()) {
-		const auto last = _macosIcon->framesCount() - 1;
-		const auto from = animated ? std::clamp(total - current, 0, last) : last;
-		_macosIcon->animate([=] { update(); }, from, last);
-	}
-	update();
 }
 
 void PlayButton::finishTransform() {
 	_layout.finishTransform();
-	if (_macosIcon && _macosIcon->valid()) {
-		_macosIcon->jumpTo(_macosIcon->framesCount() - 1, [=] { update(); });
-	}
 }
 
 void PlayButton::paintEvent(QPaintEvent *e) {
 	auto p = QPainter(this);
 
 	paintRipple(p, _st.rippleAreaPosition);
-	if (_macosIcon && _macosIcon->valid() && _state != State::Cancel) {
-		_macosIcon->paintInCenter(p, rect(), Jel::Ui::MacosInterfaceEnabled()
-			? st::windowFg->c : _st.color->c);
-		return;
-	}
 	p.translate(_st.iconPosition);
 	_layout.paint(p, _st.color);
 }

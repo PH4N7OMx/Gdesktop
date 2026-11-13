@@ -7,7 +7,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "settings/settings_common.h"
 
-#include "jel/ui/macos_interface.h"
 
 #include "base/timer.h"
 #include "lottie/lottie_icon.h"
@@ -335,7 +334,6 @@ AbstractSection::AbstractSection(
 	QWidget *parent,
 	not_null<Window::SessionController*> controller)
 : _controller(controller) {
-	Jel::Ui::SetupMacosSettingsPage(this);
 }
 
 AbstractSection::~AbstractSection() = default;
@@ -399,10 +397,6 @@ void Icon::paint(QPainter &p, QPoint position) const {
 }
 
 void Icon::paint(QPainter &p, int x, int y) const {
-	if (Jel::Ui::PaintMacosSettingsIcon(
-			p, QRect(QPoint(x, y), size()), _icon)) {
-		return;
-	}
 	if (_background) {
 		_background->paint(p, { { x, y }, _icon->size() });
 	} else if (_backgroundBrush) {

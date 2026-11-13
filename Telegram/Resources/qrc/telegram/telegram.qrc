@@ -1,16 +1,5 @@
 <RCC>
   <qresource prefix="/gui">
-    <file alias="art/jel/macos/callaccept.png">../../art/jel/macos/callaccept.png</file>
-    <file alias="art/jel/macos/calldecline.png">../../art/jel/macos/calldecline.png</file>
-    <file alias="art/jel/macos/callredial.png">../../art/jel/macos/callredial.png</file>
-    <file alias="art/jel/macos/profile.png">../../art/jel/macos/profile.png</file>
-    <file alias="art/jel/macos/notifications.png">../../art/jel/macos/notifications.png</file>
-    <file alias="art/jel/macos/privacy.png">../../art/jel/macos/privacy.png</file>
-    <file alias="art/jel/macos/appearance.png">../../art/jel/macos/appearance.png</file>
-    <file alias="art/jel/macos/palette.png">../../art/jel/macos/palette.png</file>
-    <file alias="art/jel/macos/folders.png">../../art/jel/macos/folders.png</file>
-    <file alias="art/jel/macos/advanced.png">../../art/jel/macos/advanced.png</file>
-    <file alias="art/jel/macos/language.png">../../art/jel/macos/language.png</file>
     <file alias="art/background.tgv">../../art/background.tgv</file>
     <file alias="art/bg_thumbnail.png">../../art/bg_thumbnail.png</file>
     <file alias="art/bg_initial.jpg">../../art/bg_initial.jpg</file>

@@ -143,14 +143,9 @@ public:
 	virtual void fitWidthToSections();
 
 	void setRippleTopRoundRadius(int radius);
-	QString accessibilityValue() const override;
-	Qt::FocusPolicy accessibilityFocusPolicy() override;
 
 protected:
 	void paintEvent(QPaintEvent *e) override;
-	void keyPressEvent(QKeyEvent *e) override;
-	void focusInEvent(QFocusEvent *e) override;
-	void focusOutEvent(QFocusEvent *e) override;
 
 	int resizeGetHeight(int newWidth) override;
 

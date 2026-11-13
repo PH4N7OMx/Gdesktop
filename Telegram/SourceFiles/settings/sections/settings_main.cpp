@@ -103,8 +103,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 // GummyGram includes
 #include "jel/ui/settings/settings_main.h"
-#include "jel/ui/macos_interface.h"
-#include "styles/style_jel_styles.h"
 #include <QtGui/QPainter>
 #include "jel/ui/utils/jel_profile_values.h"
 #include "jel/utils/telegram_helpers.h"
@@ -159,10 +157,9 @@ Cover::Cover(
 	not_null<UserData*> user)
 : FixedHeightWidget(
 	parent,
-	Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(106)
-		: st::settingsPhotoTop
-			+ st::infoProfileCover.photo.size.height()
-			+ st::settingsPhotoBottom)
+	st::settingsPhotoTop
+		+ st::infoProfileCover.photo.size.height()
+		+ st::settingsPhotoBottom)
 , _controller(controller)
 , _user(user)
 , _badge(
@@ -195,22 +192,10 @@ Cover::Cover(
 	_user,
 	Ui::UserpicButton::Role::OpenPhoto,
 	Ui::UserpicButton::Source::PeerPhoto,
-	Jel::Ui::MacosInterfaceEnabled() ? st::macosSettingsPhoto : st::infoProfileCover.photo)
-, _name(this, Jel::Ui::MacosInterfaceEnabled() ? st::macosSettingsName : st::infoProfileCover.name)
+	st::infoProfileCover.photo)
+, _name(this, st::infoProfileCover.name)
 , _id(this, st::defaultFlatLabel, st::popupMenuWithIcons)
 , _username(this, st::infoProfileMegagroupCover.status) {
-	if (Jel::Ui::MacosInterfaceEnabled()) {
-		paintRequest() | rpl::on_next([=] {
-			auto p = QPainter(this);
-			p.setRenderHint(QPainter::Antialiasing);
-			p.fillRect(rect(), st::boxDividerBg->c);
-			p.setPen(Qt::NoPen);
-			p.setBrush(st::windowBg->c);
-			const auto inset = style::ConvertScale(20);
-			const auto vertical = style::ConvertScale(8);
-			p.drawRoundedRect(rect().adjusted(inset, vertical, -inset, -vertical), inset, inset);
-		}, lifetime());
-	}
 	_user->updateFull();
 
 	_name->setSelectable(true);
@@ -292,8 +277,8 @@ void Cover::setupChildGeometry() {
 	widthValue(
 	) | rpl::on_next([=](int newWidth) {
 		_userpic->moveToLeft(
-			Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(36) : st::settingsPhotoLeft,
-			Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(23) : st::settingsPhotoTop,
+			st::settingsPhotoLeft,
+			st::settingsPhotoTop,
 			newWidth);
 		refreshNameGeometry(newWidth);
 		refreshIdGeometry(newWidth);
@@ -347,8 +332,8 @@ void Cover::initViewers() {
 }
 
 void Cover::refreshNameGeometry(int newWidth) {
-	const auto nameLeft = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(121) : st::settingsNameLeft;
-	const auto nameTop = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(24) : st::settingsNameTop;
+	const auto nameLeft = st::settingsNameLeft;
+	const auto nameTop = st::settingsNameTop;
 	const auto qrButtonWidth = (_qrButton && !_qrButton->isHidden())
 		? (_qrButton->width() + st::infoProfileCover.rightSkip)
 		: 0;
@@ -381,8 +366,8 @@ void Cover::updateIdText() {
 }
 
 void Cover::refreshIdGeometry(int newWidth) {
-	const auto idLeft = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(121) : st::settingsPhoneLeft;
-	const auto idTop = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(45) : st::settingsPhoneTop;
+	const auto idLeft = st::settingsPhoneLeft;
+	const auto idTop = st::settingsPhoneTop;
 	const auto idWidth = newWidth
 		- idLeft
 		- st::infoProfileCover.rightSkip;
@@ -391,8 +376,8 @@ void Cover::refreshIdGeometry(int newWidth) {
 }
 
 void Cover::refreshUsernameGeometry(int newWidth) {
-	const auto usernameLeft = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(121) : st::settingsUsernameLeft;
-	const auto usernameTop = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(64) : st::settingsUsernameTop;
+	const auto usernameLeft = st::settingsUsernameLeft;
+	const auto usernameTop = st::settingsUsernameTop;
 	const auto usernameRight = st::infoProfileCover.rightSkip;
 	const auto usernameWidth = newWidth - usernameLeft - usernameRight;
 	_username->resizeToWidth(usernameWidth);
@@ -404,7 +389,7 @@ void Cover::refreshQrButtonGeometry(int newWidth) {
 		return;
 	}
 	const auto buttonTop = (height() - _qrButton->height()) / 2;
-	const auto buttonRight = Jel::Ui::MacosInterfaceEnabled() ? style::ConvertScale(30) : st::infoProfileCover.rightSkip;
+	const auto buttonRight = st::infoProfileCover.rightSkip;
 	const auto inset = st::infoProfileLabeledButtonQrInset;
 	_qrButton->moveToRight(buttonRight - inset, buttonTop, newWidth);
 }

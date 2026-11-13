@@ -56,8 +56,6 @@ private:
 	rpl::event_stream<bool> _qrActive;
 	Ui::LinkButton *_skip = nullptr;
 	Ui::LinkButton *_passkey = nullptr;
-	Fn<void()> _macosLayout;
-	int _macosErrorTop = 0;
 	base::Timer _refreshTimer;
 	mtpRequestId _requestId = 0;
 	bool _forceRefresh = false;

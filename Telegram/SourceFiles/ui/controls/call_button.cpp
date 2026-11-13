@@ -156,14 +156,6 @@ void CallButton::setProgress(float64 progress) {
 	update();
 }
 
-void CallButton::setImageOverride(QImage from, QImage to) {
-	Expects(to.isNull() || from.size() == to.size());
-	_imageFrom = from.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-	_imageTo = to.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-	_imageMixed = QImage();
-	update();
-}
-
 void CallButton::paintEvent(QPaintEvent *e) {
 	QPainter p(this);
 
@@ -190,46 +182,7 @@ void CallButton::paintEvent(QPaintEvent *e) {
 		p.drawEllipse(outerRect);
 	}
 
-	// Full-color actions carry their own circle; never pass them through
-	// the monochrome icon mask or paint another background underneath.
-	const auto imageOverride = !_imageFrom.isNull()
-		&& (!_stTo || !_imageTo.isNull()) && !_bgOverride && !_corner;
-	if (imageOverride) {
-		auto hq = PainterHighQualityEnabler(p);
-		const auto bounds = myrtlrect(_stFrom->bgPosition.x(),
-			_stFrom->bgPosition.y(), _stFrom->bgSize, _stFrom->bgSize);
-		if (paintFrom) {
-			p.drawImage(bounds, _imageFrom);
-		} else if (paintTo) {
-			p.drawImage(bounds, _imageTo);
-		} else {
-			if (_imageMixed.isNull()) {
-				_imageMixed = QImage(_imageFrom.size(), QImage::Format_ARGB32_Premultiplied);
-				_imageMixed.setDevicePixelRatio(_imageFrom.devicePixelRatio());
-			}
-			_imageMixed.fill(Qt::transparent);
-			auto fadedTo = _imageTo.copy();
-			{
-				auto fade = QPainter(&fadedTo);
-				fade.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-				fade.fillRect(QRectF(0, 0,
-					fadedTo.width() / fadedTo.devicePixelRatio(),
-					fadedTo.height() / fadedTo.devicePixelRatio()),
-					QColor::fromRgbF(0., 0., 0., _progress));
-			}
-			{
-				auto q = QPainter(&_imageMixed);
-				q.setOpacity(1. - _progress);
-				q.drawImage(QPoint(), _imageFrom);
-				// Weight the source first: painter opacity also attenuates
-				// the destination with Plus on the raster backend.
-				q.setOpacity(1.);
-				q.setCompositionMode(QPainter::CompositionMode_Plus);
-				q.drawImage(QPoint(), fadedTo);
-			}
-			p.drawImage(bounds, _imageMixed);
-		}
-	} else if (_bgOverride) {
+	if (_bgOverride) {
 		Assert(!_corner); // Didn't support this case yet.
 
 		const auto &s = _stFrom->bgSize;
@@ -259,9 +212,6 @@ void CallButton::paintEvent(QPaintEvent *e) {
 		rippleColorInterpolated = anim::color(_stFrom->button.ripple.color, _stTo->button.ripple.color, _progress);
 	}
 	paintRipple(p, _stFrom->button.rippleAreaPosition, rippleColorOverride);
-	if (imageOverride) {
-		return;
-	}
 
 	auto positionFrom = iconPosition(_stFrom);
 	if (paintFrom) {

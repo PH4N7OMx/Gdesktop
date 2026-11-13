@@ -343,14 +343,6 @@ private:
 
 	std::unique_ptr<Ui::AbstractButton> _frozenAccountBar;
 
-	Ui::RpWidget *_macosNavigation = nullptr;
-	object_ptr<Ui::RpWidget> _macosHeader = { nullptr };
-	object_ptr<Ui::FlatLabel> _macosTitle = { nullptr };
-	object_ptr<Ui::AbstractButton> _macosAccount = { nullptr };
-	object_ptr<Ui::IconButton> _macosCompose = { nullptr };
-	object_ptr<Ui::PopupMenu> _macosComposeMenu = { nullptr };
-	std::unique_ptr<Info::Profile::EmojiStatusPanel> _macosStatusPanel;
-	std::unique_ptr<Info::Profile::Badge> _macosAccountBadge;
 	object_ptr<Ui::RpWidget> _searchControls;
 	object_ptr<HistoryView::TopBarWidget> _subsectionTopBar = { nullptr };
 	struct {

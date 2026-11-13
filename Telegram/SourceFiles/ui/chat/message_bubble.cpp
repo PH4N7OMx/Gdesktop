@@ -6,8 +6,6 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "ui/chat/message_bubble.h"
-#include "jel/ui/macos_bubble.h"
-#include "jel/ui/macos_interface.h"
 
 #include "ui/cached_round_corners.h"
 #include "ui/image/image_prepare.h"
@@ -363,10 +361,6 @@ void FinishBubblePatternOnMain(not_null<BubblePattern*> pattern) {
 }
 
 void PaintBubble(QPainter &p, const SimpleBubble &args) {
-	if (Jel::Ui::MacosInterfaceEnabled()) {
-		Jel::Ui::PaintMacosBubble(p, args);
-		return;
-	}
 	if (UsePatternBubble(args)) {
 		PaintPatternBubble(p, args);
 	} else {

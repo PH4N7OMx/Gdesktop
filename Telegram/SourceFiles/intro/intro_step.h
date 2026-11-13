@@ -99,8 +99,6 @@ public:
 
 	[[nodiscard]] int contentLeft() const;
 	[[nodiscard]] int contentTop() const;
-	[[nodiscard]] virtual int nextButtonTop() const;
-	[[nodiscard]] virtual int minimumFooterTop() const;
 
 	void setErrorCentered(bool centered);
 	void showError(rpl::producer<QString> text);

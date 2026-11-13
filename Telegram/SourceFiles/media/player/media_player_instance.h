@@ -116,7 +116,6 @@ public:
 		const AudioMsgId &audioId,
 		std::optional<PlaylistContext> context = {});
 	[[nodiscard]] TrackState getState(AudioMsgId::Type type) const;
-	[[nodiscard]] std::vector<std::pair<float64, float64>> bufferedRanges(AudioMsgId::Type type) const;
 
 	[[nodiscard]] PlaylistContext playlistContext(
 		AudioMsgId::Type type) const {

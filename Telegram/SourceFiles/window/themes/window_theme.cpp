@@ -7,7 +7,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "window/themes/window_theme.h"
 
-#include "jel/ui/macos_interface.h"
 
 #include "window/themes/window_theme_preview.h"
 #include "window/themes/window_themes_chat.h"
@@ -581,13 +580,11 @@ void ChatBackground::start() {
 	) | rpl::on_next([=](const BackgroundUpdate &update) {
 		refreshThemeWatcher();
 		if (update.paletteChanged()) {
-			Jel::Ui::ApplyMacosPalette();
 			style::NotifyPaletteChanged();
 		}
 	}, _lifetime);
 
 	initialRead();
-	Jel::Ui::ApplyMacosPalette();
 
 	Core::App().domain().activeSessionValue(
 	) | rpl::filter([=](Main::Session *session) {

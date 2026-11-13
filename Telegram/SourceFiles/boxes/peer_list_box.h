@@ -683,9 +683,6 @@ private:
 	std::unique_ptr<PeerListSearchController> _searchController = nullptr;
 
 	const style::PeerList *_listSt = nullptr;
-	mutable const style::PeerList *_macosSource = nullptr;
-	mutable const style::PeerList *_macosPrepared = nullptr;
-	mutable std::vector<std::unique_ptr<style::PeerList>> _macosStyles;
 	const style::MultiSelect *_selectSt = nullptr;
 
 	Fn<void()> _showFinished;

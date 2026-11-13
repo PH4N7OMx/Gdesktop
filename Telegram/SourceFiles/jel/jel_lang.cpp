@@ -72,10 +72,10 @@ void JelLanguage::loadCachedLanguage() {
 	language.resetValue("jel_CreationDateUserConfirmed");
 	language.resetValue("jel_CreationDateSelfConfirmed");
 	const auto pluginStrings = std::map<QString, QString>{
-		{ u"jel_InterfaceStyle"_q, u"Стиль интерфейса"_q },
-		{ u"jel_InterfaceStyleDescription"_q, u"Интерфейс и значки можно выбрать отдельно. Автоматические значки соответствуют стилю интерфейса. Для применения нужен перезапуск. Интерфейс macOS пока экспериментальный."_q },
-		{ u"jel_InterfaceIcons"_q, u"Значки интерфейса"_q },
-		{ u"jel_InterfaceIconsAutomatic"_q, u"Как у интерфейса"_q },
+		{ u"jel_SwitchStyle"_q, u"Стиль переключателей"_q },
+		{ u"jel_SwitchStyleClassic"_q, u"Классический"_q },
+		{ u"jel_SwitchStyleRounded"_q, u"Скруглённый"_q },
+		{ u"jel_SwitchStylePreview"_q, u"Попробуйте переключатели ниже. Стиль применяется сразу."_q },
 		{ u"jel_TranslatorHeader"_q, u"Перевод"_q },
 		{ u"jel_JellyConfiguration"_q, u"Настройки плагина"_q },
 		{ u"jel_JellyDisabled"_q, u"Выключен"_q },

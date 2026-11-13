@@ -6,8 +6,6 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "window/main_window.h"
-#include "jel/ui/macos_interface.h"
-#include "styles/style_jel_styles.h"
 
 #include "api/api_updates.h"
 #include "storage/localstorage.h"
@@ -590,22 +588,6 @@ void MainWindow::init() {
 		}, lifetime());
 	}
 	refreshTitleWidget();
-#ifndef Q_OS_MAC
-	if (Jel::Ui::MacosInterfaceEnabled()) {
-		setBodyTitleArea([=](QPoint point) {
-			using Flag = Ui::WindowTitleHitTestFlag;
-			const auto child = body()->childAt(point);
-			return child && child->property("jel-macos-title-area").toBool()
-				? (Flag::Move | Flag::Maximize | Flag::Menu) : (Flag::None | Flag(0));
-		});
-		_controller->sessionControllerValue() | rpl::on_next([=](Window::SessionController *session) {
-			const auto unified = session && isPrimary();
-			setProperty("jel-macos-unified-title", unified);
-			setTitleStyle(unified ? st::macosUnifiedWindowTitle : st::macosWindowTitle);
-			recountGeometryConstraints();
-		}, lifetime());
-	}
-#endif
 	if constexpr (Core::BuildIsCanary) {
 		setupCanaryTitleLabel();
 	}
@@ -727,7 +709,6 @@ int MainWindow::computeMinHeight() const {
 
 void MainWindow::refreshTitleWidget() {
 	if (Ui::Platform::NativeWindowFrameSupported()
-		&& (Platform::IsMac() || !Jel::Ui::MacosInterfaceEnabled())
 		&& Core::App().settings().nativeWindowFrame()) {
 		setNativeFrame(true);
 		if (Platform::NativeTitleRequiresShadow()) {

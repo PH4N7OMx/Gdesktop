@@ -637,7 +637,6 @@ void JelSettings::validate() {
 		modified = true;
 	}
 
-	validateRange(_interfaceIcons, 0, 2, defaults._interfaceIcons);
 	validateRange(_messageBubbleRadius, 0, 16, defaults._messageBubbleRadius);
 	validateRange(_wideMultiplier, 0.5, 4.0, defaults._wideMultiplier);
 	validateRange(_avatarCorners, 0, JelUiSettings::kMaxAvatarCorners, defaults._avatarCorners);
@@ -812,19 +811,13 @@ void JelSettings::setIncreaseWebviewWidth(bool val) {
 	save();
 }
 
-void JelSettings::setMacosInterface(bool val) {
-	if (_macosInterface.current() == val) {
+void JelSettings::setRoundedSwitches(bool val) {
+	if (_roundedSwitches.current() == val) {
 		return;
 	}
-	_macosInterface = val;
-	save();
-}
-
-void JelSettings::setInterfaceIcons(int val) {
-	if (val < 0 || val > 2 || _interfaceIcons.current() == val) {
-		return;
-	}
-	_interfaceIcons = val;
+	_roundedSwitches = val;
+	JelUiSettings::setRoundedSwitches(val);
+	repaintApp();
 	save();
 }
 
@@ -1406,8 +1399,7 @@ void to_json(nlohmann::json &j, const JelSettings &s) {
 		{"spoofWebviewAsAndroid", s._spoofWebviewAsAndroid.current()},
 		{"increaseWebviewHeight", s._increaseWebviewHeight.current()},
 		{"increaseWebviewWidth", s._increaseWebviewWidth.current()},
-		{"macosInterface", s._macosInterface.current()},
-		{"interfaceIcons", s._interfaceIcons.current()},
+		{"roundedSwitches", s._roundedSwitches.current()},
 		{"materialSwitches", s._materialSwitches.current()},
 		{"removeMessageTail", s._removeMessageTail.current()},
 		{"disableNotificationsDelay", s._disableNotificationsDelay.current()},
@@ -1539,8 +1531,7 @@ void from_json(const nlohmann::json &j, JelSettings &s) {
 	s._spoofWebviewAsAndroid = j.value("spoofWebviewAsAndroid", defaults._spoofWebviewAsAndroid.current());
 	s._increaseWebviewHeight = j.value("increaseWebviewHeight", defaults._increaseWebviewHeight.current());
 	s._increaseWebviewWidth = j.value("increaseWebviewWidth", defaults._increaseWebviewWidth.current());
-	s._macosInterface = j.value("macosInterface", defaults._macosInterface.current());
-	s._interfaceIcons = j.value("interfaceIcons", defaults._interfaceIcons.current());
+	s._roundedSwitches = j.value("roundedSwitches", defaults._roundedSwitches.current());
 	s._materialSwitches = j.value("materialSwitches", defaults._materialSwitches.current());
 	s._removeMessageTail = j.value("removeMessageTail", defaults._removeMessageTail.current());
 	s._disableNotificationsDelay = j.value("disableNotificationsDelay", defaults._disableNotificationsDelay.current());

@@ -108,7 +108,6 @@ private:
 	QPixmap _contentFrom, _contentTo;
 
 	Ui::Animations::Simple _stateChangeAnimation;
-	Ui::Animations::Simple _macosVoiceRound;
 	int _stateChangeFromWidth = 0;
 
 	QString _slowmodeDelayText;

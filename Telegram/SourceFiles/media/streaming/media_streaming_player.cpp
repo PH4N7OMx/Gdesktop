@@ -900,10 +900,6 @@ rpl::producer<bool> Player::fullInCache() const {
 	return _fullInCache.events();
 }
 
-std::vector<std::pair<float64, float64>> Player::bufferedRanges() const {
-	return _file->bufferedRanges();
-}
-
 int64 Player::fileSize() const {
 	return _file->size();
 }

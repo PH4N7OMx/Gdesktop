@@ -34,8 +34,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "qr/qr_generate.h"
 #include "platform/platform_webauthn.h"
 #include "styles/style_intro.h"
-#include "styles/style_jel_styles.h"
-#include "jel/ui/macos_interface.h"
 
 // GummyGram includes
 #include "main/main_domain.h"
@@ -261,7 +259,7 @@ QString QrWidget::accessibilityDescription() {
 }
 
 int QrWidget::errorTop() const {
-	return _macosLayout ? _macosErrorTop : contentTop() + st::introQrErrorTop;
+	return contentTop() + st::introQrErrorTop;
 }
 
 void QrWidget::checkForTokenUpdate(const MTPUpdates &updates) {
@@ -310,7 +308,6 @@ void QrWidget::setupControls() {
 		sizeValue(),
 		code->widthValue()
 	) | rpl::on_next([=](QSize size, int codeWidth) {
-		if (Jel::Ui::MacosInterfaceEnabled()) return;
 		code->moveToLeft(
 			(size.width() - codeWidth) / 2,
 			contentTop() + st::introQrTop);
@@ -324,7 +321,6 @@ void QrWidget::setupControls() {
 		sizeValue(),
 		title->widthValue()
 	) | rpl::on_next([=](QSize size, int titleWidth) {
-		if (Jel::Ui::MacosInterfaceEnabled()) return;
 		title->resizeToWidth(st::introQrTitleWidth);
 		const auto oneLine = st::introQrTitle.style.font->height;
 		const auto topDelta = (title->height() - oneLine);
@@ -341,39 +337,12 @@ void QrWidget::setupControls() {
 	};
 	auto index = 0;
 	for (const auto &text : texts) {
-		const auto native = Jel::Ui::MacosInterfaceEnabled();
-		const auto margins = native
-			? QMargins(st::macosAuthQrTextLeft, st::macosAuthQrTextTop, 0,
-				(index + 1 == int(texts.size())) ? st::macosAuthQrLastBottom : st::macosAuthQrRowBottom)
-			: st::introQrStepMargins;
 		const auto label = steps->add(
 			object_ptr<Ui::FlatLabel>(
 				steps,
 				text(tr::rich),
 				st::introQrStep),
-			margins);
-		if (native) {
-			const auto number = QString::number(++index);
-			const auto badge = Ui::CreateChild<Ui::RpWidget>(steps);
-			badge->resize(st::macosAuthQrBadge, st::macosAuthQrBadge);
-			badge->setAttribute(Qt::WA_TransparentForMouseEvents);
-			badge->paintRequest() | rpl::on_next([=] {
-				auto p = QPainter(badge);
-				p.setRenderHint(QPainter::Antialiasing);
-				p.setPen(Qt::NoPen);
-				p.setBrush(st::activeButtonBg->b);
-				p.drawEllipse(badge->rect());
-				p.setFont(st::macosAuthQrStep.style.font->monospace()->f);
-				p.setPen(st::activeButtonFg->p);
-				p.drawText(badge->rect(), Qt::AlignCenter, number);
-			}, badge->lifetime());
-			label->positionValue() | rpl::on_next([=](QPoint position) {
-				badge->moveToLeft(position.x() - st::macosAuthQrTextLeft,
-					position.y() - st::macosAuthQrTextTop);
-			}, badge->lifetime());
-			style::PaletteChanged() | rpl::on_next([=] { badge->update(); }, badge->lifetime());
-			continue;
-		}
+			st::introQrStepMargins);
 		const auto number = Ui::CreateChild<Ui::FlatLabel>(
 			steps,
 			rpl::single(tr::semibold(QString::number(++index) + ".")),
@@ -392,7 +361,6 @@ void QrWidget::setupControls() {
 		sizeValue(),
 		steps->widthValue()
 	) | rpl::on_next([=](QSize size, int stepsWidth) {
-		if (Jel::Ui::MacosInterfaceEnabled()) return;
 		steps->moveToLeft(
 			(size.width() - stepsWidth) / 2,
 			contentTop() + st::introQrStepsTop);
@@ -405,48 +373,12 @@ void QrWidget::setupControls() {
 		sizeValue(),
 		_skip->widthValue()
 	) | rpl::on_next([=](QSize size, int skipWidth) {
-		if (Jel::Ui::MacosInterfaceEnabled()) return;
 		_skip->moveToLeft(
 			(size.width() - skipWidth) / 2,
 			contentTop() + st::introQrSkipTop);
 	}, _skip->lifetime());
 
 	_skip->setClickedCallback([=] { submit(); });
-	if (Jel::Ui::MacosInterfaceEnabled()) {
-		const auto layingOut = std::make_shared<bool>(false);
-		_macosLayout = [=] {
-			if (*layingOut) return;
-			*layingOut = true;
-			const auto guard = gsl::finally([&] { *layingOut = false; });
-			const auto padding = st::macosAuthPagePadding;
-			const auto available = std::max(0, width() - 2 * padding);
-			title->resizeToWidth(std::min(st::introQrTitleWidth, available));
-			steps->resizeToWidth(std::min(st::introQrLabelsWidth, available));
-			const auto smallGap = st::macosAuthPhoneSeparatorInset;
-			const auto passkeyHeight = _passkey ? _passkey->height() + smallGap : 0;
-			const auto fixed = code->height() + title->height() + steps->height()
-				+ st::normalFont->height + 2 * smallGap + _skip->height() + passkeyHeight;
-			const auto gap = std::clamp((height() - 2 * padding - fixed) / 2,
-				st::macosAuthGapCompact, st::macosAuthGap);
-			const auto total = fixed + 2 * gap;
-			auto top = std::max(st::macosAuthGapCompact, (height() - total) / 2);
-			code->moveToLeft((width() - code->width()) / 2, top);
-			top += code->height() + gap;
-			title->moveToLeft((width() - title->width()) / 2, top);
-			top += title->height() + gap;
-			steps->moveToLeft((width() - steps->width()) / 2, top);
-			_macosErrorTop = top + steps->height() + smallGap;
-			top = _macosErrorTop + st::normalFont->height + smallGap;
-			_skip->moveToLeft((width() - _skip->width()) / 2, top);
-			if (_passkey) {
-				_passkey->moveToLeft((width() - _passkey->width()) / 2,
-					top + _skip->height() + smallGap);
-			}
-			Step::resizeEvent(nullptr);
-		};
-		rpl::combine(sizeValue(), title->heightValue(), steps->heightValue(), _skip->sizeValue())
-		| rpl::on_next([=] { _macosLayout(); }, lifetime());
-	}
 }
 
 void QrWidget::setupPasskeyLink() {
@@ -464,10 +396,6 @@ void QrWidget::setupPasskeyLink() {
 		sizeValue(),
 		_passkey->widthValue()
 	) | rpl::on_next([=](QSize size, int passkeyWidth) {
-		if (_macosLayout) {
-			_macosLayout();
-			return;
-		}
 		_passkey->moveToLeft(
 			(size.width() - passkeyWidth) / 2,
 			(contentTop()

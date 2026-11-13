@@ -14,8 +14,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "intro/intro_email.h"
 #include "intro/intro_qr.h"
 #include "styles/style_intro.h"
-#include "styles/style_jel_styles.h"
-#include "jel/ui/macos_interface.h"
 #include <QtGui/QPainter>
 #include <QtGui/QPaintEvent>
 #include "ui/widgets/buttons.h"
@@ -128,47 +126,12 @@ void PhoneWidget::setupQrLogin() {
 	) | rpl::on_next([=](QSize size, int qrLoginWidth) {
 		qrLogin->moveToLeft(
 			(size.width() - qrLoginWidth) / 2,
-			contentTop() + (Jel::Ui::MacosInterfaceEnabled()
-				? st::macosAuthPhoneQrTop : st::introQrLoginLinkTop));
+			contentTop() + st::introQrLoginLinkTop);
 	}, qrLogin->lifetime());
 
 	qrLogin->setClickedCallback([=] {
 		goNextOrBack<QrWidget>();
 	});
-}
-
-int PhoneWidget::minimumFooterTop() const {
-	return Jel::Ui::MacosInterfaceEnabled()
-		? contentTop() + st::macosAuthPhoneQrTop + st::normalFont->height
-			+ st::macosAuthPhoneSeparatorInset : Step::minimumFooterTop();
-}
-
-int PhoneWidget::nextButtonTop() const {
-	return Jel::Ui::MacosInterfaceEnabled()
-		? contentTop() + st::macosAuthPhoneNextTop : Step::nextButtonTop();
-}
-
-int PhoneWidget::errorTop() const {
-	return Jel::Ui::MacosInterfaceEnabled()
-		? contentTop() + st::macosAuthPhoneErrorTop : Step::errorTop();
-}
-
-void PhoneWidget::paintEvent(QPaintEvent *e) {
-	if (!Jel::Ui::MacosInterfaceEnabled()) {
-		Step::paintEvent(e);
-		return;
-	}
-	auto p = QPainter(this);
-	if (paintAnimated(p, e->rect())) return;
-	p.setRenderHint(QPainter::Antialiasing);
-	p.setPen(Qt::NoPen);
-	p.setBrush(st::boxDividerBg->b);
-	const auto card = QRect(_country->x(), _country->y(), _country->width(),
-		_phone->y() + _phone->height() - _country->y());
-	p.drawRoundedRect(card, st::macosAuthPhoneRadius, st::macosAuthPhoneRadius);
-	const auto inset = st::macosAuthPhoneSeparatorInset;
-	p.fillRect(card.x() + inset, _country->y() + _country->height(),
-		card.width() - 2 * inset, st::lineWidth, st::menuSeparatorFg->b);
 }
 
 void PhoneWidget::resizeEvent(QResizeEvent *e) {

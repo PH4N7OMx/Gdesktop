@@ -6,7 +6,6 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "window/window_session_controller.h"
-#include "jel/ui/macos_interface.h"
 
 #include "apiwrap.h"
 #include "api/api_cloud_password.h"
@@ -3894,7 +3893,7 @@ void SessionController::clearPeerThemeOverride(not_null<PeerData*> peer) {
 void SessionController::pushDefaultChatBackground() {
 	const auto background = Theme::Background();
 	const auto &paper = background->paper();
-	auto chatBackground = Ui::ChatThemeBackground{
+	_defaultChatTheme->setBackground({
 		.prepared = background->prepared(),
 		.preparedForTiled = background->preparedForTiled(),
 		.gradientForFill = background->gradientForFill(),
@@ -3904,14 +3903,7 @@ void SessionController::pushDefaultChatBackground() {
 		.gradientRotation = paper.gradientRotation(),
 		.isPattern = paper.isPattern(),
 		.tile = background->tile(),
-	};
-	if (Jel::Ui::MacosInterfaceEnabled() && !background->isNonDefaultThemeOrBackground()) {
-		chatBackground = Ui::ChatThemeBackground{
-			.colorForFill = st::windowBg->c,
-			.colors = { st::windowBg->c },
-		};
-	}
-	_defaultChatTheme->setBackground(std::move(chatBackground));
+	});
 	const auto &cloud = background->themeObject().cloud;
 	auto bubbles = Ui::ChatThemeBubblesData();
 	if (!cloud.emoticon.isEmpty()) {
@@ -3921,11 +3913,6 @@ void SessionController::pushDefaultChatBackground() {
 		if (variant) {
 			bubbles = Theme::PrepareBubblesData(cloud, *variant);
 		}
-	}
-	if (Jel::Ui::MacosDefaultPaletteEnabled() && bubbles.colors.empty()) {
-		bubbles.colors = Theme::IsNightMode()
-			? std::vector<QColor>{ QColor(0x41, 0x6e, 0xad), QColor(0x38, 0x64, 0xa0) }
-			: std::vector<QColor>{ QColor(0x50, 0x97, 0xcb), QColor(0x48, 0x89, 0xbf) };
 	}
 	if (bubbles.colors != _defaultChatThemeBubblesColors) {
 		_defaultChatThemeBubblesColors = bubbles.colors;

@@ -316,10 +316,8 @@ public:
 	[[nodiscard]] bool spoofWebviewAsAndroid() const { return _spoofWebviewAsAndroid.current(); }
 	[[nodiscard]] bool increaseWebviewHeight() const { return _increaseWebviewHeight.current(); }
 	[[nodiscard]] bool increaseWebviewWidth() const { return _increaseWebviewWidth.current(); }
-	[[nodiscard]] bool macosInterface() const { return _macosInterface.current(); }
-	void setMacosInterface(bool val);
-	[[nodiscard]] int interfaceIcons() const { return _interfaceIcons.current(); }
-	void setInterfaceIcons(int val);
+	[[nodiscard]] bool roundedSwitches() const { return _roundedSwitches.current(); }
+	void setRoundedSwitches(bool val);
 	[[nodiscard]] bool materialSwitches() const { return _materialSwitches.current(); }
 	[[nodiscard]] bool removeMessageTail() const { return _removeMessageTail.current(); }
 	[[nodiscard]] bool disableNotificationsDelay() const { return _disableNotificationsDelay.current(); }
@@ -698,8 +696,7 @@ private:
 	rpl::variable<bool> _spoofWebviewAsAndroid = false;
 	rpl::variable<bool> _increaseWebviewHeight = false;
 	rpl::variable<bool> _increaseWebviewWidth = false;
-	rpl::variable<bool> _macosInterface = false;
-	rpl::variable<int> _interfaceIcons = 0;
+	rpl::variable<bool> _roundedSwitches = false;
 	rpl::variable<bool> _materialSwitches = true;
 	rpl::variable<bool> _removeMessageTail = false;
 	rpl::variable<bool> _disableNotificationsDelay = false;

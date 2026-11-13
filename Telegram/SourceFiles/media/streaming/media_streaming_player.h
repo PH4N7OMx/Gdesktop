@@ -62,7 +62,6 @@ public:
 	[[nodiscard]] rpl::producer<bool> fullInCache() const;
 
 	[[nodiscard]] int64 fileSize() const;
-	[[nodiscard]] std::vector<std::pair<float64, float64>> bufferedRanges() const;
 	[[nodiscard]] QSize videoSize() const;
 	[[nodiscard]] QImage frame(
 		const FrameRequest &request,

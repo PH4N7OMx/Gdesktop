@@ -14,10 +14,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtGui/QFontMetrics>
 
-namespace Lottie {
-class Icon;
-} // namespace Lottie
-
 namespace style {
 struct MediaPlayerPlayIcon;
 struct MediaPlayerPlayButton;
@@ -62,15 +58,11 @@ public:
 	using State = PlayButtonLayout::State;
 
 	PlayButton(QWidget *parent, const style::MediaPlayerPlayButton &st);
-	~PlayButton();
-
-	void enableMacosIcons();
 
 	void setState(State state);
 	void finishTransform();
 
 private:
-	void updateMacosIcon(bool animated);
 	void paintEvent(QPaintEvent *e) override;
 
 	QPoint prepareRippleStartPosition() const override;
@@ -78,9 +70,6 @@ private:
 
 	const style::MediaPlayerPlayButton &_st;
 	PlayButtonLayout _layout;
-	State _state = State::Play;
-	bool _macosIcons = false;
-	std::unique_ptr<Lottie::Icon> _macosIcon;
 
 };
 

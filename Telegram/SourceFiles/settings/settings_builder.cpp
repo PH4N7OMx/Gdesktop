@@ -6,7 +6,6 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "settings/settings_builder.h"
-#include "jel/ui/macos_interface.h"
 
 #include "apiwrap.h"
 #include "lang/lang_keys.h"
@@ -77,7 +76,6 @@ BuildHelper::BuildHelper(
 		.isPaused = isPaused,
 		.highlights = highlights,
 	});
-	Jel::Ui::SetupMacosSettingsPage(builder.container());
 	_method(builder);
 	SetupCopyLinkMenus(controller, *highlights, lifetime);
 
@@ -178,7 +176,6 @@ SectionBuilder::SectionBuilder(BuildContext context)
 }
 
 void SectionBuilder::add(FnMut<void(const BuildContext &ctx)> method) {
-	if (!_addingMacosRow) _macosGroup = nullptr;
 	Expects(method != nullptr);
 
 	method(_context);
@@ -275,25 +272,6 @@ Ui::RpWidget *SectionBuilder::addControl(ControlArgs &&args) {
 }
 
 Ui::SettingsButton *SectionBuilder::addButton(ButtonArgs &&args) {
-	const auto macos = Jel::Ui::MacosInterfaceEnabled();
-	if (macos && args.shown) {
-		_macosGroup = nullptr;
-		auto result = (::Ui::SettingsButton*)nullptr;
-		scope([&] { result = addButton(std::move(args)); }, base::take(args.shown));
-		_macosGroup = nullptr;
-		return result;
-	}
-	auto wctx = std::get_if<WidgetContext>(&_context);
-	const auto outer = wctx ? wctx->container.get() : nullptr;
-	const auto grouped = macos && wctx && !args.container;
-	if (grouped) {
-		if (!_macosGroup || _macosGroupParent != outer) {
-			_macosGroupParent = outer;
-			_macosGroup = Jel::Ui::CreateMacosSettingsGroup(outer);
-		}
-		wctx->container = _macosGroup;
-		_addingMacosRow = true;
-	}
 	const auto &st = args.st ? *args.st : st::settingsButton;
 	auto iconForSearch = IconDescriptor{ args.icon.icon };
 	const auto factory = [&](not_null<Ui::VerticalLayout*> container) {
@@ -317,7 +295,7 @@ Ui::SettingsButton *SectionBuilder::addButton(ButtonArgs &&args) {
 		}
 		return button;
 	};
-	const auto result = static_cast<Ui::SettingsButton*>(addControl({
+	return static_cast<Ui::SettingsButton*>(addControl({
 		.factory = factory,
 		.id = std::move(args.id),
 		.altIds = std::move(args.altIds),
@@ -328,12 +306,6 @@ Ui::SettingsButton *SectionBuilder::addButton(ButtonArgs &&args) {
 		.keywords = std::move(args.keywords),
 		.searchIcon = std::move(iconForSearch),
 	}));
-	if (grouped) {
-		wctx->container = outer;
-		_addingMacosRow = false;
-		if (result) Jel::Ui::AddMacosSettingsRow(_macosGroup, result);
-	}
-	return result;
 }
 
 Ui::SettingsButton *SectionBuilder::addSectionButton(SectionArgs &&args) {
@@ -350,7 +322,6 @@ Ui::SettingsButton *SectionBuilder::addSectionButton(SectionArgs &&args) {
 }
 
 void SectionBuilder::addDivider() {
-	_macosGroup = nullptr;
 	v::match(_context, [&](const WidgetContext &ctx) {
 		Ui::AddDivider(ctx.container);
 	}, [](const SearchContext &) {
@@ -358,7 +329,6 @@ void SectionBuilder::addDivider() {
 }
 
 void SectionBuilder::addSkip() {
-	_macosGroup = nullptr;
 	v::match(_context, [&](const WidgetContext &ctx) {
 		Ui::AddSkip(ctx.container);
 	}, [](const SearchContext &) {
@@ -366,7 +336,6 @@ void SectionBuilder::addSkip() {
 }
 
 void SectionBuilder::addSkip(int height) {
-	_macosGroup = nullptr;
 	v::match(_context, [&](const WidgetContext &ctx) {
 		Ui::AddSkip(ctx.container, height);
 	}, [](const SearchContext &) {
@@ -374,7 +343,6 @@ void SectionBuilder::addSkip(int height) {
 }
 
 void SectionBuilder::addDividerText(rpl::producer<QString> text) {
-	_macosGroup = nullptr;
 	v::match(_context, [&](const WidgetContext &ctx) {
 		Ui::AddDividerText(ctx.container, std::move(text));
 	}, [](const SearchContext &) {
@@ -464,7 +432,6 @@ Ui::Checkbox *SectionBuilder::addCheckbox(CheckboxArgs &&args) {
 }
 
 void SectionBuilder::addSubsectionTitle(SubsectionTitleArgs &&args) {
-	_macosGroup = nullptr;
 	v::match(_context, [&](const WidgetContext &ctx) {
 		const auto title = AddSubsectionTitle(
 			ctx.container,

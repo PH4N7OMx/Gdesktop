@@ -495,10 +495,6 @@ void File::setLoaderPriority(int priority) {
 	_reader->setLoaderPriority(priority);
 }
 
-std::vector<std::pair<float64, float64>> File::bufferedRanges() const {
-	return _reader->bufferedRanges();
-}
-
 int64 File::size() const {
 	return _reader->size();
 }

@@ -166,8 +166,6 @@ private:
 	[[nodiscard]] int titleMostLeft() const;
 	[[nodiscard]] int statusMostLeft() const;
 	[[nodiscard]] QRect userpicGeometry() const;
-	[[nodiscard]] int profilePhotoSize() const;
-	[[nodiscard]] int profileTopicShift() const;
 	void updateGiftButtonsGeometry(
 		float64 progressCurrent,
 		const QRect &userpicRect);

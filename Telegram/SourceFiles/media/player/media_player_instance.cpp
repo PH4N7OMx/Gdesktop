@@ -6,7 +6,6 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "media/player/media_player_instance.h"
-#include "jel/ui/macos_interface.h"
 
 #include "data/data_document.h"
 #include "data/data_session.h"
@@ -1403,13 +1402,6 @@ rpl::producer<OrderMode> Instance::orderChanges(
 		: rpl::never<OrderMode>();
 }
 
-std::vector<std::pair<float64, float64>> Instance::bufferedRanges(AudioMsgId::Type type) const {
-	const auto data = getData(type);
-	return (data && data->streamed)
-		? data->streamed->instance.player().bufferedRanges()
-		: std::vector<std::pair<float64, float64>>();
-}
-
 TrackState Instance::getState(AudioMsgId::Type type) const {
 	if (const auto data = getData(type)) {
 		if (data->streamed) {
@@ -1570,9 +1562,7 @@ void Instance::handleStreamingUpdate(
 	}, [&](UpdateVideo) {
 		emitUpdate(data->type);
 	}, [&](PreloadedAudio) {
-		if (Jel::Ui::MacosInterfaceEnabled()) {
-			emitUpdate(data->type);
-		}
+		//emitUpdate(data->type, [](AudioMsgId) { return true; });
 	}, [&](UpdateAudio) {
 		emitUpdate(data->type);
 	}, [](WaitingForData) {

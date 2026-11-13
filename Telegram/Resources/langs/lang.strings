@@ -9621,12 +9621,12 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 
 
-"jel_InterfaceStyle" = "Interface style";
-"jel_InterfaceStyleDescription" = "Choose the layout and icon set separately. Automatic icons follow the interface style. Restart the app to apply changes. The macOS layout is experimental.";
+
+
 "jel_TranslatorHeader" = "Translation";
 
-"jel_InterfaceIcons" = "Interface icons";
-"jel_InterfaceIconsAutomatic" = "Match interface style";
+
+
 
 "jel_PlayerAddToProfile" = "Add to Profile";
 "jel_PlayerRemoveFromProfile" = "Remove";
@@ -9675,3 +9675,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "jel_JellyV2RollbackNotice" = "Restore the previous package and its data snapshot? The plugin will be stopped and must be enabled again. Current saved permissions will be cleared.";
 "jel_JellyV2RemoveData" = "Also delete this plugin's settings and saved data. Permissions are always removed.";
 "jel_JellyV2Disable" = "Disable";
+
+"jel_SwitchStyle" = "Switch style";
+"jel_SwitchStyleClassic" = "Classic";
+"jel_SwitchStyleRounded" = "Rounded";
+"jel_SwitchStylePreview" = "Try the switches below. Changes apply immediately.";

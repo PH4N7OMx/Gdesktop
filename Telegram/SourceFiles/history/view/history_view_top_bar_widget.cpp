@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/view/history_view_top_bar_widget.h"
+#include "styles/style_jel_styles.h"
 
 #include "history/history.h"
 #include "history/view/history_view_send_action.h"
@@ -76,11 +77,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 // GummyGram includes
 #include "jel/jel_settings.h"
-#include "jel/ui/macos_interface.h"
 #include "boxes/peers/edit_participants_box.h"
 #include "data/data_chat_filters.h"
 #include "history/admin_log/history_admin_log_section.h"
-#include "styles/style_jel_styles.h"
 #include "styles/style_jel_icons.h"
 
 
@@ -1204,8 +1203,7 @@ void TopBarWidget::updateControlsGeometry() {
 	const auto otherButtonsTop = std::max(selectedButtonsTop, searchFieldTop)
 		+ st::topBarHeight;
 	const auto backButtonTop = selectedButtonsTop + st::topBarHeight;
-	const auto controlsInset = Jel::Ui::MacosTitleControlsInset(this);
-	auto buttonsLeft = controlsInset + st::topBarActionSkip
+	auto buttonsLeft = st::topBarActionSkip
 		+ (_controller->adaptive().isOneColumn() ? 0 : st::lineWidth);
 	auto buttonsWidth = (_forward->isHidden() ? 0 : _forward->contentWidth())
 		+ (_sendNow->isHidden() ? 0 : _sendNow->contentWidth())
@@ -1275,13 +1273,13 @@ void TopBarWidget::updateControlsGeometry() {
 	_clear->moveToRight(st::topBarActionSkip, selectedButtonsTop);
 
 	if (!_cancelChoose->isHidden()) {
-		_leftTaken = controlsInset;
+		_leftTaken = 0;
 		_cancelChoose->moveToLeft(_leftTaken, otherButtonsTop);
 		_leftTaken += _cancelChoose->width();
 	} else if (_back->isHidden()) {
-		_leftTaken = controlsInset + st::topBarArrowPadding.right();
+		_leftTaken = st::topBarArrowPadding.right();
 	} else {
-		_leftTaken = controlsInset + anim::interpolate(
+		_leftTaken = anim::interpolate(
 			0,
 			(_narrowWidth - _back->width()) / 2,
 			_narrowRatio);
@@ -1294,7 +1292,7 @@ void TopBarWidget::updateControlsGeometry() {
 			const auto middle = (_narrowWidth - infoSt.photoSize) / 2;
 			_leftTaken = anim::interpolate(
 				_leftTaken,
-				controlsInset + middle - infoSt.photoPosition.x(),
+				middle - infoSt.photoPosition.x(),
 				_narrowRatio);
 		}
 		_info->moveToLeft(_leftTaken, otherButtonsTop);
@@ -1306,7 +1304,7 @@ void TopBarWidget::updateControlsGeometry() {
 
 	if (_searchField) {
 		const auto fieldLeft = _back->isHidden()
-			? controlsInset + st::topBarArrowPadding.right()
+			? st::topBarArrowPadding.right()
 			: _leftTaken;
 		const auto fieldTop = searchFieldTop
 			+ (height() - _searchField->height()) / 2;

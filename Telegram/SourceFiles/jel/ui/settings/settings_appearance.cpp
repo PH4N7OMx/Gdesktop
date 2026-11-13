@@ -26,6 +26,7 @@
 #include "styles/style_settings.h"
 #include "ui/painter.h"
 #include "ui/widgets/labels.h"
+#include "ui/widgets/checkbox.h"
 #include "ui/wrap/padding_wrap.h"
 #include "ui/wrap/vertical_layout.h"
 #include "window/window_session_controller.h"
@@ -190,49 +191,37 @@ void BuildAppearance(SectionBuilder &builder, JelSectionBuilder &jel) {
 	builder.addSubsectionTitle(tr::jel_CategoryAppearance());
 
 	jel.addChooseButton({
-		.id = u"jel/interface"_q,
-		.title = tr::jel_InterfaceStyle(),
-		.boxTitle = tr::jel_InterfaceStyle(),
-		.initialSelection = settings->macosInterface() ? 1 : 0,
-		.options = { u"Telegram Desktop"_q, u"macOS"_q },
-		.setter = [controller = builder.controller()](int index) {
-			auto &settings = JelSettings::getInstance();
-			if (settings.macosInterface() != (index == 1)) {
-				settings.setMacosInterface(index == 1);
-				ShowRestartPrompt(controller);
-			}
-		},
-		.keywords = { u"macOS"_q, u"interface"_q },
-	});
-	jel.addChooseButton({
-		.id = u"jel/interfaceIcons"_q,
-		.title = tr::jel_InterfaceIcons(),
-		.boxTitle = tr::jel_InterfaceIcons(),
-		.initialSelection = settings->interfaceIcons(),
+		.id = u"jel/switchStyle"_q,
+		.altIds = { u"jel/materialSwitches"_q, u"jel/newSwitchStyle"_q },
+		.title = tr::jel_SwitchStyle(),
+		.boxTitle = tr::jel_SwitchStyle(),
+		.initialSelection = settings->roundedSwitches() ? 1 : 0,
 		.options = {
-			tr::jel_InterfaceIconsAutomatic(tr::now),
-			u"Telegram Desktop"_q,
-			u"macOS"_q,
+			tr::jel_SwitchStyleClassic(tr::now),
+			tr::jel_SwitchStyleRounded(tr::now),
 		},
-		.setter = [controller = builder.controller()](int index) {
-			auto &settings = JelSettings::getInstance();
-			if (settings.interfaceIcons() != index) {
-				settings.setInterfaceIcons(index);
-				ShowRestartPrompt(controller);
-			}
+		.setter = [](int index) {
+			JelSettings::getInstance().setRoundedSwitches(index == 1);
 		},
-		.keywords = { u"macOS"_q, u"icons"_q },
 	});
-	builder.addDividerText(tr::jel_InterfaceStyleDescription());
+	builder.addDividerText(tr::jel_SwitchStylePreview());
+	builder.add([](const WidgetContext &ctx) -> SectionBuilder::WidgetToAdd {
+		auto preview = object_ptr<Ui::VerticalLayout>(ctx.container);
+		for (const auto rounded : { false, true }) {
+			auto view = std::make_unique<Ui::ToggleView>(st::defaultToggle, rounded);
+			view->setRoundedStyle(rounded);
+			preview->add(object_ptr<Ui::Checkbox>(
+				preview.data(),
+				rounded
+					? tr::jel_SwitchStyleRounded(tr::now)
+					: tr::jel_SwitchStyleClassic(tr::now),
+				st::defaultCheckbox,
+				std::move(view)), st::settingsCheckboxPadding);
+		}
+		return { .widget = std::move(preview) };
+	});
 	builder.addSkip();
 
-	jel.addSettingToggle({
-		.id = u"jel/materialSwitches"_q,
-		.altIds = { u"jel/newSwitchStyle"_q },
-		.title = tr::jel_MaterialSwitches(),
-		.getter = &JelSettings::materialSwitches,
-		.setter = &JelSettings::setMaterialSwitches,
-	});
 	jel.addSettingToggle({
 		.id = u"jel/disableCustomBackgrounds"_q,
 		.altIds = { u"jel/customThemes"_q },

@@ -8,8 +8,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/controls/send_button.h"
 
 #include "styles/palette.h"
-#include "jel/ui/macos_interface.h"
-#include "jel/ui/macos_recording.h"
 
 #include "lang/lang_tag.h"
 #include "lottie/lottie_icon.h"
@@ -63,7 +61,6 @@ void SendButton::setState(State state) {
 		_contentFrom = grabContent();
 	}
 
-	if (!voiceRoundTransition) _macosVoiceRound.stop();
 	if (_voiceRoundAnimating && !voiceRoundTransition) {
 		_voiceRoundAnimating = false;
 	}
@@ -115,14 +112,7 @@ void SendButton::setState(State state) {
 		Unexpected("Send button type.");
 	}());
 
-	if (voiceRoundTransition && Jel::Ui::MacosInterfaceIconsEnabled()) {
-		_voiceRoundAnimating = true;
-		_macosVoiceRound.start([=] {
-			_voiceRoundAnimating = _macosVoiceRound.animating();
-			update();
-		}, _macosVoiceRound.value(previousType == Type::Round ? 1. : 0.),
-			newType == Type::Round ? 1. : 0., 500, Jel::Ui::MacosRecordingSpring);
-	} else if (voiceRoundTransition) {
+	if (voiceRoundTransition) {
 		_voiceRoundAnimating = true;
 
 		const auto toRound = (newType == Type::Round);
@@ -161,8 +151,6 @@ void SendButton::setState(State state) {
 
 void SendButton::finishAnimating() {
 	_stateChangeAnimation.stop();
-	_macosVoiceRound.stop();
-	if (Jel::Ui::MacosInterfaceIconsEnabled()) _voiceRoundAnimating = false;
 	updateSize();
 	update();
 }
@@ -271,12 +259,6 @@ void SendButton::paintRound(QPainter &p, bool over) {
 }
 
 void SendButton::paintLottieIcon(QPainter &p, int index, bool over) {
-	if (Jel::Ui::MacosInterfaceIconsEnabled()) {
-		const auto color = Jel::Ui::MacosInterfaceEnabled() ? st::windowFg->c
-			: over ? st::historyRecordVoiceFgOver->c : st::historyRecordVoiceFg->c;
-		Jel::Ui::PaintMacosRecordingGlyph(p, rect(), index == kRoundToVoiceIndex ? 1. : 0., color);
-		return;
-	}
 	auto &icon = _voiceRoundIcons[index];
 	if (!icon) {
 		initVoiceRoundIcon(index);
@@ -319,23 +301,6 @@ void SendButton::paintCancel(QPainter &p, bool over) {
 
 void SendButton::paintSend(QPainter &p, bool over) {
 	const auto &sendIcon = over ? _st.inner.iconOver : _st.inner.icon;
-	if (Jel::Ui::MacosInterfaceEnabled()) {
-		const auto size = QSize(style::ConvertScale(40), style::ConvertScale(32));
-		const auto pill = QRect(QPoint((width() - size.width()) / 2,
-			(height() - size.height()) / 2), size);
-		auto hq = PainterHighQualityEnabler(p);
-		p.setPen(Qt::NoPen);
-		auto background = _state.fillBgOverride.isValid()
-			? _state.fillBgOverride : st::windowBgActive->c;
-		if (isDisabled()) background.setAlphaF(background.alphaF() * 0.5);
-		else if (over) background = background.lighter(108);
-		p.setBrush(background);
-		p.drawRoundedRect(pill, pill.height() / 2., pill.height() / 2.);
-		const auto position = QPoint((width() - sendIcon.width()) / 2,
-			(height() - sendIcon.height()) / 2);
-		sendIcon.paint(p, position, width(), QColor(Qt::white));
-		return;
-	}
 	if (const auto padding = _st.sendIconFillPadding; padding > 0) {
 		const auto ellipse = sendEllipseRect();
 		{
@@ -620,12 +585,7 @@ void SendButton::paintVoiceRoundIcon(QPainter &p, bool over) {
 		: st::historyRecordVoiceFgOver->c;
 	const auto toVideo = (_state.type == Type::Round);
 	const auto index = toVideo ? kVoiceToRoundIndex : kRoundToVoiceIndex;
-	if (Jel::Ui::MacosInterfaceIconsEnabled()) {
-		Jel::Ui::PaintMacosRecordingGlyph(p, rect(), _macosVoiceRound.value(toVideo ? 1. : 0.),
-			Jel::Ui::MacosInterfaceEnabled() ? st::windowFg->c : color);
-	} else {
-		_voiceRoundIcons[index]->paintInCenter(p, rect(), color);
-	}
+	_voiceRoundIcons[index]->paintInCenter(p, rect(), color);
 	if (_state.forbidden) {
 		p.setOpacity(1.);
 	}

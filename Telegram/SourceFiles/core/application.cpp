@@ -7,7 +7,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "core/application.h"
 
-#include "jel/ui/macos_interface.h"
 
 #include "data/data_abstract_structure.h"
 #include "data/data_channel.h"
@@ -325,7 +324,7 @@ void Application::run() {
 
 	startLocalStorage();
 
-	style::SetCustomFont(Jel::Ui::MacosFontFamily(settings().customFontFamily()));
+	style::SetCustomFont(settings().customFontFamily());
 	style::internal::StartFonts();
 
 	Test::ApplyStartupOverrides();
@@ -354,7 +353,6 @@ void Application::run() {
 
 	JelInfra::init();
 	style::StartManager(cScale());
-	Jel::Ui::StartMacosInterface();
 	Ui::Accessible::Init();
 	Ui::InitTextOptions();
 	Ui::StartCachedCorners();

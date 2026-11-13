@@ -6,7 +6,6 @@ For license and copyright information please follow this link:
 https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "info/info_top_bar.h"
-#include "jel/ui/macos_interface.h"
 
 #include "dialogs/ui/dialogs_stories_list.h"
 #include "lang/lang_keys.h"
@@ -398,7 +397,6 @@ void TopBar::updateControlsGeometry(int newWidth) {
 }
 
 void TopBar::updateDefaultControlsGeometry(int newWidth) {
-	const auto controlsInset = Jel::Ui::MacosTitleControlsInset(this);
 	auto right = 0;
 	for (auto &button : _buttons) {
 		if (!button) {
@@ -417,18 +415,18 @@ void TopBar::updateDefaultControlsGeometry(int newWidth) {
 	}
 	if (_back) {
 		_back->setGeometryToLeft(
-			controlsInset,
 			0,
-			std::max(0, newWidth - right - controlsInset),
+			0,
+			newWidth - right,
 			_back->height(),
 			newWidth);
 	}
 	if (_title) {
-		const auto x = controlsInset + (_back
+		const auto x = _back
 			? _st.back.width
 			: _subtitle
 			? _st.titleWithSubtitlePosition.x()
-			: _st.titlePosition.x());
+			: _st.titlePosition.x();
 		const auto y = _subtitle
 			? _st.titleWithSubtitlePosition.y()
 			: _st.titlePosition.y();
@@ -436,9 +434,9 @@ void TopBar::updateDefaultControlsGeometry(int newWidth) {
 		_title->entity()->resizeToWidth(available);
 		_title->moveToLeft(x, y, newWidth);
 		if (_subtitle) {
-			const auto subtitleX = controlsInset + (_back
+			const auto subtitleX = _back
 				? _st.back.width
-				: _st.subtitlePosition.x());
+				: _st.subtitlePosition.x();
 			_subtitle->entity()->resizeToWidth(
 				std::max(newWidth - right - subtitleX, 0));
 			_subtitle->moveToLeft(
@@ -470,7 +468,7 @@ void TopBar::updateSelectionControlsGeometry(int newWidth) {
 		right += _forward->width();
 	}
 
-	auto left = Jel::Ui::MacosTitleControlsInset(this);
+	auto left = 0;
 	_cancelSelection->moveToLeft(left, 0);
 	left += _cancelSelection->width();
 

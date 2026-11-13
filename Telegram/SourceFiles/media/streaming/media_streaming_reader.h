@@ -50,7 +50,6 @@ public:
 	// Any thread.
 	[[nodiscard]] int64 size() const;
 	[[nodiscard]] bool isRemoteLoader() const;
-	[[nodiscard]] std::vector<std::pair<float64, float64>> bufferedRanges() const;
 
 	// Single thread.
 	[[nodiscard]] FillState fill(
@@ -154,7 +153,6 @@ private:
 		void headerDone(bool fromCache);
 		[[nodiscard]] int headerSize() const;
 		[[nodiscard]] bool fullInCache() const;
-		[[nodiscard]] std::vector<std::pair<float64, float64>> bufferedRanges() const;
 		[[nodiscard]] bool headerWontBeFilled() const;
 		[[nodiscard]] bool headerModeUnknown() const;
 		[[nodiscard]] bool isFullInHeader() const;
@@ -219,7 +217,6 @@ private:
 	void loadAtOffset(uint32 offset);
 	void checkLoadWillBeFirst(uint32 offset);
 	bool processLoadedParts();
-	void refreshBufferedRanges();
 
 	bool checkForSomethingMoreReceived();
 
@@ -255,7 +252,6 @@ private:
 	PriorityQueue _loadingOffsets;
 
 	Slices _slices;
-	base::thread_safe_wrap<std::vector<std::pair<float64, float64>>> _bufferedRanges;
 
 	// Even if streaming had failed, the Reader can work for the downloader.
 	std::optional<Error> _streamingError;

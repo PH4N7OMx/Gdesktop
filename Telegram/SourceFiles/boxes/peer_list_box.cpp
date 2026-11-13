@@ -48,8 +48,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 // GummyGram includes
 #include "styles/style_jel_icons.h"
 #include "jel/ui/jel_userpic.h"
-#include "jel/ui/macos_interface.h"
-#include "styles/style_jel_styles.h"
 
 
 [[nodiscard]] PeerListRowId UniqueRowIdFromString(const QString &d) {
@@ -443,15 +441,7 @@ PeerListController::PeerListController(
 PeerListController::~PeerListController() = default;
 
 const style::PeerList &PeerListController::computeListSt() const {
-	const auto &original = _listSt ? *_listSt : st::peerListBox;
-	if (!Jel::Ui::MacosInterfaceEnabled()) return original;
-	if (_macosSource != &original) {
-		_macosSource = &original;
-		auto native = Jel::Ui::PrepareMacosPeerListStyle(original);
-		_macosPrepared = native ? native.get() : &original;
-		if (native) _macosStyles.push_back(std::move(native));
-	}
-	return *_macosPrepared;
+	return _listSt ? *_listSt : st::peerListBox;
 }
 
 void PeerListController::showFinished() {
@@ -1145,8 +1135,7 @@ void PeerListRow::paintDisabledCheckUserpic(
 }
 
 void PeerListRow::setStatusText(const QString &text) {
-	_status.setText(Jel::Ui::MacosInterfaceEnabled()
-		? st::macosPeerStatusStyle : st::defaultTextStyle, text, Ui::NameTextOptions());
+	_status.setText(st::defaultTextStyle, text, Ui::NameTextOptions());
 }
 
 float64 PeerListRow::checkedRatio() {
@@ -2222,13 +2211,6 @@ void PeerListContent::paintRowContent(
 
 	p.fillRect(0, 0, outerWidth, _rowHeight, bg);
 	row->paintRipple(p, st, 0, 0, outerWidth);
-	if (Jel::Ui::MacosInterfaceEnabled() && st.photoSize == st::macosPeerItem.photoSize
-		&& (st.height == st::macosPeerItem.height || st.height == st::macosRecentCalls.item.height)
-		&& !selected && getRow(RowIndex(index.value + 1))) {
-		const auto left = st.namePosition.x();
-		p.fillRect(style::RightToLeft() ? 0 : left, _rowHeight - st::lineWidth,
-			std::max(0, outerWidth - left), st::lineWidth, st::menuSeparatorFg);
-	}
 	row->paintUserpic(
 		p,
 		st,

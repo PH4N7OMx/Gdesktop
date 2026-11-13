@@ -8,7 +8,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "info/profile/info_profile_top_bar.h"
 
 #include "styles/palette.h"
-#include "jel/ui/macos_interface.h"
 
 #include "api/api_peer_colors.h"
 #include "api/api_peer_photo.h"
@@ -430,9 +429,9 @@ TopBar::TopBar(
 	QWidget::setMinimumHeight(st::infoLayerTopBarHeight);
 	QWidget::setMaximumHeight(_savedMessages
 		? st::infoLayerTopBarHeight
-		: (_hasActions
-			? st::infoProfileTopBarHeightMax
-			: st::infoProfileTopBarNoActionsHeightMax) - profileTopicShift());
+		: _hasActions
+		? st::infoProfileTopBarHeightMax
+		: st::infoProfileTopBarNoActionsHeightMax);
 	return QWidget::minimumHeight()
 		+ (!_hasActions
 			? 0
@@ -1951,15 +1950,15 @@ void TopBar::paintEdges(QPainter &p, const QRect &clip) const {
 }
 
 int TopBar::titleMostLeft() const {
-	return Jel::Ui::MacosTitleControlsInset(this) + ((_back && _back->toggled())
+	return (_back && _back->toggled())
 		? _back->width()
-		: _st.titleWithSubtitlePosition.x());
+		: _st.titleWithSubtitlePosition.x();
 }
 
 int TopBar::statusMostLeft() const {
-	return Jel::Ui::MacosTitleControlsInset(this) + ((_back && _back->toggled())
+	return (_back && _back->toggled())
 		? _back->width()
-		: _st.subtitlePosition.x());
+		: _st.subtitlePosition.x();
 }
 
 int TopBar::calculateRightButtonsWidth() const {
@@ -1983,7 +1982,6 @@ int TopBar::calculateRightButtonsWidth() const {
 }
 
 void TopBar::updateLabelsPosition() {
-	if (_back) _back->moveToLeft(Jel::Ui::MacosTitleControlsInset(this), 0);
 	if (width() <= 0) {
 		return;
 	}
@@ -2069,7 +2067,7 @@ void TopBar::updateTitlePosition(float64 progressCurrent) {
 
 	const auto titleTop = anim::interpolate(
 		_st.titleWithSubtitlePosition.y(),
-		st::infoProfileTopBarTitleTop - profileTopicShift(),
+		st::infoProfileTopBarTitleTop,
 		progressCurrent);
 
 	const auto badgeTop = titleTop;
@@ -2134,7 +2132,7 @@ void TopBar::updateStatusPosition(float64 progressCurrent) {
 	if (_forumButton) {
 		const auto buttonTop = anim::interpolate(
 			_st.subtitlePosition.y(),
-			st::infoProfileTopBarStatusTop - profileTopicShift(),
+			st::infoProfileTopBarStatusTop,
 			progressCurrent);
 		const auto mostLeft = statusMostLeft();
 		const auto buttonMostLeft = anim::interpolate(
@@ -2173,7 +2171,7 @@ void TopBar::updateStatusPosition(float64 progressCurrent) {
 		* (_tabSwapShown ? 1. : -1.)));
 	const auto statusTop = anim::interpolate(
 		_st.subtitlePosition.y(),
-		st::infoProfileTopBarStatusTop - profileTopicShift(),
+		st::infoProfileTopBarStatusTop,
 		progressCurrent) + swapShift;
 	const auto totalElementsWidth = _status->width()
 		+ (_starsRating ? _starsRating->width() : 0)
@@ -2786,19 +2784,10 @@ void TopBar::resizeEvent(QResizeEvent *e) {
 	RpWidget::resizeEvent(e);
 }
 
-int TopBar::profilePhotoSize() const {
-	return Jel::Ui::MacosInterfaceEnabled() && _topic
-		? style::ConvertScale(60) : st::infoProfileTopBarPhotoSize;
-}
-
-int TopBar::profileTopicShift() const {
-	return Jel::Ui::MacosInterfaceEnabled() && _topic ? style::ConvertScale(60) : 0;
-}
-
 QRect TopBar::userpicGeometry() const {
 	constexpr auto kMinScale = 0.25;
 	const auto progressCurrent = _progress.current();
-	const auto fullSize = profilePhotoSize();
+	const auto fullSize = st::infoProfileTopBarPhotoSize;
 	const auto minSize = fullSize * kMinScale;
 	const auto size = anim::interpolate(minSize, fullSize, progressCurrent);
 	const auto x = (width() - size) / 2;
@@ -2840,7 +2829,7 @@ void TopBar::paintUserpic(QPainter &p, const QRect &geometry) {
 		if (_userpicUniqueKey != key) {
 			_userpicUniqueKey = key;
 			_cachedUserpic = Ui::EmptyUserpic::GenerateSavedMessages(
-				profilePhotoSize() * style::DevicePixelRatio());
+				st::infoProfileTopBarPhotoSize * style::DevicePixelRatio());
 			_cachedUserpic.setDevicePixelRatio(style::DevicePixelRatio());
 		}
 		auto hq = PainterHighQualityEnabler(p);
@@ -2848,7 +2837,7 @@ void TopBar::paintUserpic(QPainter &p, const QRect &geometry) {
 		return;
 	}
 	if (_videoUserpicPlayer && _videoUserpicPlayer->ready()) {
-		const auto size = profilePhotoSize();
+		const auto size = st::infoProfileTopBarPhotoSize;
 		const auto paused = _gifPausedChecker();
 		const auto frame = _videoUserpicPlayer->frame(
 			Size(size),
@@ -2871,7 +2860,7 @@ void TopBar::paintUserpic(QPainter &p, const QRect &geometry) {
 		_waitingUserpicCloudLoad = false;
 		_userpicUniqueKey = key;
 		_userpicJelState = jelState;
-		const auto fullSize = profilePhotoSize();
+		const auto fullSize = st::infoProfileTopBarPhotoSize;
 		const auto scaled = fullSize * style::DevicePixelRatio();
 		auto image = QImage();
 		if (const auto broadcast = _peer->monoforumBroadcast()) {
@@ -4042,13 +4031,6 @@ rpl::producer<QString> TopBar::nameValue() const {
 
 TopBarActionButtonStyle TopBar::mapActionStyle(
 		std::optional<QColor> c) const {
-	if (Jel::Ui::MacosInterfaceEnabled() && !c) {
-		return TopBarActionButtonStyle{
-			.bgColor = st::windowBgOver->c,
-			.fgColor = st::windowActiveTextFg->c,
-			.shadowColor = std::nullopt,
-		};
-	}
 	if (c) {
 		return TopBarActionButtonStyle{
 			.bgColor = Ui::BlendColors(

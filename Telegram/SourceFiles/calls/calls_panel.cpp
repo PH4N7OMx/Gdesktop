@@ -7,7 +7,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "calls/calls_panel.h"
 #include "jel/jel_settings.h"
-#include "jel/ui/macos_interface.h"
 #include "jel/features/streamer_mode/streamer_mode.h"
 
 #include "boxes/peers/replace_boost_box.h" // CreateUserpicsWithMoreBadge
@@ -86,22 +85,6 @@ constexpr auto kHideControlsTimeout = 5 * crl::time(1000);
 constexpr auto kHideControlsQuickTimeout = 2 * crl::time(1000);
 constexpr auto kNameFadeDuration = crl::time(70);
 
-enum class MacosCallAction { Accept, Decline, Redial };
-
-const QImage &MacosCallActionImage(MacosCallAction action) {
-	static const auto images = [] {
-		auto result = std::array<QImage, 3>{
-			QImage(u":/gui/art/jel/macos/callaccept.png"_q),
-			QImage(u":/gui/art/jel/macos/calldecline.png"_q),
-			QImage(u":/gui/art/jel/macos/callredial.png"_q),
-		};
-		for (auto &image : result) image.setDevicePixelRatio(2.);
-		return result;
-	}();
-	return images[int(action)];
-}
-
-
 [[nodiscard]] QByteArray BatterySvg(
 		const QSize &s,
 		const QColor &c) {
@@ -168,10 +151,6 @@ Panel::Panel(not_null<Call*> call)
 , _status(std::in_place, widget(), st::callStatus)
 , _hideControlsTimer([=] { requestControlsHidden(true); })
 , _controlsShownForceTimer([=] { controlsShownForce(false); }) {
-	if (Jel::Ui::MacosInterfaceIconsEnabled()) {
-		_decline->entity()->setImageOverride(MacosCallActionImage(MacosCallAction::Decline));
-		_cancel->entity()->setImageOverride(MacosCallActionImage(MacosCallAction::Decline));
-	}
 	_decline->setDuration(st::callPanelDuration);
 	_decline->entity()->setText(tr::lng_call_decline());
 	_decline->entity()->setAccessibleName(tr::lng_call_decline(tr::now));
@@ -1895,12 +1874,6 @@ void Panel::refreshAnswerHangupRedialLabel() {
 		}
 		Unexpected("AnswerHangupRedialState value.");
 	}();
-	if (Jel::Ui::MacosInterfaceIconsEnabled()) {
-		_answerHangupRedial->setImageOverride(
-			MacosCallActionImage(*_answerHangupRedialState == AnswerHangupRedialState::Redial
-				? MacosCallAction::Redial : MacosCallAction::Accept),
-			MacosCallActionImage(MacosCallAction::Decline));
-	}
 	_answerHangupRedial->setText(phrase());
 	_answerHangupRedial->setAccessibleName(phrase(tr::now));
 }

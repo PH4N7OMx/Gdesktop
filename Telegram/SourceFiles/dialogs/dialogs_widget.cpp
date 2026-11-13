@@ -112,8 +112,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 // GummyGram includes
 #include "jel/jel_settings.h"
-#include "jel/ui/macos_interface.h"
-#include "styles/style_jel_styles.h"
 #include "ui/widgets/labels.h"
 #include "ui/widgets/popup_menu.h"
 #include "boxes/peer_list_controllers.h"
@@ -325,61 +323,6 @@ Widget::Widget(
 , _searchTimer([=] { search(); })
 , _peerSearch(&controller->session(), Api::PeerSearch::Type::WithSponsored)
 , _singleMessageSearch(&controller->session()) {
-	if (Jel::Ui::MacosInterfaceEnabled() && _layout == Layout::Main) {
-		_macosNavigation = Jel::Ui::CreateMacosNavigation(this, controller);
-		_macosHeader.create(this);
-		_macosHeader->setProperty("jel-macos-title-area", true);
-		_macosHeader->paintRequest() | rpl::on_next([=](QRect clip) {
-			QPainter(_macosHeader.data()).fillRect(clip, st::dialogsBg->c);
-		}, _macosHeader->lifetime());
-		_macosAccount.create(_macosHeader);
-		_macosAccount->setClickedCallback([=] { showMainMenu(); });
-		_macosAccount->setIsMenuButton(true);
-		_macosAccount->setAccessibleName(tr::lng_main_menu(tr::now));
-		_macosTitle.create(_macosAccount, st::macosSettingsName);
-		_macosTitle->setAttribute(Qt::WA_TransparentForMouseEvents);
-		_macosStatusPanel = std::make_unique<Info::Profile::EmojiStatusPanel>();
-		_macosAccountBadge = std::make_unique<Info::Profile::Badge>(
-			_macosAccount, st::settingsCoverBadge, &controller->session(),
-			Info::Profile::BadgeContentForPeer(controller->session().user()),
-			_macosStatusPanel.get(), [=] {
-				return controller->isGifPausedAtLeastFor(Window::GifPauseReason::Layer);
-			}, 0, Info::Profile::BadgeType::Premium);
-		_macosAccountBadge->setPremiumClickCallback([=] {
-			if (const auto widget = _macosAccountBadge->widget()) {
-				_macosStatusPanel->show(controller, widget, _macosAccountBadge->sizeTag());
-			}
-		});
-		_macosAccountBadge->updated() | rpl::on_next([=] {
-			crl::on_main(this, [=] { updateControlsGeometry(); });
-		}, _macosAccount->lifetime());
-		Info::Profile::NameValue(controller->session().user()) | rpl::on_next([=](const QString &name) {
-			_macosTitle->setText(name);
-			crl::on_main(this, [=] { updateControlsGeometry(); });
-		}, _macosTitle->lifetime());
-		_macosCompose.create(_macosHeader, st::topBarSearch);
-		_macosCompose->setIconOverride(Jel::Ui::MacosInterfaceIconsEnabled()
-			? &st::macosComposeIcon : &st::menuIconEdit);
-		_macosCompose->setAccessibleName(tr::lng_profile_send_message(tr::now));
-		_macosCompose->setIsMenuButton(true);
-		_macosCompose->setClickedCallback([=] {
-			_macosComposeMenu.destroy();
-			_macosComposeMenu.create(this, st::popupMenuWithIcons);
-			_macosComposeMenu->addAction(tr::lng_profile_send_message(tr::now), [=] {
-				controller->show(PrepareContactsBox(controller));
-			}, &st::menuIconChatBubble);
-			_macosComposeMenu->addAction(tr::lng_create_group_title(tr::now), [=] {
-				controller->showNewGroup();
-			}, &st::menuIconGroups);
-			_macosComposeMenu->addAction(tr::lng_create_channel_title(tr::now), [=] {
-				controller->showNewChannel();
-			}, &st::menuIconChannel);
-			_macosComposeMenu->popup(_macosCompose->mapToGlobal(QPoint(0, _macosCompose->height())));
-		});
-		_macosAccount->show();
-		_macosCompose->show();
-		_macosHeader->show();
-	}
 	const auto makeChildListShown = [](PeerId peerId, float64 shown) {
 		return InnerWidget::ChildListShown{ peerId, shown };
 	};
@@ -4628,15 +4571,10 @@ void Widget::updateSearchFromVisibility(bool fast) {
 }
 
 void Widget::updateControlsGeometry() {
-	if (_macosNavigation) {
-		_macosNavigation->setVisible(width() >= st::columnMinimalWidthLeft);
-	}
-	const auto macosHeader = _macosHeader && width() >= st::columnMinimalWidthLeft;
-	if (_macosHeader) _macosHeader->setVisible(macosHeader);
 	if (width() < _narrowWidth) {
 		return;
 	}
-	auto filterAreaTop = _macosHeader ? st::macosTopBarHeight : 0;
+	auto filterAreaTop = 0;
 
 	const auto ratiow = anim::interpolate(
 		width(),
@@ -4651,13 +4589,12 @@ void Widget::updateControlsGeometry() {
 		? st::dialogsFilterSkip
 		: (st::dialogsFilterPadding.x() + _mainMenu.toggle->width()))
 		+ st::dialogsFilterPadding.x();
-	if (macosHeader) filterLeft = style::ConvertScale(10);
 	const auto filterRight = st::dialogsFilterSkip
 		+ st::dialogsFilterPadding.x();
 	const auto filterWidth = std::max(ratiow, smallw)
 		- filterLeft
 		- filterRight;
-	const auto filterAreaHeight = _macosHeader ? st::macosDialogsSearchHeight : st::topBarHeight;
+	const auto filterAreaHeight = st::topBarHeight;
 	_searchControls->setGeometry(0, filterAreaTop, ratiow, filterAreaHeight);
 	if (_subsectionTopBar) {
 		_subsectionTopBar->setGeometryWithNarrowRatio(
@@ -4679,23 +4616,6 @@ void Widget::updateControlsGeometry() {
 		(_narrowWidth - _mainMenu.toggle->width()) / 2,
 		narrowRatio);
 	_mainMenu.toggle->moveToLeft(mainMenuLeft, st::dialogsFilterPadding.y());
-	if (_macosHeader) {
-		_mainMenu.toggle->setVisible(!macosHeader && !controller()->filtersWidth());
-		if (macosHeader) {
-			_macosHeader->setGeometry(0, 0, ratiow, st::macosTopBarHeight);
-			_macosCompose->moveToRight(style::ConvertScale(6), 0);
-			const auto badge = _macosAccountBadge->widget();
-			const auto badgeSkip = badge ? badge->width() + style::ConvertScale(3) : 0;
-			_macosTitle->resizeToNaturalWidth(std::max(0, ratiow - style::ConvertScale(130) - badgeSkip));
-			const auto leading = Jel::Ui::MacosTitleControlsInset(_macosHeader.data());
-			const auto accountWidth = _macosTitle->width() + badgeSkip;
-			const auto left = std::max(leading, (ratiow - accountWidth) / 2);
-			_macosAccount->setGeometry(left, 0, accountWidth, st::macosTopBarHeight);
-			const auto titleTop = (st::macosTopBarHeight - _macosTitle->height()) / 2;
-			_macosTitle->moveToLeft(0, titleTop);
-			_macosAccountBadge->move(_macosTitle->width(), titleTop, titleTop + _macosTitle->height());
-		}
-	}
 	_mainMenu.under->setGeometry(
 		0,
 		0,
@@ -4703,7 +4623,6 @@ void Widget::updateControlsGeometry() {
 		_mainMenu.toggle->y()
 			+ _mainMenu.toggle->height()
 			+ st::dialogsFilterPadding.y());
-	if (macosHeader) _mainMenu.under->hide();
 	const auto searchLeft = anim::interpolate(
 		-_searchForNarrowLayout->width(),
 		(_narrowWidth - _searchForNarrowLayout->width()) / 2,
@@ -4750,12 +4669,6 @@ void Widget::updateControlsGeometry() {
 	updateLockUnlockPosition();
 
 	auto bottomSkip = 0;
-	if (_macosNavigation && !_macosNavigation->isHidden()) {
-		bottomSkip = st::macosNavigationHeight;
-		_macosNavigation->setGeometry(
-			0, height() - bottomSkip, barw, bottomSkip);
-		_macosNavigation->raise();
-	}
 	const auto putBottomButton = [&](auto &button) {
 		if (button && !button->isHidden()) {
 			const auto buttonHeight = button->height();

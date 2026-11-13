@@ -147,7 +147,7 @@ void SaveLastPlaybackPosition(
 
 bool IsRealPlaybackContext(not_null<const HistoryItem*> item) {
 	return item->isRegular()
-		|| item->isScheduled()
+		|| (item->isScheduled() && !item->isSending() && !item->hasFailed())
 		|| item->isSavedMusicItem();
 }
 

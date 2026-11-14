@@ -18,7 +18,8 @@ public:
  operator T() const { return ptr; }
 };
 struct PeerId { int value = 1; };
-struct PeerData { PeerId id; };
+struct Session { int uniqueId() const { return 1; } };
+struct PeerData { PeerId id; Session &session() const { static Session value; return value; } };
 struct FullMsgId { int peer = 0; int msg = 0; auto operator<=>(const FullMsgId&) const = default; };
 struct HistoryMessageForwarded {};
 struct String : std::string { using std::string::string; using std::string::operator=; bool isEmpty() const { return empty(); } };
@@ -37,6 +38,7 @@ struct HistoryItem {
  History *h;
  bool regular = true;
  bool service = false;
+ bool hasMedia = false;
  PeerData *sender;
  PeerData *original;
  bool forwarded = false;
@@ -46,6 +48,7 @@ struct HistoryItem {
  History *history() const { return h; }
  bool isRegular() const { return regular; }
  bool isService() const { return service; }
+ const void *media() const { return hasMedia ? this : nullptr; }
  const Text &originalText() const { return text; }
  PeerData *from() const { return sender; }
  PeerData *originalSender() const { return original; }
@@ -70,7 +73,8 @@ struct JelSettings {
  bool collapseDuplicates() const { return true; }
 };
 namespace FiltersController {
-std::set<int> showingFilteredMessages;
+std::set<std::pair<int, int>> showingFilteredMessages;
+std::pair<int, int> dialogKey(PeerData *peer) { return {peer->session().uniqueId(), peer->id.value}; }
 bool isEnabled(PeerData*) { return true; }
 #include "duplicate_group_under_test.h"
 
@@ -121,5 +125,16 @@ int main() {
  assert(countDuplicateGroupSize(first)==1);
  second->reply=0;second->text.text="different";
  assert(countDuplicateGroupSize(first)==1);
- std::cout << "Duplicate grouping checks passed: authors, previews, counts, signatures, hidden authors, replies and text.\n";
+ second->text = first->text;
+ first->hasMedia = true;
+ assert(countDuplicateGroupSize(first)==1);
+ assert(!getDuplicateHead(second));
+ first->hasMedia = false;
+ second->hasMedia = true;
+ assert(countDuplicateGroupSize(first)==1);
+ assert(!isDuplicateMessage(second));
+ first->hasMedia = true;
+ assert(countDuplicateGroupSize(first)==1);
+ assert(countDuplicateGroupSize(second)==1);
+ std::cout << "Duplicate grouping checks passed, including media and mixed text/media messages.\n";
 }

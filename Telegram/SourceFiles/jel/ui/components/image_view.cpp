@@ -7,10 +7,11 @@
 #include "jel/ui/components/image_view.h"
 
 #include "jel/features/message_shot/message_shot.h"
-#include "jel/utils/telegram_helpers.h"
 #include "styles/style_jel_styles.h"
 #include "styles/style_chat.h"
 #include "ui/painter.h"
+
+#include <QtCore/QTimer>
 
 ImageView::ImageView(QWidget *parent)
 	: RpWidget(parent) {
@@ -64,7 +65,7 @@ void ImageView::setImage(const QImage &image) {
 		return;
 	}
 
-	dispatchToMainThread(set, 100);
+	QTimer::singleShot(100, this, set);
 }
 
 void ImageView::computeDiffImages(const QImage &prev, const QImage &curr) {

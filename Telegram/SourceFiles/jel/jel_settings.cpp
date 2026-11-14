@@ -442,57 +442,45 @@ JelSettings &JelSettings::getInstance() {
 }
 
 void JelSettings::load() {
-	json p;
-	auto loaded = readJsonFromFile(settingsPath(), p);
-	if (!loaded && QFile::exists(settingsBackupPath())) {
-		loaded = readJsonFromFile(settingsBackupPath(), p);
-	}
-	if (!loaded) {
-		loaded = readJsonFromFile(cWorkingDir() + u"tdata/ayu_settings.json"_q, p)
-			|| readJsonFromFile(cWorkingDir() + u"tdata/ayu_settings.json.bak"_q, p);
-	}
-	if (!loaded) {
-		if (cGhost()) {
-			auto &ghost = JelSettings::ghost();
-			ghost._sendReadMessages = false;
-			ghost._sendReadStories = false;
-			ghost._sendOnlinePackets = false;
-			ghost._sendUploadProgress = false;
-			ghost._sendOfflinePacketAfterOnline = true;
-		}
-
-		getInstance().validate();
-
-		if (getInstance().streamerMode()) {
-			JelFeatures::StreamerMode::apply(true);
-		}
-		return;
-	}
-
 	auto &settings = getInstance();
+	const auto load = [&](const QString &path) {
+		auto p = json();
+		if (!readJsonFromFile(path, p) || !p.is_object()) {
+			return false;
+		}
+		try {
+			if (!p.contains("ghostModeSettings")) {
+				p["ghostModeSettings"] = nlohmann::json::object({
+					{"0", {
+						{"sendReadMessages", p.value("sendReadMessages", true)},
+						{"sendReadStories", p.value("sendReadStories", true)},
+						{"sendOnlinePackets", p.value("sendOnlinePackets", true)},
+						{"sendUploadProgress", p.value("sendUploadProgress", true)},
+						{"sendOfflinePacketAfterOnline", p.value("sendOfflinePacketAfterOnline", false)},
+						{"markReadAfterAction", p.value("markReadAfterAction", true)},
+						{"useScheduledMessages", p.value("useScheduledMessages", false)},
+						{"sendWithoutSound", p.value("sendWithoutSound", false)}
+					}}
+				});
+				p["useGlobalGhostMode"] = true;
 
-	if (!p.contains("ghostModeSettings")) {
-		p["ghostModeSettings"] = nlohmann::json::object({
-			{"0", {
-				{"sendReadMessages", p.value("sendReadMessages", true)},
-				{"sendReadStories", p.value("sendReadStories", true)},
-				{"sendOnlinePackets", p.value("sendOnlinePackets", true)},
-				{"sendUploadProgress", p.value("sendUploadProgress", true)},
-				{"sendOfflinePacketAfterOnline", p.value("sendOfflinePacketAfterOnline", false)},
-				{"markReadAfterAction", p.value("markReadAfterAction", true)},
-				{"useScheduledMessages", p.value("useScheduledMessages", false)},
-				{"sendWithoutSound", p.value("sendWithoutSound", false)}
-			}}
-		});
-		p["useGlobalGhostMode"] = true;
-
-		LOG(("GummyGramSettings: migrated ghost mode settings to per-account format"));
-	}
-
-	try {
-		from_json(p, settings);
-	} catch (...) {
-		LOG(("GummyGramSettings: failed to parse settings file"));
+				LOG(("GummyGramSettings: migrated ghost mode settings to per-account format"));
+			}
+			auto parsed = JelSettings();
+			from_json(p, parsed);
+			settings = std::move(parsed);
+			return true;
+		} catch (...) {
+			LOG(("GummyGramSettings: failed to parse settings file"));
+			return false;
+		}
+	};
+	const auto loaded = load(settingsPath())
+		|| load(settingsBackupPath())
+		|| load(cWorkingDir() + u"tdata/ayu_settings.json"_q)
+		|| load(cWorkingDir() + u"tdata/ayu_settings.json.bak"_q);
+	if (!loaded) {
+		LOG(("GummyGramSettings: using defaults, no valid settings file"));
 	}
 
 	if (cGhost()) {

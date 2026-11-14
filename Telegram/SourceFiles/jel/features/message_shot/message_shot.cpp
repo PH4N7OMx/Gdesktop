@@ -8,6 +8,8 @@
 
 #include "qguiapplication.h"
 
+#include "base/weak_ptr.h"
+
 #include <type_traits>
 #include "jel/jel_settings.h"
 #include "jel/ui/boxes/message_shot_box.h"
@@ -38,6 +40,9 @@
 #include "ui/layers/box_content.h"
 #include "window/themes/window_theme.h"
 #include "window/section_widget.h"
+
+#include <QtCore/QPointer>
+#include <QtCore/QTimer>
 
 namespace JelFeatures::MessageShot {
 
@@ -214,10 +219,17 @@ QColor makeDefaultBackgroundColor() {
 	return st::boxBg->c.darker(110);
 }
 
-void Make(not_null<QWidget*> box, const ShotConfig &config, const Fn<void(QImage&,bool)>& callback) {
+namespace {
+
+void RenderShot(not_null<QWidget*> box, const ShotConfig &config, const Fn<void(QImage&,bool)>& callback, bool final) {
 	const auto controller = config.controller;
 	const auto st = config.st;
-	auto messages = config.messages;
+	auto messages = std::vector<not_null<HistoryItem*>>();
+	for (const auto id : config.messageIds) {
+		if (const auto item = controller->session().data().message(id)) {
+			messages.push_back(item);
+		}
+	}
 
 	if (messages.empty()) {
 		return;
@@ -233,21 +245,6 @@ void Make(not_null<QWidget*> box, const ShotConfig &config, const Fn<void(QImage
 		messages.front()->history(),
 		config.chatMode,
 		config.context);
-
-	// remove deleted messages
-	messages.erase(
-		std::ranges::remove_if(
-			messages,
-			[=](const auto &message)
-			{
-				return !message || !controller->session().data().message(message->fullId());
-			}).begin(),
-		messages.end()
-	);
-
-	if (messages.empty()) {
-		return;
-	}
 
 	auto createdViews = std::make_shared<std::unordered_map<not_null<HistoryItem*>, std::shared_ptr<HistoryView::Element>>>();
 	createdViews->reserve(messages.size());
@@ -285,38 +282,8 @@ void Make(not_null<QWidget*> box, const ShotConfig &config, const Fn<void(QImage
 		getView(messages[0])->setAttachToNext(false);
 	}
 
-	struct MediaPreload {
-		std::vector<std::shared_ptr<Data::PhotoMedia>> photos;
-		std::vector<std::shared_ptr<Data::DocumentMedia>> documents;
-	};
-	auto preload = std::make_shared<MediaPreload>();
-
-	for (const auto &message : messages) {
-		if (!message->media()) continue;
-		const auto origin = Data::FileOrigin(message->fullId());
-		if (const auto photo = message->media()->photo()) {
-			auto media = photo->activeMediaView()
-				? photo->activeMediaView()
-				: photo->createMediaView();
-			if (!media->loaded()) {
-				photo->load(origin, LoadFromCloudOrLocal, false);
-			}
-			preload->photos.push_back(std::move(media));
-		} else if (const auto document = message->media()->document()) {
-			if (document->hasThumbnail()) {
-				auto media = document->activeMediaView()
-					? document->activeMediaView()
-					: document->createMediaView();
-				if (!media->thumbnail()) {
-					document->loadThumbnail(origin);
-				}
-				preload->documents.push_back(std::move(media));
-			}
-		}
-	}
-
 	const auto showBackground = JelSettings::getInstance().messageShotSettings().showBackground();
-	auto render = [=, messages = std::move(messages), delegate = std::move(delegate)](bool final)
+	auto render = [=, messages = std::move(messages)](bool final)
 	{
 		takingShot = true;
 
@@ -443,40 +410,101 @@ void Make(not_null<QWidget*> box, const ShotConfig &config, const Fn<void(QImage
 		callback(result, final);
 	};
 
-	if (!preload->documents.empty() || !preload->photos.empty()) {
-		render(false); // render immediately to give box width
+	render(final);
+}
 
-		auto lifetime = std::make_shared<rpl::lifetime>();
-		auto latch = std::make_shared<TimedCountDownLatch>(1);
-		rpl::single() | rpl::then(
-			config.controller->session().downloaderTaskFinished()
-		) | rpl::filter([=]
-			{
-				for (const auto &media : preload->photos) {
-					if (media->owner()->loading()) return false;
-				}
-				for (const auto &media : preload->documents) {
-					if (media->owner()->thumbnailLoading()) return false;
-				}
-				return true;
-			}
-		) | rpl::take(1) | rpl::on_next([=]
-		{
-			latch->countDown();
-		}, *lifetime);
+} // namespace
 
-		crl::async([=, render = std::move(render)]
-		{
-			latch->await(std::chrono::seconds(3));
-			crl::on_main([=]
-			{
-				lifetime->destroy();
-				render(true);
-			});
-		});
-	} else {
-		render(true);
+void Make(
+		not_null<Ui::RpWidget*> box,
+		const ShotConfig &config,
+		const Fn<void(QImage&, bool)> &callback) {
+	const auto guardedBox = QPointer<Ui::RpWidget>(box.get());
+	const auto controller = base::make_weak(config.controller.get());
+	const auto render = [=](bool final) {
+		if (guardedBox && controller) {
+			RenderShot(guardedBox.data(), config, callback, final);
+		}
+	};
+	auto messages = std::vector<not_null<HistoryItem*>>();
+	for (const auto id : config.messageIds) {
+		if (const auto item = config.controller->session().data().message(id)) {
+			messages.push_back(item);
+		}
 	}
+	if (messages.empty()) {
+		return;
+	}
+	struct MediaPreload {
+		std::vector<std::shared_ptr<Data::PhotoMedia>> photos;
+		std::vector<std::shared_ptr<Data::DocumentMedia>> documents;
+	};
+	auto preload = std::make_shared<MediaPreload>();
+
+	for (const auto &message : messages) {
+		if (!message->media()) continue;
+		const auto origin = Data::FileOrigin(message->fullId());
+		if (const auto photo = message->media()->photo()) {
+			auto media = photo->activeMediaView()
+				? photo->activeMediaView()
+				: photo->createMediaView();
+			if (!media->loaded()) {
+				photo->load(origin, LoadFromCloudOrLocal, false);
+			}
+			preload->photos.push_back(std::move(media));
+		} else if (const auto document = message->media()->document()) {
+			if (document->hasThumbnail()) {
+				auto media = document->activeMediaView()
+					? document->activeMediaView()
+					: document->createMediaView();
+				if (!media->thumbnail()) {
+					document->loadThumbnail(origin);
+				}
+				preload->documents.push_back(std::move(media));
+			}
+		}
+	}
+	if (preload->documents.empty() && preload->photos.empty()) {
+		render(true);
+		return;
+	}
+	render(false);
+	const auto lifetime = std::make_shared<rpl::lifetime>();
+	box->lifetime().add([=] { lifetime->destroy(); });
+	const auto finished = std::make_shared<bool>(false);
+	config.controller->session().data().sessionDataAboutToBeCleared(
+	) | rpl::on_next([=] {
+		*finished = true;
+		lifetime->destroy();
+	}, *lifetime);
+	const auto finish = [=] {
+		if (*finished) {
+			return;
+		}
+		*finished = true;
+		lifetime->destroy();
+		render(true);
+	};
+	const auto ready = [=] {
+		for (const auto &media : preload->photos) {
+			if (!media->loaded()) {
+				return false;
+			}
+		}
+		for (const auto &media : preload->documents) {
+			if (!media->thumbnail()) {
+				return false;
+			}
+		}
+		return true;
+	};
+	config.controller->session().downloaderTaskFinished(
+	) | rpl::filter(ready) | rpl::take(1) | rpl::on_next([=] {
+		if (guardedBox) {
+			QTimer::singleShot(0, guardedBox.data(), finish);
+		}
+	}, *lifetime);
+	QTimer::singleShot(ready() ? 0 : 3000, box.get(), finish);
 }
 
 namespace {
@@ -496,11 +524,11 @@ void ShowMessageShotBox(
 		HistoryView::ElementChatMode chatMode,
 		HistoryView::Context context,
 		Fn<void()> clearSelected) {
-	auto messages = std::vector<not_null<HistoryItem*>>();
+	auto messages = MessageIdsList();
 	messages.reserve(ids.size());
 	for (const auto item : ids) {
 		if (const auto message = resolveMessage(item)) {
-			messages.push_back(message);
+			messages.push_back(message->fullId());
 		}
 	}
 	if (messages.empty()) {

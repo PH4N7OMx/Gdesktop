@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_session.h"
 
 #include "apiwrap.h"
+#include "jel/features/filters/filters_controller.h"
 #include "api/api_peer_colors.h"
 #include "api/api_updates.h"
 #include "api/api_user_privacy.h"
@@ -385,6 +386,7 @@ Session::~Session() {
 	Wallet::CloseWallet(this);
 	unlockTerms();
 	data().clear();
+	FiltersController::clearSession(uniqueId());
 	ClickHandler::clearActive();
 	ClickHandler::unpressed();
 }

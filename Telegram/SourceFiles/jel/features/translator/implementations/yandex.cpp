@@ -87,10 +87,12 @@ QPointer<QNetworkReply> YandexTranslator::startSingleTranslation(
 	req.setHeader(QNetworkRequest::ContentTypeHeader,
 				  QStringLiteral("application/x-www-form-urlencoded"));
 
-	QUrlQuery postData;
-	postData.addQueryItem(QStringLiteral("lang"), to);
-	postData.addQueryItem(QStringLiteral("text"), shouldWrapInHtml() ? Html::entitiesToHtml(text) : text.text);
-	const auto postDataEncoded = postData.toString(QUrl::FullyEncoded).toUtf8();
+	const auto postDataEncoded = QByteArrayLiteral("lang=")
+		+ QUrl::toPercentEncoding(to)
+		+ QByteArrayLiteral("&text=")
+		+ QUrl::toPercentEncoding(shouldWrapInHtml()
+			? Html::entitiesToHtml(text)
+			: text.text);
 
 	QPointer<QNetworkReply> reply = _nam.post(req, postDataEncoded);
 

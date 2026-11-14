@@ -15,6 +15,7 @@
 #include "core/application.h"
 #include "core/click_handler_types.h"
 #include "data/data_channel.h"
+#include "data/data_chat.h"
 #include "data/data_file_origin.h"
 #include "data/data_forum_topic.h"
 #include "data/data_session.h"
@@ -24,7 +25,43 @@
 #include "ui/basic_click_handlers.h"
 #include "ui/text/text_utilities.h"
 
+#include <array>
+
 namespace MessageHistory {
+namespace {
+
+constexpr auto kMessageFlagIsPost = 0x00004000;
+
+[[nodiscard]] PeerData *ResolveSender(
+		not_null<History*> history,
+		const JelMessageBase &message) {
+	const auto storedId = uint64(message.fromId);
+	if (storedId & (UserId::kReservedBit << 48)) {
+		return history->owner().peerLoaded(DeserializePeerId(storedId));
+	}
+	if ((message.flags & kMessageFlagIsPost)
+		&& history->peer->isChannel()
+		&& (history->peer->id.value & PeerId::kChatTypeMask) == storedId) {
+		return history->peer;
+	}
+	const auto candidates = std::array<PeerData*, 3>{
+		history->owner().userLoaded(UserId(storedId)),
+		history->owner().channelLoaded(ChannelId(storedId)),
+		history->owner().chatLoaded(ChatId(storedId)),
+	};
+	auto result = static_cast<PeerData*>(nullptr);
+	for (const auto peer : candidates) {
+		if (peer) {
+			if (result) {
+				return nullptr;
+			}
+			result = peer;
+		}
+	}
+	return result;
+}
+
+} // namespace
 
 OwnedItem::OwnedItem(std::nullptr_t) {
 }
@@ -66,13 +103,7 @@ void GenerateItems(
 	not_null<History*> history,
 	JelMessageBase message,
 	Fn<void(OwnedItem item, TimeId sentDate, MsgId)> callback) {
-	PeerData *from = history->owner().userLoaded(message.fromId);
-	if (!from) {
-		from = history->owner().channelLoaded(message.fromId);
-	}
-	if (!from) {
-		from = reinterpret_cast<PeerData*>(history->owner().chatLoaded(message.fromId));
-	}
+	const auto from = ResolveSender(history, message);
 	const auto date = message.entityCreateDate;
 	const auto addPart = [&](
 		not_null<HistoryItem*> item,
@@ -103,7 +134,7 @@ void GenerateItems(
 														  ? QString::fromStdString(message.postAuthor)
 														  : from
 																? QString()
-																: QString("unknown user: %1").arg(message.fromId),
+																: QString("unknown user: %1").arg(uint64(message.fromId) & PeerId::kChatTypeMask),
 									},
 									std::move(text),
 									MTP_messageMediaEmpty());

@@ -521,7 +521,7 @@ QString formatMessageTime(const QTime &time) {
 	);
 }
 
-int getMediaSizeBytes(not_null<HistoryItem*> message) {
+int64 getMediaSizeBytes(not_null<HistoryItem*> message) {
 	if (!message->media()) {
 		return -1;
 	}

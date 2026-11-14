@@ -298,6 +298,9 @@ void intelligentForward(
 
 
 	for (const auto &chunk : chunks) {
+		if (state->stopRequested) {
+			break;
+		}
 		if (chunk.isJelForwardNeeded) {
 			forwardMessages(session, action, true, Data::ResolvedForwardDraft(chunk.items));
 		} else {
@@ -310,6 +313,9 @@ void intelligentForward(
 			state->sentMessages = state->totalMessages;
 
 			state->updateBottomBar(*session, &peer->id, ForwardState::State::Finished);
+		}
+		if (state->stopRequested) {
+			break;
 		}
 		state->currentChunk++;
 	}
@@ -336,7 +342,7 @@ void forwardMessages(
 	std::shared_ptr<ForwardState> state;
 
 	if (forwardState) {
-		state = std::make_shared<ForwardState>(*forwardStates[peer->id]);
+		state = forwardStates.at(peer->id);
 	} else {
 		state = std::make_shared<ForwardState>(1);
 	}

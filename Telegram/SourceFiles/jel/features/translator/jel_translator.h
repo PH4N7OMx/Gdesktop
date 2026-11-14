@@ -116,8 +116,8 @@ private:
     std::unordered_map<CacheKey, CacheIterator> _cacheMap;
     static constexpr size_t MAX_CACHE_SIZE = 500;
 
-    QString generateCacheKey(const QString &text, const QString &fromLang, const QString &toLang) const;
-    QString generateMessageCacheKey(PeerId peerId, MsgId msgId, const QString &fromLang, const QString &toLang) const;
+    QString generateCacheKey(const QString &text, const QString &fromLang, const QString &toLang, TranslationProvider provider) const;
+    QString generateMessageCacheKey(PeerId peerId, MsgId msgId, const QString &fromLang, const QString &toLang, TranslationProvider provider) const;
     void insertToCache(const QString &key, const CacheEntry &entry);
     std::optional<CacheEntry> getFromCache(const QString &key);
     void removeLeastRecentlyUsed();
@@ -129,6 +129,7 @@ private:
     };
 
     mtpRequestId _nextId = 1;
+    uint64 _cacheGeneration = 0;
     std::unordered_map<mtpRequestId, Pending> _pending;
 };
 

@@ -9,6 +9,7 @@
 #include "jel/features/message_shot/message_shot_theme_state.h"
 #include "history/view/history_view_list_widget.h"
 #include "ui/chat/chat_style.h"
+#include "ui/rp_widget.h"
 #include "window/window_session_controller.h"
 
 class HistoryInner;
@@ -19,7 +20,7 @@ struct ShotConfig
 {
 	not_null<Window::SessionController*> controller;
 	std::shared_ptr<Ui::ChatStyle> st;
-	std::vector<not_null<HistoryItem*>> messages;
+	MessageIdsList messageIds;
 	HistoryView::ElementChatMode chatMode = HistoryView::ElementChatMode::Default;
 	HistoryView::Context context = HistoryView::Context::History;
 };
@@ -44,7 +45,7 @@ bool setChoosingTheme(bool val);
 // util
 QColor makeDefaultBackgroundColor();
 
-void Make(not_null<QWidget*> box, const ShotConfig &config, const Fn<void(QImage&,bool)>& callback);
+void Make(not_null<Ui::RpWidget*> box, const ShotConfig &config, const Fn<void(QImage&,bool)>& callback);
 
 void Wrapper(not_null<HistoryView::ListWidget*> widget, Fn<void()> clearSelected);
 void Wrapper(not_null<HistoryInner*> widget, Fn<void()> clearSelected);

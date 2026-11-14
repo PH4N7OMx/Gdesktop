@@ -7,6 +7,7 @@
 #include "jel/features/translator/jel_translator.h"
 
 #include "api/api_text_entities.h"
+#include "base/weak_ptr.h"
 #include "jel/features/translator/implementations/google.h"
 #include "jel/features/translator/implementations/yandex.h"
 #include "data/data_peer.h"
@@ -94,6 +95,7 @@ TranslateManager::Builder TranslateManager::request(
 
 mtpRequestId TranslateManager::performTranslation(Builder &req) {
 	const auto id = _nextId++;
+	const auto generation = _cacheGeneration;
 	_pending.emplace(
 		id,
 		Pending{
@@ -122,7 +124,7 @@ mtpRequestId TranslateManager::performTranslation(Builder &req) {
 			texts.push_back(textWithEntities);
 
 			// todo: entities are not considered in cache key
-			const auto key = generateCacheKey(text, fromLang, toLang);
+			const auto key = generateCacheKey(text, fromLang, toLang, req._provider);
 			cacheKeys.push_back(key);
 
 			if (const auto cached = getFromCache(key)) {
@@ -141,7 +143,7 @@ mtpRequestId TranslateManager::performTranslation(Builder &req) {
 					const auto textWithEntities = message->originalText();
 					texts.push_back(textWithEntities);
 
-					const auto key = generateMessageCacheKey(peerData->id, msgId, fromLang, toLang);
+					const auto key = generateMessageCacheKey(peerData->id, msgId, fromLang, toLang, req._provider);
 					cacheKeys.push_back(key);
 
 					if (const auto cached = getFromCache(key)) {
@@ -180,8 +182,14 @@ mtpRequestId TranslateManager::performTranslation(Builder &req) {
 
 	CallbackSuccess onSuccess = [this, id, resultTexts = std::move(resultTexts), cacheKeys = std::move(cacheKeys),
 			uncachedIndices = std::move(uncachedIndices), texts = std::move(texts),
-			fromLang, toLang, session = req.session()](const std::vector<TextWithEntities> &translated) mutable
+			fromLang, toLang, generation,
+			weakSession = base::make_weak(req.session())](const std::vector<TextWithEntities> &translated) mutable
 	{
+		const auto session = weakSession.get();
+		if (!session || generation != _cacheGeneration) {
+			triggerFail(id);
+			return;
+		}
 		for (size_t i = 0; i < translated.size() && i < uncachedIndices.size(); ++i) {
 			const auto index = uncachedIndices[i];
 			resultTexts[index] = translated[i];
@@ -264,10 +272,9 @@ bool TranslateManager::triggerFail(mtpRequestId id) {
 }
 
 void TranslateManager::resetCache() {
+	++_cacheGeneration;
 	_cacheList.clear();
 	_cacheMap.clear();
-
-	// todo: remove all running requests
 }
 
 TranslateManager *TranslateManager::currentInstance() {
@@ -280,16 +287,23 @@ void TranslateManager::init() {
 	if (!instance) instance = new TranslateManager;
 }
 
-QString TranslateManager::generateCacheKey(const QString &text, const QString &fromLang, const QString &toLang) const {
+QString TranslateManager::generateCacheKey(const QString &text, const QString &fromLang, const QString &toLang, TranslationProvider provider) const {
 	const auto textHash = QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Sha1).toHex();
-	return QStringLiteral("%1_%2_%3").arg(QString::fromLatin1(textHash), fromLang, toLang);
+	return QStringLiteral("%1_%2_%3_%4")
+		.arg(int(provider))
+		.arg(QString::fromLatin1(textHash), fromLang, toLang);
 }
 
 QString TranslateManager::generateMessageCacheKey(PeerId peerId,
 												  MsgId msgId,
 												  const QString &fromLang,
-												  const QString &toLang) const {
-	return QStringLiteral("%1_%2_%3_%4").arg(peerId.value).arg(msgId.bare).arg(fromLang, toLang);
+												  const QString &toLang,
+												  TranslationProvider provider) const {
+	return QStringLiteral("%1_%2_%3_%4_%5")
+		.arg(int(provider))
+		.arg(peerId.value)
+		.arg(msgId.bare)
+		.arg(fromLang, toLang);
 }
 
 void TranslateManager::insertToCache(const QString &key, const CacheEntry &entry) {

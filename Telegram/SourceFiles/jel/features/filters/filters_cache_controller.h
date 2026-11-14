@@ -52,5 +52,6 @@ void putFiltered(
 	const std::shared_ptr<const Cache> &matchedCache);
 
 void invalidate(not_null<HistoryItem*> item);
+void clearSession(uint64 sessionId);
 
 }

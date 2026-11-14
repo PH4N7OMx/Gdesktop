@@ -1,4 +1,4 @@
-﻿// This is the source code of AyuGram for Desktop.
+// This is the source code of AyuGram for Desktop.
 //
 // We do not and cannot prevent the use of our code,
 // but be respectful and credit the original author.
@@ -36,7 +36,7 @@ void map(not_null<HistoryItem*> item, JelMessageBase &message) {
 	message.dialogId = getDialogIdFromPeer(item->history()->peer);
 	message.groupedId = item->groupId().raw();
 	message.peerId = item->history()->peer->id.value & PeerId::kChatTypeMask;
-	message.fromId = item->from()->id.value & PeerId::kChatTypeMask;
+	message.fromId = SerializePeerId(item->from()->id);
 	if (item->topic()) {
 		message.topicId = item->topicRootId().bare;
 	} else {

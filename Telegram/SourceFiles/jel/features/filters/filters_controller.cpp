@@ -19,14 +19,29 @@
 #include "history/history_item.h"
 #include "history/history_item_components.h"
 #include "history/view/history_view_element.h"
+#include "main/main_session.h"
 #include "unicode/regex.h"
 
 #include <memory>
+#include <set>
 #include <unordered_set>
 
 namespace FiltersController {
 
-std::unordered_set<long long> showingFilteredMessages;
+using DialogKey = std::pair<uint64, uint64>;
+
+std::set<DialogKey> showingFilteredMessages;
+
+DialogKey dialogKey(not_null<PeerData*> peer) {
+	return { peer->session().uniqueId(), peer->id.value };
+}
+
+void clearSession(uint64 sessionId) {
+	std::erase_if(showingFilteredMessages, [=](const DialogKey &key) {
+		return key.first == sessionId;
+	});
+	FiltersCacheController::clearSession(sessionId);
+}
 
 bool filterBlocked(const not_null<HistoryItem*> item) {
 	if (item->from() != item->history()->peer) {
@@ -180,7 +195,7 @@ base::flat_set<FullMsgId> removingDuplicates;
 	const auto peer = item->history()->peer;
 	return JelSettings::getInstance().collapseDuplicates()
 		&& isEnabled(peer)
-		&& !showingFilteredMessages.contains(peer->id.value);
+		&& !showingFilteredMessages.contains(dialogKey(peer));
 }
 
 [[nodiscard]] bool IsRemoving(not_null<const HistoryItem*> item) {
@@ -193,6 +208,7 @@ base::flat_set<FullMsgId> removingDuplicates;
 		&& item->isRegular()
 		&& !IsRemoving(item)
 		&& !item->isService()
+		&& !item->media()
 		&& (item->id > 0)
 		&& !item->originalText().text.isEmpty();
 }
@@ -200,6 +216,9 @@ base::flat_set<FullMsgId> removingDuplicates;
 [[nodiscard]] bool SameDuplicateContent(
 		not_null<const HistoryItem*> first,
 		not_null<const HistoryItem*> second) {
+	if (first->media() || second->media()) {
+		return false;
+	}
 	const auto firstForward = first->Get<HistoryMessageForwarded>();
 	const auto secondForward = second->Get<HistoryMessageForwarded>();
 	if ((firstForward != nullptr) != (secondForward != nullptr)) {
@@ -423,7 +442,7 @@ bool isBlockedOrRegexFiltered(const not_null<HistoryItem*> item) {
 }
 
 bool filtered(const not_null<HistoryItem*> item) {
-	if (showingFilteredMessages.contains(item->history()->peer->id.value)) {
+	if (showingFilteredMessages.contains(dialogKey(item->history()->peer))) {
 		return false;
 	}
 
@@ -442,18 +461,18 @@ bool filtered(const not_null<HistoryItem*> item) {
 }
 
 std::optional<bool> filteredMessagesShown(not_null<PeerData*> peer) {
-	if (!showingFilteredMessages.contains(peer->id.value)
+	if (!showingFilteredMessages.contains(dialogKey(peer))
 		&& !FiltersCacheController::hasFilteredMessages(peer)) {
 		return std::nullopt;
 	}
-	return showingFilteredMessages.contains(peer->id.value);
+	return showingFilteredMessages.contains(dialogKey(peer));
 }
 
 void toggleFilteredMessagesShown(not_null<PeerData*> peer) {
-	if (showingFilteredMessages.contains(peer->id.value)) {
-		showingFilteredMessages.erase(peer->id.value);
+	if (showingFilteredMessages.contains(dialogKey(peer))) {
+		showingFilteredMessages.erase(dialogKey(peer));
 	} else {
-		showingFilteredMessages.insert(peer->id.value);
+		showingFilteredMessages.insert(dialogKey(peer));
 	}
 	FiltersCacheController::fireUpdate();
 }

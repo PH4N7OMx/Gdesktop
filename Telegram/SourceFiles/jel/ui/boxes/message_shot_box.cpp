@@ -14,6 +14,7 @@
 #include "boxes/abstract_box.h"
 #include "data/data_chat.h"
 #include "data/data_channel.h"
+#include "data/data_session.h"
 #include "data/data_todo_list.h"
 #include "data/data_user.h"
 #include "history/history.h"
@@ -78,7 +79,11 @@ void MessageShotBox::setupContent() {
 	auto hasReplies = false;
 	auto hasHeaderDecorations = false;
 	auto hasSpoilers = false;
-	for (const auto &item : _config.messages) {
+	for (const auto id : _config.messageIds) {
+		const auto item = _config.controller->session().data().message(id);
+		if (!item) {
+			continue;
+		}
 		if (!hasReactions && !item->reactions().empty()) {
 			hasReactions = true;
 		}

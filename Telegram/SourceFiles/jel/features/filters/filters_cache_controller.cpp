@@ -13,10 +13,13 @@
 #include "data/data_session.h"
 #include "history/history.h"
 #include "history/history_item.h"
+#include "main/main_session.h"
 #include "rpl/event_stream.h"
 
+#include <map>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <unordered_set>
 
 namespace FiltersCacheController {
@@ -37,8 +40,24 @@ rpl::producer<> updates() {
 
 std::shared_ptr<const Cache> cache;
 
-std::unordered_map<long long, std::unordered_map<int64, bool>> filteredMessages;
-std::unordered_set<BareId> dialogsWithHiddenBlockedMessages; // purely for show / hide filtered messages
+using DialogKey = std::pair<uint64, uint64>;
+
+std::map<DialogKey, std::unordered_map<int64, bool>> filteredMessages;
+std::set<DialogKey> dialogsWithHiddenBlockedMessages; // purely for show / hide filtered messages
+
+DialogKey dialogKey(not_null<PeerData*> peer) {
+	return { peer->session().uniqueId(), peer->id.value };
+}
+
+void clearSession(uint64 sessionId) {
+	std::lock_guard lock(filteredMessagesMutex);
+	std::erase_if(filteredMessages, [=](const auto &entry) {
+		return entry.first.first == sessionId;
+	});
+	std::erase_if(dialogsWithHiddenBlockedMessages, [=](const DialogKey &key) {
+		return key.first == sessionId;
+	});
+}
 
 std::shared_ptr<const Cache> buildCache() {
 	const auto filters = JelDatabase::getAllRegexFilters();
@@ -143,7 +162,7 @@ std::shared_ptr<const Cache> snapshot() {
 
 std::optional<bool> isFiltered(not_null<HistoryItem*> item) {
 	std::lock_guard lock(filteredMessagesMutex);
-	auto dialogIt = filteredMessages.find(item->history()->peer->id.value);
+	auto dialogIt = filteredMessages.find(dialogKey(item->history()->peer));
 
 	if (dialogIt == filteredMessages.end()) {
 		return std::nullopt;
@@ -159,10 +178,10 @@ std::optional<bool> isFiltered(not_null<HistoryItem*> item) {
 
 bool hasFilteredMessages(not_null<PeerData*> peer) {
 	std::lock_guard lock(filteredMessagesMutex);
-	if (dialogsWithHiddenBlockedMessages.contains(peer->id.value)) {
+	if (dialogsWithHiddenBlockedMessages.contains(dialogKey(peer))) {
 		return true;
 	}
-	const auto dialogIt = filteredMessages.find(peer->id.value);
+	const auto dialogIt = filteredMessages.find(dialogKey(peer));
 	if (dialogIt == filteredMessages.end()) {
 		return false;
 	}
@@ -176,7 +195,7 @@ bool hasFilteredMessages(not_null<PeerData*> peer) {
 
 void putHiddenBlockedMessage(not_null<HistoryItem*> item) {
 	std::lock_guard lock(filteredMessagesMutex);
-	dialogsWithHiddenBlockedMessages.insert(item->history()->peer->id.value);
+	dialogsWithHiddenBlockedMessages.insert(dialogKey(item->history()->peer));
 }
 
 void putFiltered(
@@ -190,16 +209,16 @@ void putFiltered(
 	}
 
 	std::lock_guard filteredLock(filteredMessagesMutex);
-	filteredMessages[item->history()->peer->id.value][item->id.bare] = res;
+	filteredMessages[dialogKey(item->history()->peer)][item->id.bare] = res;
 	if (group && res) {
 		for (const auto& groupItem : group->items) {
-			filteredMessages[item->history()->peer->id.value][groupItem->id.bare] = true;
+			filteredMessages[dialogKey(item->history()->peer)][groupItem->id.bare] = true;
 		}
 	}
 }
 
 void invalidateSingle(not_null<HistoryItem*> item) {
-	const auto dialogIt = filteredMessages.find(item->history()->peer->id.value);
+	const auto dialogIt = filteredMessages.find(dialogKey(item->history()->peer));
 
 	if (dialogIt == filteredMessages.end()) {
 		return;

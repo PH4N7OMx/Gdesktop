@@ -28,6 +28,7 @@ std::optional<bool> filteredMessagesShown(not_null<PeerData*> peer);
 void toggleFilteredMessagesShown(not_null<PeerData*> peer);
 
 void invalidate(not_null<HistoryItem*> item);
+void clearSession(uint64 sessionId);
 
 struct ReversiblePattern
 {

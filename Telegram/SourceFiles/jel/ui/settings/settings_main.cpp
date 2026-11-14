@@ -168,7 +168,7 @@ void BuildLinks(SectionBuilder &builder) {
 		.id = u"jel/website"_q,
 		.title = tr::jel_LinksDocumentation(),
 		.icon = { &st::menuIconIpAddress },
-		.label = rpl::single(QString("JellyPlugins documentation")),
+		.label = rpl::single(u"JellyPlugins"_q),
 		.onClick = [=] {
 			QDesktopServices::openUrl(
 				QString("https://jellygram.gitbook.io/jelly-plugins/"));

@@ -2,6 +2,7 @@
 
 #include "jel/plugins/plugin_service.h"
 #include "jel/ui/settings/settings_main.h"
+#include "base/event_filter.h"
 #include "main/main_session.h"
 #include "settings/settings_builder.h"
 #include "ui/layers/generic_box.h"
@@ -9,10 +10,12 @@
 #include "ui/widgets/buttons.h"
 #include "ui/widgets/checkbox.h"
 #include "ui/widgets/labels.h"
+#include "ui/widgets/popup_menu.h"
 #include "ui/wrap/vertical_layout.h"
 #include "window/window_session_controller.h"
 #include "lang_auto.h"
 
+#include <QContextMenuEvent>
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QFile>
@@ -67,7 +70,14 @@ Ui::Checkbox *Check(not_null<Ui::GenericBox*> box, const QString &text, bool che
 }
 
 void Row(not_null<Ui::GenericBox*> box, rpl::producer<QString> text, Fn<void()> callback) {
-	box->addRow(object_ptr<Ui::SettingsButton>(box, std::move(text), st::settingsButton))->setClickedCallback(std::move(callback));
+	const auto button = box->addRow(
+		object_ptr<Ui::SettingsButton>(
+			box,
+			std::move(text),
+			st::settingsButtonNoIcon),
+		style::margins());
+	button->setAllowTextLines();
+	button->setClickedCallback(std::move(callback));
 }
 
 Ui::InputField *Text(not_null<Ui::GenericBox*> box, const QString &value, bool readOnly, bool code = false) {
@@ -159,7 +169,6 @@ void ShowAction(not_null<Window::SessionController*> controller, PendingAction p
 		const auto guardedBox = QPointer<Ui::GenericBox>(box.get());
 		box->setTitle(tr::jel_JellyV2ReviewAction());
 		box->setWidth(st::boxWideWidth);
-		Label(box, tr::jel_JellyV2ActualNotice(tr::now), true);
 		Label(box, tr::jel_JellyV2RequestedBy(tr::now) + pending.pluginName, true);
 		Label(box, tr::jel_JellyV2Account(tr::now) + pending.account);
 		Label(box, pending.recipient);
@@ -260,6 +269,62 @@ void ShowSettings(not_null<Window::SessionController*> controller, PluginInfo in
 	}));
 }
 
+void ShowRemove(not_null<Window::SessionController*> controller, PluginInfo info) {
+	const auto service = QPointer<Service>(&controller->session().plugins());
+	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
+		box->setTitle(tr::jel_JellyRemove());
+		box->setWidth(st::boxWideWidth);
+		Label(box, info.package.name);
+		const auto removeData = Check(box, tr::jel_JellyV2RemoveData(tr::now), true);
+		box->addButton(tr::jel_JellyRemove(), [=] {
+			if (!service) return;
+			auto error = QString();
+			if (service->uninstall(info.package.id, info.package.digest, removeData->checked(), error)) box->closeBox();
+			else controller->showToast(error);
+		});
+		box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
+	}));
+}
+
+void SetupPluginMenu(
+		not_null<Window::SessionController*> controller,
+		not_null<Ui::SettingsButton*> button,
+		QString id) {
+	const auto service = QPointer<Service>(&controller->session().plugins());
+	const auto menu = button->lifetime().make_state<base::unique_qptr<Ui::PopupMenu>>();
+	base::install_event_filter(button, [=](not_null<QEvent*> event) {
+		if (event->type() != QEvent::ContextMenu) {
+			return base::EventFilterResult::Continue;
+		}
+		if (!service) return base::EventFilterResult::Cancel;
+		for (const auto &info : service->plugins()) {
+			if (info.package.id != id) continue;
+			*menu = base::make_unique_q<Ui::PopupMenu>(button, st::popupMenuWithIcons);
+			(*menu)->addAction(
+				info.enabled ? tr::jel_JellyV2Disable(tr::now) : tr::jel_JellyEnable(tr::now),
+				[=] {
+					if (!service) return;
+					auto error = QString();
+					const auto success = info.enabled
+						? service->disable(info.package.id, error)
+						: service->enable(info.package.id, info.package.digest, error);
+					if (!success) controller->showToast(error);
+				},
+				info.enabled ? &st::menuIconBlock : &st::menuIconUnblock);
+			(*menu)->addSeparator();
+			(*menu)->addAction(tr::jel_JellyRemove(tr::now), [=] {
+				ShowRemove(controller, info);
+			}, &st::menuIconDelete);
+			const auto context = static_cast<QContextMenuEvent*>(event.get());
+			(*menu)->popup(context->reason() == QContextMenuEvent::Keyboard
+				? button->mapToGlobal(button->rect().center())
+				: context->globalPos());
+			break;
+		}
+		return base::EventFilterResult::Cancel;
+	});
+}
+
 void ShowDetails(not_null<Window::SessionController*> controller, PluginInfo info) {
 	const auto service = QPointer<Service>(&controller->session().plugins());
 	controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> box) {
@@ -305,27 +370,6 @@ void ShowDetails(not_null<Window::SessionController*> controller, PluginInfo inf
 				});
 				confirm->addButton(tr::lng_cancel(), [=] { confirm->closeBox(); });
 			}));
-		});
-		Row(box, tr::jel_JellyRemove(), [=] {
-			controller->show(Box<Ui::GenericBox>([=](not_null<Ui::GenericBox*> confirm) {
-				confirm->setTitle(tr::jel_JellyRemove());
-				confirm->setWidth(st::boxWideWidth);
-				const auto removeData = Check(confirm, tr::jel_JellyV2RemoveData(tr::now), true);
-				confirm->addButton(tr::jel_JellyRemove(), [=] {
-					if (!service) return;
-					auto error = QString();
-					if (service->uninstall(info.package.id, info.package.digest, removeData->checked(), error)) { confirm->closeBox(); if (guardedBox) guardedBox->closeBox(); }
-					else controller->showToast(error);
-				});
-				confirm->addButton(tr::lng_cancel(), [=] { confirm->closeBox(); });
-			}));
-		});
-		box->addButton(info.enabled ? tr::jel_JellyV2Disable() : tr::jel_JellyEnable(), [=] {
-			if (!service) return;
-			auto error = QString();
-			const auto success = info.enabled ? service->disable(info.package.id, error) : service->enable(info.package.id, info.package.digest, error);
-			if (success) box->closeBox();
-			else controller->showToast(error);
 		});
 		box->addButton(tr::lng_close(), [=] { box->closeBox(); });
 	}));
@@ -382,9 +426,12 @@ const auto kMeta = BuildHelper({
 	for (const auto &error : service->diagnostics()) builder.add([=](const WidgetContext &ctx) -> SectionBuilder::WidgetToAdd {
 		return { .widget = object_ptr<Ui::FlatLabel>(ctx.container, rpl::single(error), st::boxLabel), .margin = ListMargins() };
 	});
-	for (const auto &info : service->plugins()) builder.addButton({ .id = u"jelly/v2/plugin/"_q + info.package.id,
-		.title = rpl::single(info.package.name), .icon = { &st::menuIconBot }, .label = rpl::single(Status(info) + u" · "_q + ModeName(info.mode)),
-		.onClick = [=] { ShowDetails(controller, info); } });
+	for (const auto &info : service->plugins()) {
+		const auto button = builder.addButton({ .id = u"jelly/v2/plugin/"_q + info.package.id,
+			.title = rpl::single(info.package.name), .icon = { &st::menuIconBot }, .label = rpl::single(Status(info) + u" · "_q + ModeName(info.mode)),
+			.onClick = [=] { ShowDetails(controller, info); } });
+		if (button) SetupPluginMenu(controller, button, info.package.id);
+	}
 	if (service->plugins().empty()) builder.add([](const WidgetContext &ctx) -> SectionBuilder::WidgetToAdd {
 		return { .widget = object_ptr<Ui::FlatLabel>(ctx.container, tr::jel_JellyEmpty(), st::boxLabel), .margin = ListMargins() };
 	});

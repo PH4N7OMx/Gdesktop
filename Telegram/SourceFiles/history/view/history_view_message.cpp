@@ -77,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "jel/jel_settings.h"
 #include "jel/features/filters/filters_controller.h"
 #include "jel/features/message_shot/message_shot.h"
+#include "jel/utils/telegram_helpers.h"
 #include "styles/style_jel_icons.h"
 
 

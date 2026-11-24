@@ -84,6 +84,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 // GummyGram includes
 #include "data/data_groups.h"
 #include "jel/jel_settings.h"
+#include "jel/features/filters/filters_controller.h"
 #include "jel/features/message_shot/message_shot.h"
 #include "jel/utils/telegram_helpers.h"
 #include "styles/style_jel_styles.h"
@@ -767,6 +768,13 @@ QString DateTooltipText(not_null<Element*> view) {
 	}
 	if (const auto stars = item->out() ? item->starsPaid() : 0) {
 		dateText += '\n' + tr::lng_you_paid_stars(tr::now, lt_count, stars);
+	}
+	if (const auto repeatCount = FiltersController::collapsedDuplicateGroupSize(item);
+		repeatCount > 1) {
+		dateText += '\n' + tr::jel_DuplicatesTooltip(
+			tr::now,
+			lt_count,
+			repeatCount);
 	}
 	if (!item->isLocal()) {
 		dateText += '\n';

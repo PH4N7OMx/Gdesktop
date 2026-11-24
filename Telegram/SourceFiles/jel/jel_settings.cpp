@@ -1214,6 +1214,7 @@ void JelSettings::setSingleCornerRadius(bool val) {
 void JelSettings::setCollapseDuplicates(bool val) {
 	if (_collapseDuplicates.current() == val) return;
 	_collapseDuplicates = val;
+	FiltersController::clearExpandedDuplicateGroups();
 	FiltersCacheController::fireUpdate();
 	repaintApp();
 	save();

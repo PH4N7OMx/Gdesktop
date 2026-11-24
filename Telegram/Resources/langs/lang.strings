@@ -9922,7 +9922,16 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "jel_FiltersInGroups" = "Groups & Supergroups";
 "jel_FiltersInPrivate" = "Private Chats";
 "jel_CollapseDuplicates" = "Collapse repeats (xN)";
+"jel_CollapseDuplicatesDescription" = "Group consecutive identical text messages into one (xN). Right-click a message to expand or collapse repeats.";
 "jel_DeleteAllDuplicates" = "Delete all duplicates";
+"jel_DeleteAllDuplicatesCount#one" = "Delete repeat ({count})";
+"jel_DeleteAllDuplicatesCount#other" = "Delete all repeats ({count})";
+"jel_ExpandDuplicates#one" = "Expand repeat ({count})";
+"jel_ExpandDuplicates#other" = "Expand repeats ({count})";
+"jel_CollapseDuplicatesGroup#one" = "Collapse repeat ({count})";
+"jel_CollapseDuplicatesGroup#other" = "Collapse repeats ({count})";
+"jel_DuplicatesTooltip#one" = "{count} repeated message · Right-click to expand";
+"jel_DuplicatesTooltip#other" = "{count} repeated messages · Right-click to expand";
 "jel_FiltersPerChatSection" = "Per-chat filters";
 "jel_FiltersAddPerChat" = "Configure filters for specific chat...";
 "jel_KeepForbiddenChats" = "Keep Left Chats";

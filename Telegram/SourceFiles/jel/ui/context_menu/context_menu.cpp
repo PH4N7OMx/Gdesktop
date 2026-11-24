@@ -25,6 +25,7 @@
 #include "base/call_delayed.h"
 #include "base/random.h"
 #include "base/unixtime.h"
+#include "boxes/delete_messages_box.h"
 #include "core/mime_type.h"
 #include "data/data_channel.h"
 #include "data/data_chat.h"
@@ -1000,6 +1001,79 @@ void AddCreateFilterAction(not_null<Ui::PopupMenu*> menu,
 			controller->show(Settings::RegexEditBox(&filter, {}, getDialogIdFromPeer(item->history()->peer), true));
 		},
 		&st::menuIconAddToFolder);
+}
+
+void AddDuplicateToggleAction(not_null<Ui::PopupMenu*> menu, HistoryItem *item) {
+	if (!item) {
+		return;
+	}
+	const auto dupes = FiltersController::getDuplicateGroup(item);
+	if (dupes.size() <= 1) {
+		return;
+	}
+	const auto expanded = FiltersController::isDuplicateGroupExpanded(item);
+	const auto count = int(dupes.size());
+	const auto owner = &item->history()->owner();
+	const auto session = &item->history()->session();
+	const auto itemId = item->fullId();
+	menu->addAction(
+		expanded
+			? tr::jel_CollapseDuplicatesGroup(tr::now, lt_count, count)
+			: tr::jel_ExpandDuplicates(tr::now, lt_count, count),
+		crl::guard(session, [=] {
+			if (const auto current = owner->message(itemId)) {
+				if (expanded) {
+					FiltersController::collapseDuplicateGroup(current);
+				} else {
+					FiltersController::expandDuplicateGroup(current);
+				}
+			}
+		}),
+		expanded ? &st::menuIconCollapse : &st::menuIconExpand);
+}
+
+void AddDeleteAllDuplicatesAction(
+		not_null<Ui::PopupMenu*> menu,
+		not_null<Window::SessionController*> controller,
+		HistoryItem *item) {
+	if (!item) {
+		return;
+	}
+	const auto dupes = FiltersController::getDuplicateGroup(item);
+	if (dupes.size() <= 1) {
+		return;
+	}
+	auto deletableCount = 0;
+	for (const auto &entry : dupes) {
+		if (entry->canDelete()) {
+			++deletableCount;
+		}
+	}
+	if (deletableCount <= 1) {
+		return;
+	}
+	const auto owner = &item->history()->owner();
+	const auto itemId = item->fullId();
+	menu->addAction(
+		tr::jel_DeleteAllDuplicatesCount(tr::now, lt_count, deletableCount),
+		crl::guard(controller, [=] {
+			if (const auto current = owner->message(itemId)) {
+				const auto dupesNow = FiltersController::getDuplicateGroup(current);
+				auto deletable = std::vector<not_null<HistoryItem*>>();
+				deletable.reserve(dupesNow.size());
+				for (const auto &entry : dupesNow) {
+					if (entry->canDelete()) {
+						deletable.push_back(entry);
+					}
+				}
+				if (!deletable.empty()) {
+					controller->show(Box<DeleteMessagesBox>(
+						&owner->session(),
+						owner->itemsToIds(deletable)));
+				}
+			}
+		}),
+		&st::menuIconDelete);
 }
 
 } // namespace JelUi

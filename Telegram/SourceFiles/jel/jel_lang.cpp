@@ -134,6 +134,25 @@ void JelLanguage::loadCachedLanguage() {
 		{ u"jel_JellyV2Stopping"_q, u"Останавливается"_q },
 		{ u"jel_JellyV2Waiting"_q, u"Ожидает подтверждения"_q },
 		{ u"jel_JellyViewCode"_q, u"Посмотреть код"_q },
+		{ u"jel_CollapseDuplicates"_q, u"Сворачивать повторы (xN)"_q },
+		{ u"jel_CollapseDuplicatesDescription"_q, u"Объединяет подряд идущие одинаковые текстовые сообщения в одно (xN). Нажмите ПКМ по сообщению, чтобы развернуть или свернуть повторы."_q },
+		{ u"jel_DeleteAllDuplicates"_q, u"Удалить все повторы"_q },
+		{ u"jel_DeleteAllDuplicatesCount#one"_q, u"Удалить повтор ({count})"_q },
+		{ u"jel_DeleteAllDuplicatesCount#few"_q, u"Удалить все повторы ({count})"_q },
+		{ u"jel_DeleteAllDuplicatesCount#many"_q, u"Удалить все повторы ({count})"_q },
+		{ u"jel_DeleteAllDuplicatesCount#other"_q, u"Удалить все повторы ({count})"_q },
+		{ u"jel_ExpandDuplicates#one"_q, u"Развернуть повтор ({count})"_q },
+		{ u"jel_ExpandDuplicates#few"_q, u"Развернуть повторы ({count})"_q },
+		{ u"jel_ExpandDuplicates#many"_q, u"Развернуть повторы ({count})"_q },
+		{ u"jel_ExpandDuplicates#other"_q, u"Развернуть повторы ({count})"_q },
+		{ u"jel_CollapseDuplicatesGroup#one"_q, u"Свернуть повтор ({count})"_q },
+		{ u"jel_CollapseDuplicatesGroup#few"_q, u"Свернуть повторы ({count})"_q },
+		{ u"jel_CollapseDuplicatesGroup#many"_q, u"Свернуть повторы ({count})"_q },
+		{ u"jel_CollapseDuplicatesGroup#other"_q, u"Свернуть повторы ({count})"_q },
+		{ u"jel_DuplicatesTooltip#one"_q, u"{count} повторяющееся сообщение · ПКМ, чтобы развернуть"_q },
+		{ u"jel_DuplicatesTooltip#few"_q, u"{count} повторяющихся сообщения · ПКМ, чтобы развернуть"_q },
+		{ u"jel_DuplicatesTooltip#many"_q, u"{count} повторяющихся сообщений · ПКМ, чтобы развернуть"_q },
+		{ u"jel_DuplicatesTooltip#other"_q, u"{count} повторяющихся сообщений · ПКМ, чтобы развернуть"_q },
 	};
 	for (const auto &[key, value] : pluginStrings) {
 		language.resetValue(key.toUtf8());
@@ -148,6 +167,7 @@ void JelLanguage::loadCachedLanguage() {
 		language.applyValue(
 			"jel_CreationDateSelfConfirmed",
 			u"Вы создали свой аккаунт **{item}**."_q.toUtf8());
+		language.updatePluralRules();
 	}
 	auto finalLangPackId = langMapping.contains(langPackId) ? langMapping[langPackId] : langPackId;
 

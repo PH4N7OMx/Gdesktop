@@ -52,5 +52,9 @@ void AddCreateFilterAction(not_null<Ui::PopupMenu*> menu,
 						   not_null<Window::SessionController*> controller,
 						   HistoryItem *item,
 						   const QString &selectedText);
+void AddDuplicateToggleAction(not_null<Ui::PopupMenu*> menu, HistoryItem *item);
+void AddDeleteAllDuplicatesAction(not_null<Ui::PopupMenu*> menu,
+								  not_null<Window::SessionController*> controller,
+								  HistoryItem *item);
 
 }

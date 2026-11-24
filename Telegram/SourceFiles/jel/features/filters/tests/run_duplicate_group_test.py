@@ -9,7 +9,7 @@ def main():
     tests = Path(__file__).resolve().parent
     source = (tests.parent / "filters_controller.cpp").read_text(encoding="utf-8")
     start = source.index("namespace {\n\nconstexpr auto kDuplicateFastLookupLimit")
-    end = source.index("\nvoid handleDuplicateItemRemoved", start)
+    end = source.index("\nbool isBlockedOrRegexFiltered", start)
     compiler = os.environ.get("CXX") or next(
         (path for name in ("cl", "clang++", "g++")
          if (path := shutil.which(name))), None,

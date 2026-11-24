@@ -521,12 +521,15 @@ void BottomInfo::layoutDateText() {
 			: QString();
 		const auto author = settings.filterZalgo() ? filterZalgo(_data.author) : _data.author;
 		const auto prefix = !author.isEmpty() ? u", "_q : QString();
-		const auto date = editedPrimary
+		const auto repeatSuffix = (_data.repeatCount > 1)
+			? (u" (x"_q + QString::number(_data.repeatCount) + ')')
+			: QString();
+		const auto date = (editedPrimary
 			? FormatEditedDate(_data.date, _data.editedDate)
 			: edited + ((_data.flags & (Data::Flag::ForwardedDate | Data::Flag::FullDate))
-			? Ui::FormatDateTimeSavedFrom(_data.date)
-			: QLocale().toString(_data.date.time(), QLocale::ShortFormat))
-			+ (_data.repeatCount > 1 ? (" (x" + QString::number(_data.repeatCount) + ")") : QString());
+				? Ui::FormatDateTimeSavedFrom(_data.date)
+				: QLocale().toString(_data.date.time(), QLocale::ShortFormat)))
+			+ repeatSuffix;
 		const auto afterAuthor = prefix + date;
 		const auto afterAuthorWidth = st::msgDateFont->width(afterAuthor);
 		const auto authorWidth = st::msgDateFont->width(author);
@@ -617,12 +620,15 @@ void BottomInfo::layoutDateText() {
 			? (editedIcon ? u" "_q : u", "_q)
 			: QString();
 
-		const auto dateStr = editedPrimary
+		const auto repeatSuffix = (_data.repeatCount > 1)
+			? (u" (x"_q + QString::number(_data.repeatCount) + ')')
+			: QString();
+		const auto dateStr = (editedPrimary
 			? FormatEditedDate(_data.date, _data.editedDate)
 			: (_data.flags & (Data::Flag::ForwardedDate | Data::Flag::FullDate))
-			? Ui::FormatDateTimeSavedFrom(_data.date)
-			: QLocale().toString(_data.date.time(), QLocale::ShortFormat)
-			+ (_data.repeatCount > 1 ? (" (x" + QString::number(_data.repeatCount) + ")") : QString());
+				? Ui::FormatDateTimeSavedFrom(_data.date)
+				: QLocale().toString(_data.date.time(), QLocale::ShortFormat))
+			+ repeatSuffix;
 
 		const auto date = TextWithEntities{}
 			.append(edited)
@@ -794,7 +800,16 @@ struct BottomInfo::Data BottomInfoDataFromMessage(not_null<Message*> message) {
 	auto result = BottomInfo::Data();
 	result.date = message->dateTime();
 	result.effectId = item->effectId();
-	result.repeatCount = FiltersController::countDuplicateGroupSize(item);
+	const auto context = message->context();
+	const auto allowRepeatBadge = !JelFeatures::MessageShot::isTakingShot()
+		&& (context == Context::History
+			|| context == Context::Replies
+			|| context == Context::Monoforum
+			|| context == Context::SavedSublist
+			|| context == Context::ChatPreview);
+	result.repeatCount = allowRepeatBadge
+		? FiltersController::collapsedDuplicateGroupSize(item)
+		: 1;
 	if (message->hasOutLayout()) {
 		result.flags |= Flag::OutLayout;
 	}

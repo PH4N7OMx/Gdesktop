@@ -3323,6 +3323,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 				Element::Moused())
 		) != HistoryView::PointState::GroupPart);
 	const auto addSelectMessageAction = [&](not_null<HistoryItem*> item) {
+		JelUi::AddDuplicateToggleAction(_menu, item);
 		if (item->canBeSelected() && !hasSelectRestriction()) {
 			const auto itemId = item->fullId();
 			_menu->addAction(tr::lng_context_select_msg(tr::now), [=] {
@@ -3947,6 +3948,10 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 							callback,
 							item->ttlDestroyAt(),
 							[=] { _menu = nullptr; }));
+						JelUi::AddDeleteAllDuplicatesAction(
+							_menu,
+							_controller,
+							item);
 					}
 				}
 				if (!canBlockSender && canReport) {

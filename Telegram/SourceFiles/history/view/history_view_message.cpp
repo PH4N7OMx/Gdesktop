@@ -1801,6 +1801,9 @@ void Message::refreshTopicButton() {
 }
 
 int Message::marginTop() const {
+	if (isMessageHidden(data())) {
+		return 0;
+	}
 	auto result = 0;
 	if (!isHidden()) {
 		if (isAttachedToPrevious()) {
@@ -1875,6 +1878,10 @@ void Message::draw(Painter &p, const PaintContext &context) const {
 
 	const auto stm = context.messageStyle();
 	const auto bubble = drawBubble();
+
+	if (isMessageHidden(item)) {
+		return;
+	}
 
 	if (const auto bar = Get<UnreadBar>()) {
 		auto unreadbarh = bar->height();

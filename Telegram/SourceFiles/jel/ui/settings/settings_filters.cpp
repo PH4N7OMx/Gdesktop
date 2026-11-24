@@ -152,6 +152,9 @@ void BuildGlobalFilters(SectionBuilder &builder) {
 		}, collapseButton->lifetime());
 		JelSectionBuilder(builder).addBetaBadge(collapseButton);
 	}
+	builder.addSkip();
+	builder.addDividerText(tr::jel_CollapseDuplicatesDescription());
+	builder.addSkip();
 
 	const auto controller = builder.controller();
 	builder.addButton({

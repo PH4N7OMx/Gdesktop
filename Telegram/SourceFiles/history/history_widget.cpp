@@ -812,6 +812,9 @@ HistoryWidget::HistoryWidget(
 	) | rpl::on_next([=](not_null<HistoryItem*> item) {
 		const auto history = item->history();
 		if (history == _history || history == _migrated) {
+			if (FiltersController::isCollapsedDuplicate(item)) {
+				FiltersController::expandDuplicateGroup(item);
+			}
 			if (item->mainView()) {
 				enqueueMessageHighlight({ item });
 				animatedScrollToItem(item->id);
@@ -839,26 +842,33 @@ HistoryWidget::HistoryWidget(
 				[=]
 				{
 					if (_history) {
+						auto toRefresh = std::vector<not_null<HistoryItem*>>();
+						const auto collect = [&](History *history) {
+							if (!history) {
+								return;
+							}
+							for (const auto &block : history->blocks) {
+								if (!block) {
+									continue;
+								}
+								for (const auto &msg : block->messages) {
+									if (msg) {
+										toRefresh.push_back(msg->data());
+									}
+								}
+							}
+						};
+						collect(_migrated);
+						collect(_history);
+						for (const auto &item : toRefresh) {
+							item->history()->owner().requestItemViewRefresh(item);
+						}
 						_history->forceFullResize();
 						if (_migrated) {
 							_migrated->forceFullResize();
 						}
 						updateHistoryGeometry();
 						update();
-
-						for (const auto &item : _history->blocks) {
-							if (!item) {
-								continue;
-							}
-							for (const auto &msg : item->messages) {
-								if (!msg) {
-									continue;
-								}
-
-								_history->owner().requestViewResize(msg.get());
-								_history->owner().requestItemViewRefresh(msg->data());
-							}
-						}
 					}
 				});
 		},
@@ -1978,11 +1988,15 @@ void HistoryWidget::scrollToCurrentVoiceMessage(
 void HistoryWidget::animatedScrollToItem(MsgId msgId) {
 	Expects(_history != nullptr);
 
+	auto to = session().data().message(_history->peer, msgId);
+	if (to && FiltersController::isCollapsedDuplicate(to)) {
+		FiltersController::expandDuplicateGroup(to);
+	}
+
 	if (hasPendingResizedItems()) {
 		updateListSize();
 	}
 
-	auto to = session().data().message(_history->peer, msgId);
 	if (_list->itemTop(to) < 0) {
 		return;
 	}

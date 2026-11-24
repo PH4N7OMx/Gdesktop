@@ -718,6 +718,7 @@ ListWidget::ListWidget(
 		crl::on_main(this, [=] {
 			if (_viewsCapacity.empty()) {
 				for (const auto &view : _items) {
+					view->itemDataChanged();
 					view->setPendingResize();
 				}
 				const auto old = _slice;
@@ -1512,6 +1513,15 @@ bool ListWidget::showAtPositionNow(
 		Data::MessagePosition position,
 		const Window::SectionShow &params,
 		Fn<void(bool found)> done) {
+	if (position != Data::MaxMessagePosition
+		&& position != Data::UnreadMessagePosition) {
+		if (const auto item = session().data().message(position.fullId)) {
+			if (FiltersController::isCollapsedDuplicate(item)) {
+				FiltersController::expandDuplicateGroup(item);
+				updateItemsGeometry();
+			}
+		}
+	}
 	auto scrollTop = scrollTopForPosition(position);
 	if (!scrollTop.has_value()) {
 		return false;
@@ -6416,16 +6426,11 @@ void ListWidget::itemRemoved(not_null<const HistoryItem*> item) {
 		_thanosController->captureOnRemoval(item);
 	}
 
-	const auto savedTop = _visibleTop;
 	saveScrollState();
 	const auto saved = Tgw::ListScroll::CaptureSaved(this);
 	const auto guard = gsl::finally([&] {
 		Tgw::ListScroll::Keep(this, saved);
 		restoreScrollState();
-		const auto &settings = JelSettings::getInstance();
-		if (settings.filtersEnabled() && settings.collapseDuplicates()) {
-			_delegate->listScrollTo(savedTop);
-		}
 	});
 
 	const auto view = i->second.get();

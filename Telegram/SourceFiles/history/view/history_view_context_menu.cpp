@@ -1203,22 +1203,7 @@ bool AddDeleteMessageAction(
 		callback,
 		item->ttlDestroyAt(),
 		[=] { delete menu; }));
-	const auto dupes = FiltersController::getDuplicateGroup(item);
-	if (dupes.size() > 1) {
-		menu->addAction(
-			tr::jel_DeleteAllDuplicates(tr::now),
-			crl::guard(controller, [=] {
-				if (const auto item = owner->message(itemId)) {
-					const auto dupesNow = FiltersController::getDuplicateGroup(item);
-					if (!dupesNow.empty()) {
-						controller->show(Box<DeleteMessagesBox>(
-							&owner->session(),
-							owner->itemsToIds(dupesNow)));
-					}
-				}
-			}),
-			&st::menuIconDelete);
-	}
+	JelUi::AddDeleteAllDuplicatesAction(menu, controller, item);
 	return true;
 }
 
@@ -1340,8 +1325,13 @@ bool AddSelectMessageAction(
 	} else if (!item
 		|| (item->isLocal() && !item->isEphemeral())
 		|| item->isService()
-		|| IsAnchoredEphemeral(item)
-		|| list->hasSelectRestriction()) {
+		|| IsAnchoredEphemeral(item)) {
+		return false;
+	}
+	if (request.selectedItems.empty()) {
+		JelUi::AddDuplicateToggleAction(menu, item);
+	}
+	if (list->hasSelectRestriction()) {
 		return false;
 	}
 	const auto owner = &item->history()->owner();

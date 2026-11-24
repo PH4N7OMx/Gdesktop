@@ -11,6 +11,7 @@
 #include "jel/features/filters/filters_cache_controller.h"
 #include "jel/features/filters/filters_utils.h"
 #include "jel/utils/telegram_helpers.h"
+#include "base/unixtime.h"
 #include "data/data_peer.h"
 #include "data/data_peer_id.h"
 #include "data/data_session.h"
@@ -22,6 +23,7 @@
 #include "main/main_session.h"
 #include "unicode/regex.h"
 
+#include <algorithm>
 #include <memory>
 #include <set>
 #include <unordered_set>
@@ -29,18 +31,57 @@
 namespace FiltersController {
 
 using DialogKey = std::pair<uint64, uint64>;
+using MessageKey = std::pair<uint64, FullMsgId>;
 
 std::set<DialogKey> showingFilteredMessages;
+std::set<DialogKey> dialogsWithCollapsedDuplicates;
+base::flat_set<MessageKey> notifiedDuplicates;
+base::flat_set<MessageKey> removingDuplicates;
+base::flat_set<MessageKey> expandedDuplicateGroups;
 
 DialogKey dialogKey(not_null<PeerData*> peer) {
 	return { peer->session().uniqueId(), peer->id.value };
+}
+
+MessageKey messageKey(not_null<const HistoryItem*> item) {
+	return { item->history()->session().uniqueId(), item->fullId() };
 }
 
 void clearSession(uint64 sessionId) {
 	std::erase_if(showingFilteredMessages, [=](const DialogKey &key) {
 		return key.first == sessionId;
 	});
+	std::erase_if(dialogsWithCollapsedDuplicates, [=](const DialogKey &key) {
+		return key.first == sessionId;
+	});
+	for (auto i = notifiedDuplicates.begin(); i != notifiedDuplicates.end();) {
+		if (i->first == sessionId) {
+			i = notifiedDuplicates.erase(i);
+		} else {
+			++i;
+		}
+	}
+	for (auto i = removingDuplicates.begin(); i != removingDuplicates.end();) {
+		if (i->first == sessionId) {
+			i = removingDuplicates.erase(i);
+		} else {
+			++i;
+		}
+	}
+	for (auto i = expandedDuplicateGroups.begin(); i != expandedDuplicateGroups.end();) {
+		if (i->first == sessionId) {
+			i = expandedDuplicateGroups.erase(i);
+		} else {
+			++i;
+		}
+	}
 	FiltersCacheController::clearSession(sessionId);
+}
+
+void clearExpandedDuplicateGroups() {
+	expandedDuplicateGroups.clear();
+	notifiedDuplicates.clear();
+	dialogsWithCollapsedDuplicates.clear();
 }
 
 bool filterBlocked(const not_null<HistoryItem*> item) {
@@ -181,14 +222,12 @@ namespace {
 
 constexpr auto kDuplicateFastLookupLimit = 200;
 constexpr auto kMaxTrackedDuplicates = 2000;
+constexpr auto kMaxExpandedDuplicateGroups = 1000;
 
 enum class DuplicateLookupDirection {
 	Previous,
 	Next,
 };
-
-base::flat_set<FullMsgId> notifiedDuplicates;
-base::flat_set<FullMsgId> removingDuplicates;
 
 [[nodiscard]] bool DuplicateCollapsingEnabled(
 		not_null<const HistoryItem*> item) {
@@ -199,24 +238,63 @@ base::flat_set<FullMsgId> removingDuplicates;
 }
 
 [[nodiscard]] bool IsRemoving(not_null<const HistoryItem*> item) {
-	return removingDuplicates.contains(item->fullId());
+	return removingDuplicates.contains(messageKey(item));
+}
+
+[[nodiscard]] bool HasNonEmptyReplyMarkup(not_null<const HistoryItem*> item) {
+	const auto markup = item->Get<HistoryMessageReplyMarkup>();
+	return markup && !markup->data.isNull();
+}
+
+[[nodiscard]] bool IsDuplicateContentEligible(
+		not_null<const HistoryItem*> item) {
+	return DuplicateCollapsingEnabled(item)
+		&& item->isRegular()
+		&& !item->isService()
+		&& !item->isSponsored()
+		&& !item->isLocal()
+		&& !item->isSending()
+		&& !item->hasFailed()
+		&& !item->isPinned()
+		&& !item->media()
+		&& !HasNonEmptyReplyMarkup(item)
+		&& (item->id > 0)
+		&& !item->originalText().text.isEmpty();
 }
 
 [[nodiscard]] bool IsDuplicateCandidate(
 		not_null<const HistoryItem*> item) {
-	return DuplicateCollapsingEnabled(item)
-		&& item->isRegular()
-		&& !IsRemoving(item)
-		&& !item->isService()
-		&& !item->media()
-		&& (item->id > 0)
-		&& !item->originalText().text.isEmpty();
+	return !IsRemoving(item) && IsDuplicateContentEligible(item);
+}
+
+[[nodiscard]] bool SameThread(
+		not_null<const HistoryItem*> first,
+		not_null<const HistoryItem*> second) {
+	return first->topicRootId() == second->topicRootId()
+		&& first->sublistPeerId() == second->sublistPeerId();
+}
+
+[[nodiscard]] bool SameLocalDay(TimeId first, TimeId second) {
+	if (first == second) {
+		return true;
+	}
+	return base::unixtime::parse(first).date()
+		== base::unixtime::parse(second).date();
 }
 
 [[nodiscard]] bool SameDuplicateContent(
 		not_null<const HistoryItem*> first,
 		not_null<const HistoryItem*> second) {
-	if (first->media() || second->media()) {
+	if (!IsDuplicateContentEligible(first)
+		|| !IsDuplicateContentEligible(second)) {
+		return false;
+	}
+	if (!SameThread(first, second)
+		|| !SameLocalDay(first->date(), second->date())) {
+		return false;
+	}
+	if (first->isDeleted() != second->isDeleted()
+		|| first->viaBot() != second->viaBot()) {
 		return false;
 	}
 	const auto firstForward = first->Get<HistoryMessageForwarded>();
@@ -230,9 +308,30 @@ base::flat_set<FullMsgId> removingDuplicates;
 			|| first->originalPostAuthor() != second->originalPostAuthor())) {
 		return false;
 	}
+	const auto firstSigned = first->Get<HistoryMessageSigned>();
+	const auto secondSigned = second->Get<HistoryMessageSigned>();
+	if ((firstSigned != nullptr) != (secondSigned != nullptr)) {
+		return false;
+	}
+	if (firstSigned
+		&& (firstSigned->author != secondSigned->author
+			|| firstSigned->viaBusinessBot != secondSigned->viaBusinessBot
+			|| firstSigned->isAnonymousRank != secondSigned->isAnonymousRank)) {
+		return false;
+	}
 	return first->from() == second->from()
 		&& first->originalText() == second->originalText()
 		&& first->replyTo() == second->replyTo();
+}
+
+[[nodiscard]] bool IsAdjacentCandidate(
+		not_null<const HistoryItem*> origin,
+		not_null<const HistoryItem*> candidate) {
+	return candidate->id > 0
+		&& candidate->isRegular()
+		&& !IsRemoving(candidate)
+		&& !candidate->isService()
+		&& SameThread(origin, candidate);
 }
 
 [[nodiscard]] HistoryItem *LookupClosestLoadedMessage(
@@ -241,11 +340,7 @@ base::flat_set<FullMsgId> removingDuplicates;
 	auto result = static_cast<HistoryItem*>(nullptr);
 	for (const auto &entry : item->history()->items()) {
 		const auto candidate = entry.get();
-		if (candidate == item.get()
-			|| candidate->id <= 0
-			|| !candidate->isRegular()
-			|| IsRemoving(candidate)
-			|| candidate->isService()) {
+		if (candidate == item.get() || !IsAdjacentCandidate(item, candidate)) {
 			continue;
 		}
 		if (direction == DuplicateLookupDirection::Previous) {
@@ -267,6 +362,20 @@ base::flat_set<FullMsgId> removingDuplicates;
 	if (item->id <= 0) {
 		return nullptr;
 	}
+	if (const auto view = item->mainView()) {
+		auto current = (direction == DuplicateLookupDirection::Previous)
+			? view->previousInBlocks()
+			: view->nextInBlocks();
+		while (current) {
+			const auto candidate = current->data().get();
+			if (IsAdjacentCandidate(item, candidate)) {
+				return candidate;
+			}
+			current = (direction == DuplicateLookupDirection::Previous)
+				? current->previousInBlocks()
+				: current->nextInBlocks();
+		}
+	}
 	const auto peerId = item->history()->peer->id;
 	const auto &owner = item->history()->owner();
 	for (auto offset = 1; offset <= kDuplicateFastLookupLimit; ++offset) {
@@ -277,10 +386,7 @@ base::flat_set<FullMsgId> removingDuplicates;
 			break;
 		}
 		const auto adjacent = owner.message(peerId, id);
-		if (!adjacent
-			|| !adjacent->isRegular()
-			|| IsRemoving(adjacent)
-			|| adjacent->isService()) {
+		if (!adjacent || !IsAdjacentCandidate(item, adjacent)) {
 			continue;
 		}
 		return adjacent;
@@ -291,22 +397,53 @@ base::flat_set<FullMsgId> removingDuplicates;
 void NotifyDuplicateHead(
 		not_null<const HistoryItem*> duplicate,
 		not_null<const HistoryItem*> head) {
-	const auto duplicateId = duplicate->fullId();
-	if (notifiedDuplicates.contains(duplicateId)) {
+	const auto duplicateKey = messageKey(duplicate);
+	if (notifiedDuplicates.contains(duplicateKey)) {
 		return;
 	}
 	if (notifiedDuplicates.size() >= kMaxTrackedDuplicates) {
 		notifiedDuplicates.clear();
 	}
-	notifiedDuplicates.emplace(duplicateId);
+	notifiedDuplicates.emplace(duplicateKey);
 
+	const auto session = &head->history()->session();
 	const auto owner = &head->history()->owner();
 	const auto headId = head->fullId();
-	crl::on_main([=] {
+	crl::on_main(session, [=] {
 		if (const auto current = owner->message(headId)) {
 			owner->requestItemViewRefresh(current);
 		}
 	});
+}
+
+void RefreshDuplicateGroupSync(
+		const std::vector<not_null<HistoryItem*>> &group) {
+	if (group.empty()) {
+		return;
+	}
+	const auto owner = &group.front()->history()->owner();
+	auto ids = std::vector<FullMsgId>();
+	ids.reserve(group.size() + 2);
+	const auto appendUnique = [&](const HistoryItem *entry) {
+		if (!entry) {
+			return;
+		}
+		const auto id = entry->fullId();
+		if (std::find(ids.begin(), ids.end(), id) == ids.end()) {
+			ids.push_back(id);
+		}
+	};
+	for (const auto &entry : group) {
+		appendUnique(entry);
+	}
+	appendUnique(LookupAdjacentMessage(
+		group.back(),
+		DuplicateLookupDirection::Next));
+	for (const auto &id : ids) {
+		if (const auto current = owner->message(id)) {
+			owner->requestItemViewRefresh(current);
+		}
+	}
 }
 
 } // namespace
@@ -335,11 +472,26 @@ const HistoryItem *getDuplicateHead(
 	return head;
 }
 
-bool isDuplicateMessage(const not_null<HistoryItem*> item) {
-	const auto head = getDuplicateHead(item);
-	if (!head) {
+bool isDuplicateGroupExpanded(const not_null<const HistoryItem*> item) {
+	if (!IsDuplicateCandidate(item)) {
 		return false;
 	}
+	const auto head = getDuplicateHead(item);
+	const auto first = head ? head : item.get();
+	return expandedDuplicateGroups.contains(messageKey(first));
+}
+
+bool isCollapsedDuplicate(const not_null<const HistoryItem*> item) {
+	const auto head = getDuplicateHead(item);
+	return head && !expandedDuplicateGroups.contains(messageKey(head));
+}
+
+bool isDuplicateMessage(const not_null<HistoryItem*> item) {
+	const auto head = getDuplicateHead(item);
+	if (!head || expandedDuplicateGroups.contains(messageKey(head))) {
+		return false;
+	}
+	dialogsWithCollapsedDuplicates.insert(dialogKey(item->history()->peer));
 	NotifyDuplicateHead(item, head);
 	return true;
 }
@@ -372,36 +524,144 @@ int countDuplicateGroupSize(const not_null<HistoryItem*> item) {
 	return static_cast<int>(getDuplicateGroup(item).size());
 }
 
+int collapsedDuplicateGroupSize(const not_null<const HistoryItem*> item) {
+	if (!IsDuplicateCandidate(item)) {
+		return 1;
+	}
+	if (getDuplicateHead(item) != nullptr) {
+		return 1;
+	}
+	if (expandedDuplicateGroups.contains(messageKey(item))) {
+		return 1;
+	}
+	auto count = 1;
+	for (auto next = LookupAdjacentMessage(
+			item,
+			DuplicateLookupDirection::Next);
+		next && SameDuplicateContent(item, next);
+		next = LookupAdjacentMessage(
+			next,
+			DuplicateLookupDirection::Next)) {
+		++count;
+	}
+	return count;
+}
+
+void expandDuplicateGroup(not_null<HistoryItem*> item) {
+	const auto group = getDuplicateGroup(item);
+	if (group.size() <= 1) {
+		return;
+	}
+	const auto headKey = messageKey(group.front());
+	if (expandedDuplicateGroups.contains(headKey)) {
+		return;
+	}
+	if (expandedDuplicateGroups.size() >= kMaxExpandedDuplicateGroups) {
+		expandedDuplicateGroups.clear();
+	}
+	expandedDuplicateGroups.emplace(headKey);
+	RefreshDuplicateGroupSync(group);
+}
+
+void collapseDuplicateGroup(not_null<HistoryItem*> item) {
+	const auto group = getDuplicateGroup(item);
+	if (group.size() <= 1) {
+		return;
+	}
+	const auto headKey = messageKey(group.front());
+	if (!expandedDuplicateGroups.contains(headKey)) {
+		return;
+	}
+	expandedDuplicateGroups.remove(headKey);
+	for (const auto &entry : group) {
+		notifiedDuplicates.remove(messageKey(entry));
+	}
+	RefreshDuplicateGroupSync(group);
+}
+
+void toggleDuplicateGroup(not_null<HistoryItem*> item) {
+	if (isDuplicateGroupExpanded(item)) {
+		collapseDuplicateGroup(item);
+	} else {
+		expandDuplicateGroup(item);
+	}
+}
+
 void handleDuplicateItemRemoved(not_null<const HistoryItem*> item) {
-	const auto itemId = item->fullId();
-	notifiedDuplicates.remove(itemId);
+	const auto itemKey = messageKey(item);
+	notifiedDuplicates.remove(itemKey);
+	const auto wasExpandedHead = expandedDuplicateGroups.contains(itemKey);
+	expandedDuplicateGroups.remove(itemKey);
 	if (!item->isRegular() || !DuplicateCollapsingEnabled(item)) {
 		return;
 	}
 
-	removingDuplicates.emplace(itemId);
+	removingDuplicates.emplace(itemKey);
 	const auto previous = LookupAdjacentMessage(
 		item,
 		DuplicateLookupDirection::Previous);
 	const auto next = LookupAdjacentMessage(
 		item,
 		DuplicateLookupDirection::Next);
-	auto head = static_cast<const HistoryItem*>(nullptr);
+
+	auto refreshIds = std::vector<FullMsgId>();
+	const auto appendRefresh = [&](const HistoryItem *entry) {
+		if (!entry) {
+			return;
+		}
+		const auto id = entry->fullId();
+		if (std::find(refreshIds.begin(), refreshIds.end(), id) == refreshIds.end()) {
+			refreshIds.push_back(id);
+		}
+	};
+
 	if (previous && SameDuplicateContent(previous, item)) {
-		head = getDuplicateHead(previous);
-		if (!head) {
-			head = previous;
+		const auto head = getDuplicateHead(previous);
+		appendRefresh(head ? head : previous);
+		if (next && SameDuplicateContent(next, item)) {
+			appendRefresh(next);
 		}
 	} else if (next && SameDuplicateContent(next, item)) {
-		head = next;
+		if (wasExpandedHead) {
+			expandedDuplicateGroups.emplace(messageKey(next));
+		}
+		notifiedDuplicates.remove(messageKey(next));
+		appendRefresh(next);
+		for (auto cur = LookupAdjacentMessage(
+				next,
+				DuplicateLookupDirection::Next);
+			cur && SameDuplicateContent(next, cur);
+			cur = LookupAdjacentMessage(cur, DuplicateLookupDirection::Next)) {
+			notifiedDuplicates.remove(messageKey(cur));
+			appendRefresh(cur);
+		}
+	} else if (previous && next && SameDuplicateContent(previous, next)) {
+		const auto head = getDuplicateHead(previous);
+		appendRefresh(head ? head : previous);
+		notifiedDuplicates.remove(messageKey(next));
+		appendRefresh(next);
+		for (auto cur = LookupAdjacentMessage(
+				next,
+				DuplicateLookupDirection::Next);
+			cur && SameDuplicateContent(next, cur);
+			cur = LookupAdjacentMessage(cur, DuplicateLookupDirection::Next)) {
+			notifiedDuplicates.remove(messageKey(cur));
+			appendRefresh(cur);
+		}
 	}
 
+	const auto session = &item->history()->session();
 	const auto owner = &item->history()->owner();
-	const auto headId = head ? head->fullId() : FullMsgId();
+	const auto weakSession = base::make_weak(session);
 	crl::on_main([=] {
-		removingDuplicates.remove(itemId);
-		if (const auto current = owner->message(headId)) {
-			owner->requestItemViewRefresh(current);
+		removingDuplicates.remove(itemKey);
+		if (!weakSession) {
+			return;
+		}
+		for (const auto &id : refreshIds) {
+			if (const auto current = owner->message(id)) {
+				owner->requestItemViewRefresh(current);
+			}
 		}
 	});
 }
@@ -453,26 +713,29 @@ bool filtered(const not_null<HistoryItem*> item) {
 
 	if (!isEnabled(item->history()->peer)) return false;
 
-	if (isDuplicateMessage(item)) {
+	if (isBlockedOrRegexFiltered(item)) {
 		return true;
 	}
 
-	return isBlockedOrRegexFiltered(item);
+	return isDuplicateMessage(item);
 }
 
 std::optional<bool> filteredMessagesShown(not_null<PeerData*> peer) {
-	if (!showingFilteredMessages.contains(dialogKey(peer))
-		&& !FiltersCacheController::hasFilteredMessages(peer)) {
+	const auto key = dialogKey(peer);
+	if (!showingFilteredMessages.contains(key)
+		&& !FiltersCacheController::hasFilteredMessages(peer)
+		&& !dialogsWithCollapsedDuplicates.contains(key)) {
 		return std::nullopt;
 	}
-	return showingFilteredMessages.contains(dialogKey(peer));
+	return showingFilteredMessages.contains(key);
 }
 
 void toggleFilteredMessagesShown(not_null<PeerData*> peer) {
-	if (showingFilteredMessages.contains(dialogKey(peer))) {
-		showingFilteredMessages.erase(dialogKey(peer));
+	const auto key = dialogKey(peer);
+	if (showingFilteredMessages.contains(key)) {
+		showingFilteredMessages.erase(key);
 	} else {
-		showingFilteredMessages.insert(dialogKey(peer));
+		showingFilteredMessages.insert(key);
 	}
 	FiltersCacheController::fireUpdate();
 }
@@ -484,6 +747,63 @@ void invalidate(not_null<HistoryItem*> item) {
 	}
 
 	FiltersCacheController::invalidate(item);
+
+	if (!item->isRegular() || !DuplicateCollapsingEnabled(item)) {
+		return;
+	}
+
+	auto refreshIds = std::vector<FullMsgId>();
+	const auto appendRefresh = [&](const HistoryItem *entry) {
+		if (!entry) {
+			return;
+		}
+		const auto id = entry->fullId();
+		if (std::find(refreshIds.begin(), refreshIds.end(), id) == refreshIds.end()) {
+			refreshIds.push_back(id);
+		}
+	};
+
+	const auto oldGroup = getDuplicateGroup(item);
+	for (const auto &entry : oldGroup) {
+		notifiedDuplicates.remove(messageKey(entry));
+		appendRefresh(entry);
+	}
+	appendRefresh(LookupAdjacentMessage(item, DuplicateLookupDirection::Previous));
+	appendRefresh(LookupAdjacentMessage(item, DuplicateLookupDirection::Next));
+	appendRefresh(item);
+
+	const auto session = &item->history()->session();
+	const auto owner = &item->history()->owner();
+	const auto itemId = item->fullId();
+	crl::on_main(session, [=] {
+		auto toRefresh = refreshIds;
+		const auto addUnique = [&](const HistoryItem *entry) {
+			if (!entry) {
+				return;
+			}
+			const auto id = entry->fullId();
+			if (std::find(toRefresh.begin(), toRefresh.end(), id) == toRefresh.end()) {
+				toRefresh.push_back(id);
+			}
+		};
+		if (const auto current = owner->message(itemId)) {
+			const auto newGroup = getDuplicateGroup(current);
+			for (const auto &entry : newGroup) {
+				notifiedDuplicates.remove(messageKey(entry));
+				addUnique(entry);
+			}
+			if (!newGroup.empty()) {
+				addUnique(LookupAdjacentMessage(
+					newGroup.back(),
+					DuplicateLookupDirection::Next));
+			}
+		}
+		for (const auto &id : toRefresh) {
+			if (const auto current = owner->message(id)) {
+				owner->requestItemViewRefresh(current);
+			}
+		}
+	});
 }
 
 }

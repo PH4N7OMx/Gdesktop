@@ -187,6 +187,7 @@ jobs:
             cd "$BIN_DIR"
             python3 "$GITHUB_WORKSPACE/Telegram/build/verify_jelly_runtime.py" .
             FILES="$BIN_NAME jelly-runtime"
+            test -d TelegramHelpers && FILES="$FILES TelegramHelpers"
             test -f Updater && FILES="$FILES Updater"
             tar -czvf Linux.tar.gz $FILES
             if [ "$(realpath .)" != "$(realpath $GITHUB_WORKSPACE/out/Release)" ]; then
@@ -220,7 +221,7 @@ jobs:
       TLOTTIE: "92df98dc20"
       WALLET_ENGINE: "e59e0d89d7ee90c388bf36e3334c5b276f396697"
       RUST_TOOLCHAIN: "1.96.1"
-      DESKTOP_PATCHES: "23d349a3ff09dbc1fa8127ce39ba9223de0edf21"
+      DESKTOP_PATCHES: "8a28b8433af70771c3d101c776ad837a94bd47ec"
       RNNOISE: "70f1d256acd4b34a572f999a05c87bf00b67730d"
       WEBRTC: "2ae9991a7f2278395f9716a2152e61b3cfed7a7a"
       MANUAL_CACHING: "2"

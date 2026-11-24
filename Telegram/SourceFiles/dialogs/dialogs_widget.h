@@ -169,6 +169,11 @@ protected:
 	void paintEvent(QPaintEvent *e) override;
 
 private:
+	[[nodiscard]] bool updateStoriesDrag(not_null<QDragMoveEvent*> e);
+	[[nodiscard]] bool addStoryDragAccepted(
+		not_null<QDropEvent*> e) const;
+	[[nodiscard]] bool updateAddStoryDrag(not_null<QDragMoveEvent*> e);
+	void addStoryDragLeft();
 	struct SearchProcessState {
 		base::flat_map<QString, MTPmessages_Messages> cache;
 		base::flat_map<mtpRequestId, QString> queries;
@@ -229,6 +234,7 @@ private:
 	void setupDownloadBar();
 	void setupShortcuts();
 	void setupStories();
+	void setupAddStory();
 	void setupSwipeBack();
 	void setupTopBarSuggestions();
 #ifdef _DEBUG
@@ -257,10 +263,12 @@ private:
 	[[nodiscard]] bool communityOverlaysShown() const;
 	void updateFrozenAccountBar();
 	void updateControlsVisibility(bool fast = false);
-	void updateLockUnlockVisibility(
-		anim::type animated = anim::type::instant);
+	[[nodiscard]] bool showingSuggestionsDuringWidthAnimation() const;
+	[[nodiscard]] bool searchHidesTopBarContent() const;
+	void updateTopBarActionsVisibility(anim::type animated);
 	void updateLoadMoreChatsVisibility();
-	void updateStoriesVisibility();
+	void updateStoriesVisibility(anim::type animated
+		= anim::type::normal);
 	void updateStoriesTitleShown();
 	void updateJumpToDateVisibility(bool fast = false);
 	void updateSearchFromVisibility(bool fast = false);
@@ -313,7 +321,7 @@ private:
 	void updateScrollUpVisibility();
 	void startScrollUpButtonAnimation(bool shown);
 	void updateScrollUpPosition();
-	void updateLockUnlockPosition();
+	void updateTopBarActionsPosition();
 	void updateSuggestions(anim::type animated);
 	void processSearchFocusChange();
 	void closeSuggestions();
@@ -355,6 +363,7 @@ private:
 	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _jumpToDate;
 	object_ptr<Ui::CrossButton> _cancelSearch;
 	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _lockUnlock;
+	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _addStory;
 
 	std::unique_ptr<Ui::MoreChatsBar> _moreChatsBar;
 

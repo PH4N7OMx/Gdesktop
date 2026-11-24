@@ -83,6 +83,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{#ReleasePath}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ReleasePath}\Updater.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ReleasePath}\jelly-runtime\jelly-plugin-host.exe"; DestDir: "{app}\jelly-runtime"; Flags: ignoreversion
+Source: "{#ReleasePath}\{#ModulesFolder}\TelegramWidgetHelper.exe"; DestDir: "{app}\{#ModulesFolder}"; Flags: ignoreversion
 #if MyBuildTarget != "winarm"
 Source: "{#ReleasePath}\{#ModulesFolder}\d3d\d3dcompiler_47.dll"; DestDir: "{app}\{#ModulesFolder}\d3d"; Flags: ignoreversion
 #endif
@@ -100,6 +101,16 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 Type: files; Name: "{app}\data"
 Type: files; Name: "{app}\data_config"
 Type: files; Name: "{app}\log.txt"
+Type: files; Name: "{app}\log_start0.txt"
+Type: files; Name: "{app}\log_start1.txt"
+Type: files; Name: "{app}\log_start2.txt"
+Type: files; Name: "{app}\log_start3.txt"
+Type: files; Name: "{app}\log_start4.txt"
+Type: files; Name: "{app}\log_start5.txt"
+Type: files; Name: "{app}\log_start6.txt"
+Type: files; Name: "{app}\log_start7.txt"
+Type: files; Name: "{app}\log_start8.txt"
+Type: files; Name: "{app}\log_start9.txt"
 Type: filesandordirs; Name: "{app}\DebugLogs"
 Type: filesandordirs; Name: "{app}\tupdates"
 Type: filesandordirs; Name: "{app}\tdata"
@@ -110,6 +121,16 @@ Type: dirifempty; Name: "{app}"
 Type: files; Name: "{userappdata}\{#MyAppName}\data"
 Type: files; Name: "{userappdata}\{#MyAppName}\data_config"
 Type: files; Name: "{userappdata}\{#MyAppName}\log.txt"
+Type: files; Name: "{userappdata}\{#MyAppName}\log_start0.txt"
+Type: files; Name: "{userappdata}\{#MyAppName}\log_start1.txt"
+Type: files; Name: "{userappdata}\{#MyAppName}\log_start2.txt"
+Type: files; Name: "{userappdata}\{#MyAppName}\log_start3.txt"
+Type: files; Name: "{userappdata}\{#MyAppName}\log_start4.txt"
+Type: files; Name: "{userappdata}\{#MyAppName}\log_start5.txt"
+Type: files; Name: "{userappdata}\{#MyAppName}\log_start6.txt"
+Type: files; Name: "{userappdata}\{#MyAppName}\log_start7.txt"
+Type: files; Name: "{userappdata}\{#MyAppName}\log_start8.txt"
+Type: files; Name: "{userappdata}\{#MyAppName}\log_start9.txt"
 Type: filesandordirs; Name: "{userappdata}\{#MyAppName}\DebugLogs"
 Type: filesandordirs; Name: "{userappdata}\{#MyAppName}\tupdates"
 Type: filesandordirs; Name: "{userappdata}\{#MyAppName}\tdata"

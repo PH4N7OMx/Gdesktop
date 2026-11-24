@@ -80,7 +80,7 @@ private:
 	const QPoint _itemIconPosition;
 	Ui::Animations::Simple _animation;
 	bool _isMuted = false;
-	bool _inited;
+	bool _inited = false;
 
 };
 

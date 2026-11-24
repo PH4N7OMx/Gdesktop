@@ -11,16 +11,22 @@ def sign_bundle(bundle, identity, app_entitlements=None, timestamp=False, runtim
         raise RuntimeError('JellyPlugins host is missing from the bundle: ' + str(helper))
     root = pathlib.Path(__file__).resolve().parents[2]
     entitlement = root / 'jellyplugins/v2/host/host.entitlements'
-    base = ['codesign', '--force', '--sign', identity]
-    if timestamp:
-        base.append('--timestamp')
-    if runtime:
-        base.extend(['--options', 'runtime'])
-    app = ['--entitlements', str(app_entitlements)] if app_entitlements else []
-    subprocess.run([*base, '--deep', *app, str(bundle)], check=True)
-    subprocess.run([*base, '--entitlements', str(entitlement), str(helper)], check=True)
-    subprocess.run([*base, *app, str(bundle)], check=True)
-    subprocess.run(['codesign', '--verify', '--deep', '--strict', str(bundle)], check=True)
+    if any((bundle / path).exists() for path in (
+            'Contents/Helpers/TelegramWidgetHelper',
+            'Contents/XPCServices/TelegramWidgetHelper.xpc')):
+        import sign_mac
+        sign_mac.sign(bundle, identity, app_entitlements, True if timestamp else None, runtime)
+    else:
+        base = ['codesign', '--force', '--sign', identity]
+        if timestamp:
+            base.append('--timestamp')
+        if runtime:
+            base.extend(['--options', 'runtime'])
+        app = ['--entitlements', str(app_entitlements)] if app_entitlements else []
+        subprocess.run([*base, '--deep', *app, str(bundle)], check=True)
+        subprocess.run([*base, '--entitlements', str(entitlement), str(helper)], check=True)
+        subprocess.run([*base, *app, str(bundle)], check=True)
+        subprocess.run(['codesign', '--verify', '--deep', '--strict', str(bundle)], check=True)
     data = subprocess.check_output(['codesign', '-d', '--entitlements', ':-', str(helper)], stderr=subprocess.PIPE)
     if plistlib.loads(data) != {'com.apple.security.app-sandbox': True}:
         raise RuntimeError('The plugin host inherited unexpected entitlements.')

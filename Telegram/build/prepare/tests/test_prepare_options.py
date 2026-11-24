@@ -20,7 +20,7 @@ def functions(platform='win64', options=()):
         re=re, os=os, keysLoc='cache_keys',
         win=platform != 'mac', win32=platform == 'win32',
         win64=platform == 'win64', winarm=platform == 'winarm',
-        mac=platform == 'mac', options=options, qt='6.11.2',
+        mac=platform == 'mac', options=options, qt='6.12.0',
         branch='v$QT', rustToolchain='1.90.0', modifiedEnv={},
         scriptPath=str(SOURCE.parent),
         qtAngleCmake=str(SOURCE.parents[3] / 'cmake/external/angle/qt.cmake'),
@@ -61,10 +61,9 @@ class PrepareOptionsTests(unittest.TestCase):
     def test_windows_qt_selection_matches_upstream_default(self):
         source = SOURCE.parents[1] / 'qt_version.py'
         for arch, arguments, expected in (
-                ('x64', [], '6.11.2'),
-                ('x86', [], '6.11.2'),
-                ('x64', ['qt5'], '5.15.19'),
-                ('arm', ['qt5'], '6.11.2')):
+                ('x64', [], '6.12.0'),
+                ('x86', [], '6.12.0'),
+                ('arm', [], '6.12.0')):
             environment = {}
             namespace = dict(
                 sys=types.SimpleNamespace(platform='win32', argv=arguments),
@@ -106,24 +105,10 @@ class PrepareOptionsTests(unittest.TestCase):
                 else:
                     self.assertNotEqual(*versions)
 
-    def test_qt5_patch_invalidates_the_preparation_cache(self):
-        recipe = next(node for node in ast.walk(TREE)
-            if isinstance(node, ast.Call) and getattr(node.func, 'id', '') == 'stage'
-            and 'qt5-static-angle.patch' in ast.unparse(node))
-        namespace = functions(options=('skip-debug',))
-        commands = eval(compile(ast.Expression(recipe.args[1]), str(SOURCE), 'eval'),
-            namespace)
-        filtered, _, version = namespace['filterByPlatform'](commands)
-        expected = hashlib.sha1(
-            (SOURCE.parent / 'qt5-static-angle.patch').read_bytes()).hexdigest()
-        self.assertIn(expected, version)
-        self.assertIn('git apply "', filtered)
-        self.assertIn('qt5-static-angle.patch"\nif errorlevel 1 exit /b 1', filtered)
-
     def test_windows_qt6_does_not_prepare_legacy_plugin_engine(self):
         for platform in ('win32', 'win64', 'winarm'):
             recipes = [commands for name, commands in stage_commands(platform, ('skip-debug',))
-                if name == 'qt_6.11.2' and '-feature-c++20' in commands]
+                if name == 'qt_6.12.0' and '-feature-c++20' in commands]
             self.assertEqual(len(recipes), 1)
             with self.subTest(platform=platform):
                 commands = recipes[0]

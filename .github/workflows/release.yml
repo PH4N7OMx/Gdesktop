@@ -392,6 +392,13 @@ jobs:
           path: ${{ env.LibrariesPath }}/local/tde2e
           key: ${{ steps.cache-tde2e.outputs.cache-primary-key }}
 
+      - name: Set up Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup target add aarch64-apple-darwin --toolchain "$RUST_TOOLCHAIN"
+          echo "RUSTUP_TOOLCHAIN=$RUST_TOOLCHAIN" >> $GITHUB_ENV
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
       - name: Combined Rust libraries cache
         id: cache-rust-libs
         uses: actions/cache/restore@v4
@@ -402,9 +409,6 @@ jobs:
       - name: Build wallet engine and tlottie
         if: steps.cache-rust-libs.outputs.cache-hit != 'true'
         run: |
-          export RUSTUP_TOOLCHAIN="$RUST_TOOLCHAIN"
-          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
-          rustup target add aarch64-apple-darwin --toolchain "$RUST_TOOLCHAIN"
           mkdir -p "$LibrariesPath"
           cd "$LibrariesPath"
           git clone https://github.com/desktop-app/patches.git

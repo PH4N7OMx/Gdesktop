@@ -218,6 +218,7 @@ public:
 		-> rpl::producer<ChatTypeFilter>;
 	[[nodiscard]] rpl::producer<bool> changeSearchFromArchiveRequests() const;
 	[[nodiscard]] rpl::producer<> resetSearchRestrictionsRequests() const;
+	[[nodiscard]] rpl::producer<QPoint> openSearchFiltersRequests() const;
 	[[nodiscard]] rpl::producer<> cancelSearchRequests() const;
 	[[nodiscard]] rpl::producer<> cancelSearchFromRequests() const;
 	[[nodiscard]] rpl::producer<> changeSearchFromRequests() const;
@@ -402,7 +403,8 @@ private:
 			|| (_searchedPressed >= 0)
 			|| (_communityPressed >= 0)
 			|| _pressedMorePosts
-			|| _pressedChatTypeFilter;
+			|| _pressedChatTypeFilter
+			|| _pressedExtraFilters;
 	}
 	bool isSelected() const {
 		return (_collapsedSelected >= 0)
@@ -415,7 +417,8 @@ private:
 			|| (_searchedSelected >= 0)
 			|| (_communitySelected >= 0)
 			|| _selectedMorePosts
-			|| _selectedChatTypeFilter;
+			|| _selectedChatTypeFilter
+			|| _selectedExtraFilters;
 	}
 	bool uniqueSearchResults() const;
 	bool hasHistoryInResults(not_null<History*> history) const;
@@ -623,6 +626,7 @@ private:
 	void moveSearchIn();
 	void dragPinnedFromTouch();
 	[[nodiscard]] bool hasChatTypeFilter() const;
+	[[nodiscard]] bool hasExtraFiltersSummary() const;
 
 	void restoreScrollShowingCommunity(
 		not_null<Data::CommunityInfo*> community);
@@ -685,6 +689,8 @@ private:
 	}};
 	bool _selectedChatTypeFilter = false;
 	bool _pressedChatTypeFilter = false;
+	bool _selectedExtraFilters = false;
+	bool _pressedExtraFilters = false;
 	bool _selectedMorePosts = false;
 	bool _pressedMorePosts = false;
 	int _collapsedSelected = -1;
@@ -755,6 +761,7 @@ private:
 	int _previewPressed = -1;
 	int _morePostsWidth = 0;
 	int _chatTypeFilterWidth = 0;
+	int _extraFiltersSummaryWidth = 0;
 
 	std::vector<std::unique_ptr<FakeRow>> _searchResults;
 	int _searchedCount = 0;
@@ -777,6 +784,7 @@ private:
 	rpl::event_stream<ChatTypeFilter> _changeSearchFilterRequests;
 	rpl::event_stream<bool> _changeSearchFromArchiveRequests;
 	rpl::event_stream<> _resetSearchRestrictionsRequests;
+	rpl::event_stream<QPoint> _openSearchFiltersRequests;
 	rpl::event_stream<> _cancelSearchRequests;
 	rpl::event_stream<> _cancelSearchFromRequests;
 	rpl::event_stream<> _changeSearchFromRequests;

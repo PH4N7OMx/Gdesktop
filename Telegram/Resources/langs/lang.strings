@@ -9947,6 +9947,33 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "jel_ChannelPromoText" = "Subscribe to our official Telegram channel for updates and announcements!";
 "jel_ChannelPromoSubscribe" = "Subscribe";
 "jel_ChannelPromoLater" = "Later";
+"jel_SearchFilters" = "Search filters";
+"jel_SearchFilterSortNewest" = "Newest first";
+"jel_SearchFilterSortOldest" = "Oldest first";
+"jel_SearchFilterMedia" = "Message type";
+"jel_SearchFilterMediaAll" = "All messages";
+"jel_SearchFilterMediaPhotos" = "Photos";
+"jel_SearchFilterMediaVideos" = "Videos";
+"jel_SearchFilterMediaFiles" = "Files";
+"jel_SearchFilterMediaLinks" = "Links";
+"jel_SearchFilterMediaVoice" = "Voice & video messages";
+"jel_SearchFilterMediaMusic" = "Music";
+"jel_SearchFilterMediaGifs" = "GIFs";
+"jel_SearchFilterMediaPinned" = "Pinned";
+"jel_SearchFilterMediaPolls" = "Polls";
+"jel_SearchFilterDate" = "Date";
+"jel_SearchFilterDateAny" = "Any time";
+"jel_SearchFilterDateToday" = "Today";
+"jel_SearchFilterDate7Days" = "Last 7 days";
+"jel_SearchFilterDate30Days" = "Last 30 days";
+"jel_SearchFilterDateYear" = "Last year";
+"jel_SearchFilterDateCustom" = "Choose date or range...";
+"jel_SearchFilterSender" = "Sender";
+"jel_SearchFilterSenderAll" = "All senders";
+"jel_SearchFilterSenderMine" = "Only my messages";
+"jel_SearchFilterSenderPeer" = "From interlocutor";
+"jel_SearchFilterApply" = "Apply";
+"jel_SearchFilterReset" = "Reset filters";
 
 "jel_JellyDocumentation" = "JellyPlugins documentation";
 

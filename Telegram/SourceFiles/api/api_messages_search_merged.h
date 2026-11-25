@@ -44,12 +44,12 @@ private:
 	Request _request;
 
 	std::optional<MessagesSearch> _migratedSearch;
-	FoundMessages _migratedFirstFound;
-
+	FoundMessages _secondaryFirstFound;
 	FoundMessages _concatedFound;
 
 	bool _waitingForTotal = false;
 	bool _isFull = false;
+	bool _secondaryAppended = false;
 
 	rpl::event_stream<> _newFounds;
 	rpl::event_stream<> _nextFounds;

@@ -114,6 +114,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <unordered_map>
 
 // GummyGram includes
+#include "jel/features/search/search_filters.h"
 #include "jel/ui/jel_userpic.h"
 #include "jel/utils/telegram_helpers.h"
 #include "styles/style_jel_icons.h"
@@ -202,7 +203,9 @@ constexpr auto kPreviewPostsLimit = 3;
 		: state.fromPeer;
 	const auto waiting = trimmed.isEmpty()
 		&& state.tags.empty()
-		&& !fromPeer;
+		&& !fromPeer
+		&& !state.extraFilters.triggersEmptyQuerySearch();
+	const auto hasExtraFilters = !state.extraFilters.isDefault();
 	const auto suggestAllChats = !waiting
 		&& state.tab == ChatSearchTab::MyMessages
 		&& (state.filter != ChatTypeFilter::All || !state.fromArchive);
@@ -215,6 +218,12 @@ constexpr auto kPreviewPostsLimit = 3;
 			text.append(tr::lng_search_tab_by_hashtag(tr::now));
 		} else {
 			text.append(tr::lng_dlg_search_for_messages(tr::now));
+		}
+		if (hasExtraFilters) {
+			text.append("\n\n").append(
+				Jel::SearchExtraFiltersSummary(state.extraFilters));
+			text.append("\n").append(
+				tr::link(tr::jel_SearchFilterReset(tr::now)));
 		}
 	} else {
 		text.append(tr::lng_search_tab_no_results(
@@ -237,12 +246,20 @@ constexpr auto kPreviewPostsLimit = 3;
 					tr::lng_search_tab_no_results_retry(tr::now));
 			}
 		}
+		if (hasExtraFilters) {
+			text.append("\n").append(
+				Jel::SearchExtraFiltersSummary(state.extraFilters));
+			if (!suggestAllChats) {
+				text.append("\n\n").append(
+					tr::link(tr::jel_SearchFilterReset(tr::now)));
+			}
+		}
 	}
 	auto result = object_ptr<SearchEmpty>(
 		parent,
 		icon,
 		rpl::single(std::move(text)));
-	if (suggestAllChats) {
+	if (suggestAllChats || hasExtraFilters) {
 		result->handlerActivated(
 		) | rpl::on_next(resetSearchFilters, result->lifetime());
 	}
@@ -1864,6 +1881,33 @@ void InnerWidget::paintEvent(QPaintEvent *e) {
 					st::searchedBarPosition.y(),
 					width(),
 					text);
+			} else if (hasExtraFiltersSummary()) {
+				const auto extraOver = _selectedExtraFilters
+					|| _pressedExtraFilters;
+				const auto extraFont = extraOver
+					? st::searchedBarFont->underline()
+					: st::searchedBarFont;
+				const auto leftWidth = st::searchedBarFont->width(text);
+				const auto available = width()
+					- 3 * st::searchedBarPosition.x()
+					- leftWidth;
+				if (available > 24) {
+					const auto summary = extraFont->elided(
+						Jel::SearchExtraFiltersSummary(_searchState.extraFilters),
+						available);
+					_extraFiltersSummaryWidth = extraFont->width(summary);
+					p.setFont(extraFont);
+					p.setPen(st::windowActiveTextFg);
+					p.drawTextLeft(
+						(width()
+							- st::searchedBarPosition.x()
+							- _extraFiltersSummaryWidth),
+						st::searchedBarPosition.y(),
+						width(),
+						summary);
+				} else {
+					_extraFiltersSummaryWidth = 0;
+				}
 			}
 			p.translate(0, st::searchedBarHeight);
 
@@ -2619,18 +2663,30 @@ void InnerWidget::selectByMouse(QPoint globalPosition) {
 				updateSelectedRow();
 			}
 			auto selectedChatTypeFilter = false;
+			auto selectedExtraFilters = false;
 			const auto from = skip - st::searchedBarHeight;
-			if (hasChatTypeFilter() && mouseY <= skip && mouseY >= from) {
-				const auto left = width()
-					- _chatTypeFilterWidth
-					- 2 * st::searchedBarPosition.x();
-				if (_chatTypeFilterWidth > 0 && local.x() >= left) {
-					selectedChatTypeFilter = true;
+			if (mouseY <= skip && mouseY >= from) {
+				if (hasChatTypeFilter()) {
+					const auto left = width()
+						- _chatTypeFilterWidth
+						- 2 * st::searchedBarPosition.x();
+					if (_chatTypeFilterWidth > 0 && local.x() >= left) {
+						selectedChatTypeFilter = true;
+					}
+				} else if (hasExtraFiltersSummary()) {
+					const auto left = width()
+						- _extraFiltersSummaryWidth
+						- 2 * st::searchedBarPosition.x();
+					if (_extraFiltersSummaryWidth > 0 && local.x() >= left) {
+						selectedExtraFilters = true;
+					}
 				}
 			}
-			if (_selectedChatTypeFilter != selectedChatTypeFilter) {
+			if (_selectedChatTypeFilter != selectedChatTypeFilter
+				|| _selectedExtraFilters != selectedExtraFilters) {
 				update(0, from, width(), st::searchedBarHeight);
 				_selectedChatTypeFilter = selectedChatTypeFilter;
+				_selectedExtraFilters = selectedExtraFilters;
 			}
 		}
 		if (!inTags && wasSelected != isSelected()) {
@@ -2684,6 +2740,7 @@ void InnerWidget::mousePressEvent(QMouseEvent *e) {
 	setCommunityPressed(_communitySelected);
 	_pressedMorePosts = _selectedMorePosts;
 	_pressedChatTypeFilter = _selectedChatTypeFilter;
+	_pressedExtraFilters = _selectedExtraFilters;
 
 	const auto alt = (e->modifiers() & Qt::AltModifier);
 	if (alt && showChatPreview()) {
@@ -3256,6 +3313,8 @@ void InnerWidget::mousePressReleased(
 	_pressedMorePosts = false;
 	const auto pressedChatTypeFilter = _pressedChatTypeFilter;
 	_pressedChatTypeFilter = false;
+	const auto pressedExtraFilters = _pressedExtraFilters;
+	_pressedExtraFilters = false;
 	if (wasDragging) {
 		selectByMouse(globalPosition);
 	}
@@ -3312,7 +3371,9 @@ void InnerWidget::mousePressReleased(
 			|| (pressedMorePosts
 				&& pressedMorePosts == _selectedMorePosts)
 			|| (pressedChatTypeFilter
-				&& pressedChatTypeFilter == _selectedChatTypeFilter)) {
+				&& pressedChatTypeFilter == _selectedChatTypeFilter)
+			|| (pressedExtraFilters
+				&& pressedExtraFilters == _selectedExtraFilters)) {
 			if (pressedRightButton && (pressed || filteredPressed >= 0)) {
 				const auto &row = pressed
 					? pressed
@@ -4151,6 +4212,7 @@ void InnerWidget::deselectAllRows() {
 	_collapsedSelected = -1;
 	_selectedMorePosts = false;
 	_selectedChatTypeFilter = false;
+	_selectedExtraFilters = false;
 	_selected = nullptr;
 	_communitySelected = -1;
 	_filteredSelected
@@ -4553,6 +4615,12 @@ bool InnerWidget::hasChatTypeFilter() const {
 		&& (_searchState.tab == ChatSearchTab::MyMessages);
 }
 
+bool InnerWidget::hasExtraFiltersSummary() const {
+	return !_searchResults.empty()
+		&& !hasChatTypeFilter()
+		&& !_searchState.extraFilters.isDefault();
+}
+
 void InnerWidget::searchRequested(bool loading) {
 	_searchWaiting = false;
 	_searchLoading = loading;
@@ -4630,6 +4698,10 @@ void InnerWidget::applySearchState(SearchState state) {
 		_chatTypeFilterWidth = 0;
 		update();
 	}
+	if (state.extraFilters != _searchState.extraFilters) {
+		_extraFiltersSummaryWidth = 0;
+		update();
+	}
 	_searchState = std::move(state);
 	_searchHashOrCashtag = IsHashOrCashtagSearchQuery(_searchState.query);
 	_searchWithPostsPreview = computeSearchWithPostsPreview();
@@ -4648,6 +4720,7 @@ void InnerWidget::applySearchState(SearchState state) {
 		if (_filter.isEmpty()
 			&& !_searchState.fromPeer
 			&& _searchState.tags.empty()
+			&& !_searchState.extraFilters.triggersEmptyQuerySearch()
 			&& _searchState.tab != ChatSearchTab::PublicPosts) {
 			clearFilter();
 		} else {
@@ -4963,6 +5036,10 @@ rpl::producer<bool> InnerWidget::changeSearchFromArchiveRequests() const {
 
 rpl::producer<> InnerWidget::resetSearchRestrictionsRequests() const {
 	return _resetSearchRestrictionsRequests.events();
+}
+
+rpl::producer<QPoint> InnerWidget::openSearchFiltersRequests() const {
+	return _openSearchFiltersRequests.events();
 }
 
 rpl::producer<> InnerWidget::cancelSearchRequests() const {
@@ -6304,6 +6381,9 @@ bool InnerWidget::chooseRow(
 		}
 		_menu->popup(QCursor::pos());
 		return true;
+	} else if (_selectedExtraFilters) {
+		_openSearchFiltersRequests.fire(QCursor::pos());
+		return true;
 	}
 	const auto modifyChosenRow = [&](
 			ChosenRow row,
@@ -7112,6 +7192,7 @@ void InnerWidget::clearSecondaryMouseState() {
 	_hashtagDeleteSelected = false;
 	_selectedMorePosts = false;
 	_selectedChatTypeFilter = false;
+	_selectedExtraFilters = false;
 	_selectedTopicJump = false;
 	_selectedRightButton = false;
 }

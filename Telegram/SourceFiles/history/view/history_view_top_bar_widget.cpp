@@ -1196,6 +1196,7 @@ void TopBarWidget::updateControlsGeometry() {
 		_searchCancel.destroy();
 		_jumpToDate.destroy();
 		_chooseFromUser.destroy();
+		_searchFilters.destroy();
 	}
 	auto searchFieldTop = _searchField
 		? countSelectedButtonsTop(_searchShown.value(_searchMode ? 1. : 0.))
@@ -1762,21 +1763,31 @@ bool TopBarWidget::searchJumpToDateFits() const {
 }
 
 void TopBarWidget::updateChooseFromUserGeometry() {
-	if (!_searchField || !_searchCancel || !_chooseFromUser) {
+	if (!_searchField || !_searchCancel) {
 		return;
 	}
 	const auto fieldRight = st::dialogsFilterSkip
 		+ st::dialogsFilterPadding.x();
 	const auto cancelLeft = width() - fieldRight - _searchCancel->width();
-	const auto reserved = _jumpToDate
+	auto reserved = _jumpToDate
 		? anim::interpolate(
 			0,
 			st::dialogsCalendarTopBar.width,
 			_jumpToDate->shownProgress())
 		: 0;
-	_chooseFromUser->moveToLeft(
-		cancelLeft - reserved - st::dialogsSearchFromTopBar.width,
-		_searchField->y());
+	if (_chooseFromUser) {
+		_chooseFromUser->moveToLeft(
+			cancelLeft - reserved - st::dialogsSearchFromTopBar.width,
+			_searchField->y());
+		if (_chooseFromUser->toggled()) {
+			reserved += st::dialogsSearchFromTopBar.width;
+		}
+	}
+	if (_searchFilters) {
+		_searchFilters->moveToLeft(
+			cancelLeft - reserved - st::dialogsSearchFiltersTopBar.width,
+			_searchField->y());
+	}
 }
 
 void TopBarWidget::updateSearchJumpToDateVisibility() {
@@ -1807,10 +1818,59 @@ void TopBarWidget::searchEnableChooseFromUser(bool enable, bool visible) {
 		_chooseFromUser->toggle(visible, anim::type::normal);
 	}
 	auto additional = QMargins();
+	auto right = 0;
 	if (_chooseFromUser && _chooseFromUser->toggled()) {
-		additional.setRight(_chooseFromUser->width());
+		right += _chooseFromUser->width();
 	}
+	if (_searchFilters && _searchFilters->toggled()) {
+		right += _searchFilters->width();
+	}
+	additional.setRight(right);
 	_searchField->setAdditionalMargins(additional);
+	updateControlsVisibility();
+	updateControlsGeometry();
+}
+
+void TopBarWidget::searchEnableFilters(bool enable, bool active) {
+	if (!_searchMode) {
+		return;
+	} else if (!enable) {
+		_searchFilters.destroy();
+	} else {
+		if (!_searchFilters) {
+			_searchFilters.create(
+				this,
+				object_ptr<Ui::IconButton>(
+					this,
+					st::dialogsSearchFiltersTopBar));
+			_searchFilters->toggle(true, anim::type::instant);
+			_searchFilters->entity()->setAccessibleName(
+				tr::jel_SearchFilters(tr::now));
+			_searchFilters->entity()->clicks(
+			) | rpl::on_next([=] {
+				const auto raw = _searchFilters.data();
+				_searchFiltersRequests.fire(
+					raw->mapToGlobal(QPoint(0, raw->height())));
+			}, _searchFilters->lifetime());
+		} else {
+			_searchFilters->toggle(true, anim::type::normal);
+		}
+		_searchFilters->entity()->setIconOverride(
+			active ? &st::dialogsSearchFiltersActiveIcon : nullptr,
+			active ? &st::dialogsSearchFiltersActiveIcon : nullptr);
+	}
+	if (_searchField) {
+		auto additional = QMargins();
+		auto right = 0;
+		if (_chooseFromUser && _chooseFromUser->toggled()) {
+			right += _chooseFromUser->width();
+		}
+		if (_searchFilters && _searchFilters->toggled()) {
+			right += _searchFilters->width();
+		}
+		additional.setRight(right);
+		_searchField->setAdditionalMargins(additional);
+	}
 	updateControlsVisibility();
 	updateControlsGeometry();
 }

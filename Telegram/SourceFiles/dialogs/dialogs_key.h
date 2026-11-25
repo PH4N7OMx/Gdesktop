@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "base/qt/qt_compare.h"
 #include "data/data_message_reaction_id.h"
+#include "jel/features/search/search_filters_core.h"
 
 class History;
 class PeerData;
@@ -148,6 +149,7 @@ struct SearchState {
 	ChatSearchTab tab = {};
 	ChatTypeFilter filter = ChatTypeFilter::All;
 	bool fromArchive = true;
+	Jel::SearchExtraFilters extraFilters;
 	QString query;
 
 	[[nodiscard]] bool empty() const;

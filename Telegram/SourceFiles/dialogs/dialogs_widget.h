@@ -183,6 +183,8 @@ private:
 		int32 nextRate = 0;
 		mtpRequestId requestId = 0;
 		bool full = false;
+		int filteredLoadedCount = 0;
+		int emptyClientPages = 0;
 	};
 
 	void chosenRow(const ChosenRow &row);
@@ -253,6 +255,7 @@ private:
 
 	void showCalendar();
 	void showSearchFrom();
+	void showSearchFiltersMenu(QPoint globalPos);
 	void showMainMenu();
 	void clearSearchCache(bool clearPosts);
 	void setSearchQuery(const QString &query, int cursorPosition = -1);
@@ -272,6 +275,8 @@ private:
 	void updateStoriesTitleShown();
 	void updateJumpToDateVisibility(bool fast = false);
 	void updateSearchFromVisibility(bool fast = false);
+	void updateSearchFiltersVisibility(bool fast = false);
+	void updateSearchFieldMargins();
 	void updateControlsGeometry();
 	void refreshTopBars();
 	void showSearchInTopBar(anim::type animated);
@@ -359,9 +364,11 @@ private:
 	} _mainMenu;
 	object_ptr<Ui::IconButton> _searchForNarrowLayout;
 	object_ptr<Ui::InputField> _search;
+	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _searchFilters;
 	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _chooseFromUser;
 	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _jumpToDate;
 	object_ptr<Ui::CrossButton> _cancelSearch;
+	base::unique_qptr<Ui::PopupMenu> _searchFiltersMenu;
 	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _lockUnlock;
 	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _addStory;
 
@@ -454,6 +461,7 @@ private:
 	ChannelData *_searchQueryCommunity = nullptr;
 	ChatTypeFilter _searchQueryFilter = {};
 	bool _searchQueryFromArchive = true;
+	Jel::SearchExtraFilters _searchQueryExtraFilters;
 
 	Ui::Controls::SwipeBackResult _swipeBackData;
 	bool _chatsFilterSwipeSwitch = false;

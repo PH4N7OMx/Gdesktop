@@ -311,6 +311,13 @@ dialogsSearchFrom: IconButton(dialogsCalendar) {
 	icon: icon {{ "dialogs/dialogs_search_from", dialogsMenuIconFg }};
 	iconOver: icon {{ "dialogs/dialogs_search_from", dialogsMenuIconFgOver }};
 }
+dialogsSearchFilters: IconButton(dialogsCalendar) {
+	width: 29px;
+	icon: icon {{ "menu/customize", dialogsMenuIconFg }};
+	iconOver: icon {{ "menu/customize", dialogsMenuIconFgOver }};
+	iconPosition: point(2px, 5px);
+}
+dialogsSearchFiltersActiveIcon: icon {{ "menu/customize", windowActiveTextFg }};
 
 dialogsFilter: InputField(defaultInputField) {
 	textBg: filterInputInactiveBg;
@@ -370,6 +377,9 @@ dialogsCalendarTopBar: IconButton(dialogsCalendar) {
 dialogsSearchFromTopBar: IconButton(dialogsSearchFrom) {
 	width: 26px;
 }
+dialogsSearchFiltersTopBar: IconButton(dialogsSearchFilters) {
+	width: 26px;
+}
 
 dialogCalendar: IconButton(dialogsMenuToggle) {
 	icon: icon {{ "dialogs/dialogs_calendar", lightButtonFg }};
@@ -384,6 +394,12 @@ dialogSearchFrom: IconButton(dialogCalendar) {
 	iconOver: icon {{ "dialogs/dialogs_search_from", lightButtonFgOver }};
 	iconPosition: point(9px, 8px);
 }
+dialogSearchFilters: IconButton(dialogCalendar) {
+	icon: icon {{ "menu/customize", lightButtonFg }};
+	iconOver: icon {{ "menu/customize", lightButtonFgOver }};
+	iconPosition: point(8px, 8px);
+}
+dialogSearchFiltersActiveIcon: icon {{ "menu/customize", windowActiveTextFg }};
 
 dialogsChatTypeSkip: 3px;
 dialogsChatIcon: ThreeStateIcon {

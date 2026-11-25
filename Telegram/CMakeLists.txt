@@ -288,6 +288,11 @@ set(gummygram_files
         jel/data/jel_database.h
         jel/features/avatars/jel_avatar_resolver.cpp
         jel/features/avatars/jel_avatar_resolver.h
+        jel/features/search/search_filters_core.h
+        jel/features/search/search_filters.cpp
+        jel/features/search/search_filters.h
+        jel/features/search/search_filters_menu.cpp
+        jel/features/search/search_filters_menu.h
 
         info/profile/info_profile_music_button.cpp
         info/profile/info_profile_music_button.h

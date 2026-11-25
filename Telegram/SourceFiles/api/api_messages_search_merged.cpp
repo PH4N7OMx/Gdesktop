@@ -18,9 +18,13 @@ MessagesSearchMerged::MessagesSearchMerged(not_null<History*> history)
 	}
 	const auto checkWaitingForTotal = [=] {
 		if (_waitingForTotal) {
-			if (_concatedFound.total >= 0 && _migratedFirstFound.total >= 0) {
+			if (_concatedFound.total >= 0 && _secondaryFirstFound.total >= 0) {
 				_waitingForTotal = false;
-				_concatedFound.total += _migratedFirstFound.total;
+				_concatedFound.total += _secondaryFirstFound.total;
+				if (_isFull && !_secondaryAppended) {
+					_secondaryAppended = true;
+					addFound(_secondaryFirstFound);
+				}
 				_newFounds.fire({});
 			}
 		} else {
@@ -29,37 +33,56 @@ MessagesSearchMerged::MessagesSearchMerged(not_null<History*> history)
 	};
 
 	const auto checkFull = [=](const FoundMessages &data) {
-		if (data.total == int(_concatedFound.messages.size())) {
+		if (data.total <= int(_concatedFound.messages.size())) {
 			_isFull = true;
-			addFound(_migratedFirstFound);
+			if (!_secondaryAppended && _secondaryFirstFound.total >= 0) {
+				_secondaryAppended = true;
+				addFound(_secondaryFirstFound);
+			}
+		}
+	};
+
+	const auto handleFound = [=](bool fromMigrated, const FoundMessages &data) {
+		const auto isPrimary = !_migratedSearch
+			|| (_request.extraFilters.isOldestFirst()
+				? fromMigrated
+				: !fromMigrated);
+		if (isPrimary) {
+			if (data.nextToken == _concatedFound.nextToken) {
+				addFound(data);
+				checkFull(data);
+				_nextFounds.fire({});
+			} else {
+				_concatedFound = data;
+				checkFull(data);
+				checkWaitingForTotal();
+			}
+		} else {
+			if (_isFull && _secondaryAppended) {
+				addFound(data);
+			}
+			if (data.nextToken == _secondaryFirstFound.nextToken) {
+				_nextFounds.fire({});
+			} else {
+				_secondaryFirstFound = data;
+				if (_isFull && !_secondaryAppended) {
+					_secondaryAppended = true;
+					addFound(_secondaryFirstFound);
+				}
+				checkWaitingForTotal();
+			}
 		}
 	};
 
 	_apiSearch.messagesFounds(
 	) | rpl::on_next([=](const FoundMessages &data) {
-		if (data.nextToken == _concatedFound.nextToken) {
-			addFound(data);
-			checkFull(data);
-			_nextFounds.fire({});
-		} else {
-			_concatedFound = data;
-			checkFull(data);
-			checkWaitingForTotal();
-		}
+		handleFound(false, data);
 	}, _lifetime);
 
 	if (_migratedSearch) {
 		_migratedSearch->messagesFounds(
 		) | rpl::on_next([=](const FoundMessages &data) {
-			if (_isFull) {
-				addFound(data);
-			}
-			if (data.nextToken == _migratedFirstFound.nextToken) {
-				_nextFounds.fire({});
-			} else {
-				_migratedFirstFound = data;
-				checkWaitingForTotal();
-			}
+			handleFound(true, data);
 		}, _lifetime);
 	}
 }
@@ -68,6 +91,7 @@ void MessagesSearchMerged::disableMigrated() {
 	_migratedSearch = std::nullopt;
 	_waitingForTotal = false;
 	_isFull = false;
+	_secondaryAppended = false;
 }
 
 void MessagesSearchMerged::addFound(const FoundMessages &data) {
@@ -86,14 +110,16 @@ const MessagesSearch::Request &MessagesSearchMerged::request() const {
 
 void MessagesSearchMerged::clear() {
 	_concatedFound = {};
-	_migratedFirstFound = {};
+	_secondaryFirstFound = {};
 	_waitingForTotal = false;
 	_isFull = false;
+	_secondaryAppended = false;
 }
 
 void MessagesSearchMerged::search(const Request &search) {
 	_request = search;
 	_isFull = false;
+	_secondaryAppended = false;
 	_waitingForTotal = (_migratedSearch != std::nullopt);
 	if (_migratedSearch) {
 		_migratedSearch->searchMessages(search);
@@ -102,7 +128,13 @@ void MessagesSearchMerged::search(const Request &search) {
 }
 
 void MessagesSearchMerged::searchMore() {
-	if (_migratedSearch && _isFull) {
+	if (_migratedSearch && _request.extraFilters.isOldestFirst()) {
+		if (_isFull) {
+			_apiSearch.searchMore();
+		} else {
+			_migratedSearch->searchMore();
+		}
+	} else if (_migratedSearch && _isFull) {
 		_migratedSearch->searchMore();
 	} else {
 		_apiSearch.searchMore();

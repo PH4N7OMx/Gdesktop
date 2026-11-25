@@ -92,6 +92,7 @@ public:
 	bool toggleSearch(bool shown, anim::type animated);
 	void searchEnableJumpToDate(bool enable);
 	void searchEnableChooseFromUser(bool enable, bool visible);
+	void searchEnableFilters(bool enable, bool active);
 	bool searchSetFocus();
 	[[nodiscard]] bool searchMode() const;
 	[[nodiscard]] rpl::producer<bool> searchModeChanges() const;
@@ -127,6 +128,9 @@ public:
 	}
 	[[nodiscard]] rpl::producer<> chooseFromUserRequest() const {
 		return _chooseFromUserRequests.events();
+	}
+	[[nodiscard]] rpl::producer<QPoint> searchFiltersRequest() const {
+		return _searchFiltersRequests.events();
 	}
 	[[nodiscard]] rpl::producer<> searchRequest() const;
 
@@ -238,6 +242,8 @@ private:
 	object_ptr<Ui::RoundButton> _clear;
 	object_ptr<Ui::RoundButton> _forward, _sendNow, _delete, _messageShot;
 	object_ptr<Ui::InputField> _searchField = { nullptr };
+	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _searchFilters
+		= { nullptr };
 	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _chooseFromUser
 		= { nullptr };
 	object_ptr<Ui::FadeWrapScaled<Ui::IconButton>> _jumpToDate
@@ -248,6 +254,7 @@ private:
 	rpl::event_stream<> _searchSubmitted;
 	rpl::event_stream<> _jumpToDateRequests;
 	rpl::event_stream<> _chooseFromUserRequests;
+	rpl::event_stream<QPoint> _searchFiltersRequests;
 	rpl::event_stream<bool> _searchModeChanges;
 
 	object_ptr<Ui::IconButton> _back;

@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "base/qt/qt_compare.h"
 #include "data/data_message_reaction_id.h"
+#include "jel/features/search/search_filters_core.h"
 
 class HistoryItem;
 class History;
@@ -39,6 +40,7 @@ public:
 		std::vector<Data::ReactionId> tags;
 		MsgId topMsgId;
 		SearchFilter filter = SearchFilter::NoFilter;
+		Jel::SearchExtraFilters extraFilters;
 
 		friend inline bool operator==(
 			const Request &,
@@ -70,6 +72,9 @@ private:
 
 	Request _request;
 	MsgId _offsetId;
+	int _loadedCount = 0;
+	int _emptyClientPages = 0;
+	bool _exhausted = false;
 
 	int _searchInHistoryRequest = 0; // Not real mtpRequestId.
 	mtpRequestId _requestId = 0;

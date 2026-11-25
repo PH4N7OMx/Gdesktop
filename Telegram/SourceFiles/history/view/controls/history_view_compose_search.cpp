@@ -22,6 +22,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/view/history_view_context_menu.h"
 #include "history/history.h"
 #include "history/history_item.h"
+#include "jel/features/search/search_filters.h"
+#include "jel/features/search/search_filters_menu.h"
 #include "lang/lang_keys.h"
 #include "main/main_session.h"
 #include "ui/effects/show_animation.h"
@@ -332,6 +334,8 @@ public:
 	[[nodiscard]] rpl::producer<not_null<QKeyEvent*>> keyEvents() const;
 
 	void setFrom(PeerData *peer);
+	[[nodiscard]] PeerData *currentFrom() const;
+	void triggerSearch();
 	bool handleKeyPress(not_null<QKeyEvent*> e);
 
 protected:
@@ -636,6 +640,15 @@ rpl::producer<PeerData*> TopBar::fromValue() const {
 	return _from.value();
 }
 
+PeerData *TopBar::currentFrom() const {
+	return _from.current();
+}
+
+void TopBar::triggerSearch() {
+	_typedRequests.clear();
+	requestSearch(false);
+}
+
 void TopBar::setFrom(PeerData *peer) {
 	clearItems();
 
@@ -664,10 +677,12 @@ public:
 	void setCurrent(int current);
 
 	[[nodiscard]] rpl::producer<Index> showItemRequests() const;
+	[[nodiscard]] rpl::producer<QPoint> showFiltersRequests() const;
 	[[nodiscard]] rpl::producer<> showCalendarRequests() const;
 	[[nodiscard]] rpl::producer<> showBoxFromRequests() const;
 	[[nodiscard]] rpl::producer<> showListRequests() const;
 
+	void setFiltersActive(bool active);
 	void buttonFromToggleOn(rpl::producer<bool> &&visible);
 	void buttonCalendarToggleOn(rpl::producer<bool> &&visible);
 
@@ -690,6 +705,7 @@ private:
 	Navigation _previous;
 	Navigation _next;
 
+	base::unique_qptr<Ui::IconButton> _searchFilters;
 	base::unique_qptr<Ui::IconButton> _jumpToDate;
 	base::unique_qptr<Ui::IconButton> _chooseFromUser;
 	base::unique_qptr<Ui::FlatLabel> _counter;
@@ -707,6 +723,8 @@ BottomBar::BottomBar(not_null<Ui::RpWidget*> parent, bool fastShowChooseFrom)
 // Icons are swaped.
 , _previous({ base::make_unique_q<Ui::IconButton>(this, st::calendarNext) })
 , _next({ base::make_unique_q<Ui::IconButton>(this, st::calendarPrevious) })
+, _searchFilters(
+	base::make_unique_q<Ui::IconButton>(this, st::dialogSearchFilters))
 , _jumpToDate(base::make_unique_q<Ui::IconButton>(this, st::dialogCalendar))
 , _chooseFromUser(
 	base::make_unique_q<Ui::IconButton>(this, st::dialogSearchFrom))
@@ -715,6 +733,7 @@ BottomBar::BottomBar(not_null<Ui::RpWidget*> parent, bool fastShowChooseFrom)
 	st::defaultSettingsRightLabel)) {
 
 	_counter->setAttribute(Qt::WA_TransparentForMouseEvents);
+	_searchFilters->setAccessibleName(tr::jel_SearchFilters(tr::now));
 	_chooseFromUser->setVisible(fastShowChooseFrom);
 
 	parent->geometryValue(
@@ -726,6 +745,7 @@ BottomBar::BottomBar(not_null<Ui::RpWidget*> parent, bool fastShowChooseFrom)
 
 	auto mapSize = rpl::map([=] { return size(); });
 	rpl::merge(
+		_searchFilters->shownValue() | mapSize,
 		_jumpToDate->shownValue() | mapSize,
 		_chooseFromUser->shownValue() | mapSize,
 		_counter->sizeValue() | mapSize,
@@ -739,6 +759,7 @@ BottomBar::BottomBar(not_null<Ui::RpWidget*> parent, bool fastShowChooseFrom)
 
 		auto left = st::topBarActionSkip;
 		const auto list = std::vector<not_null<Ui::RpWidget*>>{
+			_searchFilters.get(),
 			_jumpToDate.get(),
 			_chooseFromUser.get(),
 			_counter.get() };
@@ -818,7 +839,7 @@ bool BottomBar::handleKeyPress(not_null<QKeyEvent*> e) {
 
 void BottomBar::setTotal(int total) {
 	_total = total;
-	setCurrent(1);
+	setCurrent(total >= 0 ? 1 : 0);
 }
 
 void BottomBar::setCurrent(int current) {
@@ -844,6 +865,12 @@ rpl::producer<BottomBar::Index> BottomBar::showItemRequests() const {
 	return _current.changes() | rpl::map(rpl::mappers::_1 - 1);
 }
 
+rpl::producer<QPoint> BottomBar::showFiltersRequests() const {
+	return _searchFilters->clicks() | rpl::map([=] {
+		return _searchFilters->mapToGlobal(QPoint(0, 0));
+	});
+}
+
 rpl::producer<> BottomBar::showCalendarRequests() const {
 	return _jumpToDate->clicks() | rpl::to_empty;
 }
@@ -854,6 +881,12 @@ rpl::producer<> BottomBar::showBoxFromRequests() const {
 
 rpl::producer<> BottomBar::showListRequests() const {
 	return _showList->clicks() | rpl::to_empty;
+}
+
+void BottomBar::setFiltersActive(bool active) {
+	_searchFilters->setIconOverride(
+		active ? &st::dialogSearchFiltersActiveIcon : nullptr,
+		active ? &st::dialogSearchFiltersActiveIcon : nullptr);
 }
 
 void BottomBar::buttonFromToggleOn(rpl::producer<bool> &&visible) {
@@ -918,6 +951,8 @@ private:
 
 	MsgId _topMsgId;
 	Api::SearchFilter _searchFilter = Api::SearchFilter::NoFilter;
+	Jel::SearchExtraFilters _extraFilters;
+	base::unique_qptr<Ui::PopupMenu> _filtersMenu;
 	rpl::variable<bool> _filterAllowsFrom = true;
 	Dialogs::Key _calendarChat;
 	Fn<void(FullMsgId, Fn<void()>)> _calendarJump;
@@ -966,13 +1001,19 @@ ComposeSearch::Inner::Inner(
 
 	_topBar->searchRequests(
 	) | rpl::on_next([=](SearchRequest search) {
-		if (search.query.isEmpty() && search.tags.empty()) {
+		if (search.query.isEmpty()
+			&& search.tags.empty()
+			&& !_extraFilters.triggersEmptyQuerySearch()) {
 			if (!search.from || _history->peer->isSelf()) {
+				_apiSearch.clear();
+				_list.controller->addItems({}, true);
+				_bottomBar->setTotal(-1);
 				return;
 			}
 		}
 		search.topMsgId = _topMsgId;
 		search.filter = _searchFilter;
+		search.extraFilters = _extraFilters;
 		_apiSearch.clear();
 
 		_list.controller->addItems({}, true);
@@ -1022,6 +1063,9 @@ ComposeSearch::Inner::Inner(
 		_pendingJump.jumps.events() | rpl::filter(rpl::mappers::_1 >= 0),
 		_bottomBar->showItemRequests()
 	) | rpl::on_next([=](BottomBar::Index index) {
+		if (index < 0) {
+			return;
+		}
 		const auto &apiData = _apiSearch.messages();
 		const auto &messages = apiData.messages;
 		const auto size = int(messages.size());
@@ -1059,6 +1103,39 @@ ComposeSearch::Inner::Inner(
 			_apiSearch.searchMore();
 		}
 	}, _list.container->lifetime());
+
+	_bottomBar->showFiltersRequests(
+	) | rpl::on_next([=](QPoint globalPos) {
+		const auto peer = _history->peer;
+		const auto isPrivateUser = peer->isUser() && !peer->isSelf();
+		const auto canChooseFrom = _filterAllowsFrom.current()
+			&& HasChooseFrom(_history);
+		const auto weakBottom = base::make_weak(_bottomBar.get());
+		const auto weakTop = base::make_weak(_topBar.get());
+		Jel::ShowSearchFiltersMenu(_filtersMenu, globalPos, {
+			.parent = _bottomBar.get(),
+			.controller = _window,
+			.current = _extraFilters,
+			.inPeer = true,
+			.isPrivateUser = isPrivateUser,
+			.canChooseFromUser = canChooseFrom,
+			.mediaFilterLocked = (_searchFilter == Api::SearchFilter::Pinned),
+			.fromPeer = _topBar->currentFrom(),
+			.onChanged = [=](Jel::SearchExtraFilters updated) {
+				if (!weakBottom || !weakTop) {
+					return;
+				}
+				_extraFilters = updated;
+				_bottomBar->setFiltersActive(!_extraFilters.isDefault());
+				_topBar->triggerSearch();
+			},
+			.onSetFromPeer = [=](PeerData *from) {
+				if (weakTop) {
+					_topBar->setFrom(from);
+				}
+			},
+		});
+	}, _bottomBar->lifetime());
 
 	_bottomBar->showCalendarRequests(
 	) | rpl::on_next([=] {

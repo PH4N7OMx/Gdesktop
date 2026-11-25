@@ -5,7 +5,6 @@
 #include "scheme.h"
 
 #include <QtCore/QDateTime>
-#include <QtCore/QLocale>
 #include <QtCore/QTime>
 
 namespace Jel {

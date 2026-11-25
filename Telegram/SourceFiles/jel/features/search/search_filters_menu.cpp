@@ -165,19 +165,21 @@ void ShowSearchFiltersMenu(
 		st::popupMenuWithIcons);
 	const auto addAction = Ui::Menu::CreateAddActionCallback(menu.get());
 	const auto current = args.current;
+	const auto inPeer = args.inPeer;
+	const auto isPrivateUser = args.isPrivateUser;
 	const auto onChanged = args.onChanged;
 	const auto controller = args.controller;
 
 	const auto apply = [=](Fn<void(SearchExtraFilters &)> mutate) {
 		auto updated = current;
 		mutate(updated);
-		updated.sanitizeForContext(args.inPeer, args.isPrivateUser);
+		updated.sanitizeForContext(inPeer, isPrivateUser);
 		if (onChanged) {
 			onChanged(updated);
 		}
 	};
 
-	if (args.inPeer) {
+	if (inPeer) {
 		const auto newest = (current.sortOrder == SearchSortOrder::NewestFirst);
 		addAction({
 			.text = tr::jel_SearchFilterSortNewest(tr::now),
@@ -221,7 +223,7 @@ void ShowSearchFiltersMenu(
 					SearchMediaFilter::Music,
 					SearchMediaFilter::Gifs,
 				};
-				if (args.inPeer) {
+				if (inPeer) {
 					options.push_back(SearchMediaFilter::Pinned);
 					options.push_back(SearchMediaFilter::Polls);
 				}
@@ -284,7 +286,7 @@ void ShowSearchFiltersMenu(
 				customText,
 				[=] {
 					ShowSearchDateRangeBox(controller, current, [=](SearchExtraFilters updated) {
-						updated.sanitizeForContext(args.inPeer, args.isPrivateUser);
+						updated.sanitizeForContext(inPeer, isPrivateUser);
 						if (onChanged) {
 							onChanged(updated);
 						}
@@ -295,7 +297,7 @@ void ShowSearchFiltersMenu(
 		.submenuSt = &st::popupMenuWithIcons,
 	});
 
-	if (args.inPeer && args.isPrivateUser) {
+	if (inPeer && isPrivateUser) {
 		const auto senderText = (current.senderFilter == SearchSenderFilter::All)
 			? tr::jel_SearchFilterSender(tr::now)
 			: (tr::jel_SearchFilterSender(tr::now)
@@ -324,7 +326,7 @@ void ShowSearchFiltersMenu(
 			},
 			.submenuSt = &st::popupMenuWithIcons,
 		});
-	} else if (args.inPeer && args.canChooseFromUser && args.onSetFromPeer) {
+	} else if (inPeer && args.canChooseFromUser && args.onSetFromPeer) {
 		const auto self = controller->session().user();
 		const auto isMine = (args.fromPeer == self.get());
 		const auto setFrom = args.onSetFromPeer;

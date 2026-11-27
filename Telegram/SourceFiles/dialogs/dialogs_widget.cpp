@@ -2209,6 +2209,18 @@ void Widget::updateSuggestions(anim::type animated) {
 		_suggestions->reapplySearchQueryRequests() | rpl::on_next([=] {
 			applySearchUpdate();
 		}, _suggestions->lifetime());
+		_suggestions->tabChanged() | rpl::on_next([=] {
+			if (_suggestions
+				&& _suggestions->takesSearchQuery()
+				&& !_searchState.extraFilters.isDefault()) {
+				auto copy = _searchState;
+				copy.extraFilters.reset();
+				applySearchState(std::move(copy));
+			} else {
+				updateSearchFiltersVisibility();
+				updateCancelSearch();
+			}
+		}, _suggestions->lifetime());
 		_searchSuggestionsLocked = false;
 
 		rpl::merge(
@@ -2305,6 +2317,7 @@ void Widget::closeSuggestions() {
 	setFocus();
 	updateForceDisplayWide();
 	updateCancelSearch();
+	updateSearchFiltersVisibility();
 	updateSuggestions(anim::type::normal);
 }
 
@@ -2743,6 +2756,7 @@ void Widget::setInnerFocus(bool unfocusSearch) {
 		return;
 	} else if (!unfocusSearch
 		&& (!_search->getLastText().isEmpty()
+			|| !_searchState.extraFilters.isDefault()
 			|| _searchState.inChat
 			|| _searchHasFocus
 			|| _searchSuggestionsLocked)) {
@@ -3269,9 +3283,13 @@ bool Widget::search(bool inCache, SearchRequestDelay delay) {
 			process->full = false;
 			process->filteredLoadedCount = 0;
 			process->emptyClientPages = 0;
+			process->oldest.reset();
+			process->oldestMessageIds.clear();
 			_migratedProcess.full = false;
 			_migratedProcess.filteredLoadedCount = 0;
 			_migratedProcess.emptyClientPages = 0;
+			_migratedProcess.oldest.reset();
+			_migratedProcess.oldestMessageIds.clear();
 			cancelSearchRequest();
 			searchReceived(fromStartType, i->second, process, true);
 			result = true;
@@ -3299,89 +3317,20 @@ bool Widget::search(bool inCache, SearchRequestDelay delay) {
 		process->full = false;
 		process->filteredLoadedCount = 0;
 		process->emptyClientPages = 0;
+		process->oldest.reset();
+		process->oldestMessageIds.clear();
 		_migratedProcess.lastId = 0;
 		_migratedProcess.lastPeer = nullptr;
 		_migratedProcess.full = false;
 		_migratedProcess.filteredLoadedCount = 0;
 		_migratedProcess.emptyClientPages = 0;
+		_migratedProcess.oldest.reset();
+		_migratedProcess.oldestMessageIds.clear();
+		_searchTimer.cancel();
 		cancelSearchRequest();
-		const auto startWithMigrated = inPeer
-			&& _searchInMigrated
-			&& _searchQueryExtraFilters.isOldestFirst();
-		if (startWithMigrated) {
+		if (inPeer) {
 			_inner->searchRequested(true);
 			searchMore();
-		} else if (inPeer) {
-			const auto topic = searchInTopic();
-			auto &histories = session().data().histories();
-			const auto type = Data::Histories::RequestType::History;
-			const auto history = session().data().history(inPeer);
-			const auto sublist = _openedForum
-				? nullptr
-				: _searchState.inChat.sublist();
-			const auto fromPeer = sublist ? nullptr : _searchQueryFrom;
-			const auto savedPeer = sublist
-				? sublist->sublistPeer().get()
-				: nullptr;
-			const auto mediaFilter = Jel::SearchMediaFilterToMTP(
-				_searchQueryExtraFilters.mediaFilter);
-			const auto bounds = Jel::ResolveSearchDateBounds(
-				_searchQueryExtraFilters);
-			const auto mtpMinDate = (bounds.minDate > 0)
-				? (bounds.minDate - 1)
-				: 0;
-			const auto pagination = Jel::ComputeSearchPagination(
-				_searchQueryExtraFilters.sortOrder,
-				0,
-				kSearchPerPage);
-			_historiesRequest = histories.sendRequest(history, type, [=](
-					Fn<void()> finish) {
-				const auto type = SearchRequestType{
-					.start = true,
-					.peer = true,
-				};
-				using Flag = MTPmessages_Search::Flag;
-				process->requestId = session().api().request(
-					MTPmessages_Search(
-						MTP_flags((topic ? Flag::f_top_msg_id : Flag())
-							| (fromPeer ? Flag::f_from_id : Flag())
-							| (savedPeer ? Flag::f_saved_peer_id : Flag())
-							| (_searchQueryTags.empty()
-								? Flag()
-								: Flag::f_saved_reaction)),
-						inPeer->input(),
-						MTP_string(_searchQuery),
-						(fromPeer ? fromPeer->input() : MTP_inputPeerEmpty()),
-						(savedPeer ? savedPeer->input() : MTP_inputPeerEmpty()),
-						MTP_vector_from_range(
-							_searchQueryTags | ranges::views::transform(
-								Data::ReactionToMTP
-							)),
-						MTP_int(topic ? topic->rootId() : 0),
-						mediaFilter,
-						MTP_int(mtpMinDate), // min_date
-						MTP_int(bounds.maxDate), // max_date
-						MTP_int(pagination.offsetId), // offset_id
-						MTP_int(pagination.addOffset), // add_offset
-						MTP_int(kSearchPerPage),
-						MTP_int(0), // max_id
-						MTP_int(0), // min_id
-						MTP_long(0)) // hash
-				).done([=](const MTPmessages_Messages &result) {
-					_historiesRequest = 0;
-					searchReceived(type, result, process);
-					finish();
-				}).fail([=](const MTP::Error &error) {
-					_historiesRequest = 0;
-					searchFailed(type, error, process);
-					finish();
-				}).send();
-				if (_searchQueryExtraFilters.isDefault()) {
-					process->queries.emplace(process->requestId, _searchQuery);
-				}
-				return process->requestId;
-			});
-			_inner->searchRequested(true);
 		} else if (_searchState.tab == ChatSearchTab::PublicPosts) {
 			requestPublicPosts(true);
 			_inner->searchRequested(true);
@@ -3594,6 +3543,65 @@ void Widget::searchTopics() {
 	}).send();
 }
 
+void Widget::emitOldestSearchResult(
+		SearchRequestType type,
+		not_null<SearchProcessState*> process,
+		const Jel::OldestSearchResult &stepResult,
+		bool wasEmittedAny) {
+	auto messages = std::vector<not_null<HistoryItem*>>();
+	messages.reserve(stepResult.emitIds.size());
+	auto &owner = session().data();
+	for (const auto rawId : stepResult.emitIds) {
+		const auto msgId = MsgId(rawId);
+		const auto it = process->oldestMessageIds.find(msgId);
+		if (it != process->oldestMessageIds.end()) {
+			if (const auto item = owner.message(it->second)) {
+				messages.push_back(item);
+			}
+		}
+	}
+	process->full = stepResult.exhausted;
+	auto emitType = type;
+	emitType.start = !wasEmittedAny
+		&& !(type.peer && _searchInMigrated);
+	auto fullCount = stepResult.totalCount;
+	if (_searchQueryExtraFilters.hasClientSideSenderFilter()) {
+		process->filteredLoadedCount += int(messages.size());
+		fullCount = process->filteredLoadedCount;
+	}
+	_inner->searchReceived(messages, nullptr, emitType, fullCount);
+
+	const auto bounds = Jel::ResolveSearchDateBounds(
+		_searchQueryExtraFilters);
+	const auto applyClientFilter = _searchQueryExtraFilters.hasClientSideSenderFilter()
+		|| !bounds.empty();
+	const auto shouldLoadSupergroupAfterMigrated = type.migrated
+		&& process->full
+		&& !_searchProcess.full
+		&& !_searchProcess.oldest.active();
+	const auto shouldAutoFetchFiltered = applyClientFilter
+		&& messages.empty()
+		&& !process->full
+		&& (process->emptyClientPages < 6);
+	if (!messages.empty()) {
+		process->emptyClientPages = 0;
+	}
+	if (shouldLoadSupergroupAfterMigrated || shouldAutoFetchFiltered) {
+		if (shouldAutoFetchFiltered) {
+			++process->emptyClientPages;
+		}
+		const auto weak = base::make_weak(this);
+		const auto generation = _searchGeneration;
+		crl::on_main(weak, [=] {
+			if (_searchGeneration == generation) {
+				searchMore();
+			}
+		});
+	}
+	listScrollUpdated();
+	update();
+}
+
 void Widget::searchMore() {
 	const auto process = currentSearchProcess();
 	if (process->requestId
@@ -3610,14 +3618,41 @@ void Widget::searchMore() {
 	const auto mtpMinDate = (bounds.minDate > 0)
 		? (bounds.minDate - 1)
 		: 0;
+	const auto hasTextOrFrom = !_searchQuery.isEmpty()
+		|| (_searchQueryFrom != nullptr)
+		|| !_searchQueryTags.empty();
 	const auto requestMigrated = [&] {
 		auto &histories = session().data().histories();
 		const auto type = Data::Histories::RequestType::History;
 		const auto history = _searchInMigrated;
-		const auto pagination = Jel::ComputeSearchPagination(
-			_searchQueryExtraFilters.sortOrder,
+		auto offsetId = std::int32_t(std::clamp(
 			_migratedProcess.lastId.bare,
-			kSearchPerPage);
+			std::int64_t(0),
+			std::int64_t(0x3FFFFFFF)));
+		auto addOffset = std::int32_t(0);
+		auto limit = std::int32_t(kSearchPerPage);
+		if (oldestFirst) {
+			if (!_migratedProcess.oldest.active()) {
+				_migratedProcess.oldest.start(
+					!bounds.empty(),
+					hasTextOrFrom,
+					kSearchPerPage);
+			}
+			if (_migratedProcess.oldest.hasBufferedPage()) {
+				const auto wasEmitted = _migratedProcess.oldest.hasEmittedAny();
+				const auto buffered = _migratedProcess.oldest.takeBufferedPage();
+				emitOldestSearchResult(
+					SearchRequestType{ .migrated = true },
+					&_migratedProcess,
+					buffered,
+					wasEmitted);
+				return;
+			}
+			const auto step = _migratedProcess.oldest.nextRequest();
+			offsetId = step.offsetId;
+			addOffset = step.addOffset;
+			limit = step.limit;
+		}
 		_historiesRequest = histories.sendRequest(history, type, [=](
 				Fn<void()> finish) {
 			const auto type = SearchRequestType{
@@ -3641,9 +3676,9 @@ void Widget::searchMore() {
 					mediaFilter,
 					MTP_int(mtpMinDate), // min_date
 					MTP_int(bounds.maxDate), // max_date
-					MTP_int(pagination.offsetId),
-					MTP_int(pagination.addOffset), // add_offset
-					MTP_int(kSearchPerPage),
+					MTP_int(offsetId),
+					MTP_int(addOffset), // add_offset
+					MTP_int(limit),
 					MTP_int(0), // max_id
 					MTP_int(0), // min_id
 					MTP_long(0)) // hash
@@ -3678,10 +3713,34 @@ void Widget::searchMore() {
 			const auto savedPeer = sublist
 				? sublist->sublistPeer().get()
 				: nullptr;
-			const auto pagination = Jel::ComputeSearchPagination(
-				_searchQueryExtraFilters.sortOrder,
+			auto offsetId = std::int32_t(std::clamp(
 				process->lastId.bare,
-				kSearchPerPage);
+				std::int64_t(0),
+				std::int64_t(0x3FFFFFFF)));
+			auto addOffset = std::int32_t(0);
+			auto limit = std::int32_t(kSearchPerPage);
+			if (oldestFirst) {
+				if (!process->oldest.active()) {
+					process->oldest.start(
+						!bounds.empty(),
+						hasTextOrFrom,
+						kSearchPerPage);
+				}
+				if (process->oldest.hasBufferedPage()) {
+					const auto wasEmitted = process->oldest.hasEmittedAny();
+					const auto buffered = process->oldest.takeBufferedPage();
+					emitOldestSearchResult(
+						SearchRequestType{ .peer = true },
+						process,
+						buffered,
+						wasEmitted);
+					return;
+				}
+				const auto step = process->oldest.nextRequest();
+				offsetId = step.offsetId;
+				addOffset = step.addOffset;
+				limit = step.limit;
+			}
 			_historiesRequest = histories.sendRequest(history, type, [=](
 					Fn<void()> finish) {
 				const auto type = SearchRequestType{
@@ -3712,9 +3771,9 @@ void Widget::searchMore() {
 						mediaFilter,
 						MTP_int(mtpMinDate), // min_date
 						MTP_int(bounds.maxDate), // max_date
-						MTP_int(pagination.offsetId),
-						MTP_int(pagination.addOffset), // add_offset
-						MTP_int(kSearchPerPage),
+						MTP_int(offsetId),
+						MTP_int(addOffset), // add_offset
+						MTP_int(limit),
 						MTP_int(0), // max_id
 						MTP_int(0), // min_id
 						MTP_long(0)) // hash
@@ -3894,13 +3953,83 @@ void Widget::searchReceived(
 	const auto applyClientFilter = !type.posts
 		&& (_searchQueryExtraFilters.hasClientSideSenderFilter()
 			|| !bounds.empty());
+	if (oldestFirst && process->oldest.active()) {
+		auto rawIds = std::vector<std::int64_t>();
+		auto filteredIds = std::vector<std::int64_t>();
+		auto serverTotal = 0;
+		auto serverExhausted = false;
+		const auto collectList = [&](const MTPVector<MTPMessage> &messages) {
+			rawIds.reserve(messages.v.size());
+			filteredIds.reserve(messages.v.size());
+			for (const auto &message : messages.v) {
+				const auto msgId = IdFromMessage(message);
+				const auto peerId = PeerFromMessage(message);
+				const auto lastDate = DateFromMessage(message);
+				rawIds.push_back(msgId.bare);
+				if (const auto peer = session().data().peerLoaded(peerId)) {
+					if (lastDate) {
+						const auto item = session().data().addNewMessage(
+							message,
+							MessageFlags(),
+							NewMessageType::Existing);
+						process->oldestMessageIds.emplace(msgId, item->fullId());
+						if (!applyClientFilter
+							|| Jel::MatchesClientSideFilters(
+								_searchQueryExtraFilters,
+								bounds,
+								item->out(),
+								item->date())) {
+							filteredIds.push_back(msgId.bare);
+						}
+					}
+					process->lastPeer = peer;
+				} else {
+					LOG(("API Error: a search results with not loaded peer %1"
+						).arg(peerId.value));
+				}
+			}
+		};
+		result.match([&](const MTPDmessages_messages &data) {
+			serverExhausted = true;
+			collectList(data.vmessages());
+			serverTotal = int(data.vmessages().v.size());
+		}, [&](const MTPDmessages_messagesSlice &data) {
+			collectList(data.vmessages());
+			serverTotal = data.vcount().v;
+		}, [&](const MTPDmessages_channelMessages &data) {
+			collectList(data.vmessages());
+			serverTotal = data.vcount().v;
+		}, [&](const MTPDmessages_messagesNotModified &) {
+			LOG(("API Error: received messages.messagesNotModified! "
+				"(Widget::searchReceived)"));
+			serverExhausted = true;
+		});
+		process->requestId = 0;
+		const auto wasEmittedAny = process->oldest.hasEmittedAny();
+		const auto stepResult = process->oldest.onPageReceived(
+			rawIds,
+			filteredIds,
+			serverTotal,
+			serverExhausted);
+		if (stepResult.action == Jel::OldestSearchAction::FetchMore) {
+			const auto weak = base::make_weak(this);
+			const auto generation = _searchGeneration;
+			crl::on_main(weak, [=] {
+				if (_searchGeneration == generation) {
+					searchMore();
+				}
+			});
+			return;
+		}
+		emitOldestSearchResult(type, process, stepResult, wasEmittedAny);
+		return;
+	}
 	const auto inject = (type.start
 		&& !type.posts
 		&& !type.migrated
 		&& _searchQueryExtraFilters.isDefault())
 		? *_singleMessageSearch.lookup(_searchQuery)
 		: nullptr;
-	const auto prevLastId = process->lastId;
 	if (type.start) {
 		process->lastPeer = nullptr;
 		process->lastId = 0;
@@ -3908,7 +4037,6 @@ void Widget::searchReceived(
 		process->emptyClientPages = 0;
 	}
 	auto rawCount = 0;
-	auto maxRawMsgId = MsgId(0);
 	const auto processList = [&](const MTPVector<MTPMessage> &messages) {
 		auto result = std::vector<not_null<HistoryItem*>>();
 		rawCount = int(messages.v.size());
@@ -3916,9 +4044,6 @@ void Widget::searchReceived(
 			const auto msgId = IdFromMessage(message);
 			const auto peerId = PeerFromMessage(message);
 			const auto lastDate = DateFromMessage(message);
-			if (msgId > maxRawMsgId) {
-				maxRawMsgId = msgId;
-			}
 			if (const auto peer = session().data().peerLoaded(peerId)) {
 				if (lastDate) {
 					const auto item = session().data().addNewMessage(
@@ -3941,12 +4066,6 @@ void Widget::searchReceived(
 			}
 			process->lastId = msgId;
 		}
-		if (oldestFirst) {
-			std::reverse(result.begin(), result.end());
-			if (maxRawMsgId > 0) {
-				process->lastId = maxRawMsgId;
-			}
-		}
 		return result;
 	};
 	auto fullCount = 0;
@@ -3961,8 +4080,7 @@ void Widget::searchReceived(
 		const auto rateUpdated = nextRate
 			&& (nextRate->v != process->nextRate);
 		const auto finished = (type.peer || type.migrated || type.posts)
-			? (rawCount == 0
-				|| (oldestFirst && prevLastId > 0 && maxRawMsgId <= prevLastId))
+			? (rawCount == 0)
 			: !rateUpdated;
 		if (rateUpdated) {
 			process->nextRate = nextRate->v;
@@ -3974,8 +4092,7 @@ void Widget::searchReceived(
 		return list;
 	}, [&](const MTPDmessages_channelMessages &data) {
 		auto list = processList(data.vmessages());
-		if (rawCount == 0
-			|| (oldestFirst && prevLastId > 0 && maxRawMsgId <= prevLastId)) {
+		if (rawCount == 0) {
 			process->full = true;
 		}
 		fullCount = data.vcount().v;
@@ -3993,11 +4110,6 @@ void Widget::searchReceived(
 	_inner->searchReceived(messages, inject, type, fullCount);
 
 	process->requestId = 0;
-	const auto shouldLoadSupergroupAfterMigrated = oldestFirst
-		&& type.migrated
-		&& process->full
-		&& !_searchProcess.full
-		&& !_searchProcess.lastId;
 	const auto shouldAutoFetchFiltered = applyClientFilter
 		&& messages.empty()
 		&& (rawCount > 0)
@@ -4006,10 +4118,8 @@ void Widget::searchReceived(
 	if (!messages.empty()) {
 		process->emptyClientPages = 0;
 	}
-	if (shouldLoadSupergroupAfterMigrated || shouldAutoFetchFiltered) {
-		if (shouldAutoFetchFiltered) {
-			++process->emptyClientPages;
-		}
+	if (shouldAutoFetchFiltered) {
+		++process->emptyClientPages;
 		const auto weak = base::make_weak(this);
 		const auto generation = _searchGeneration;
 		crl::on_main(weak, [=] {
@@ -4032,6 +4142,8 @@ void Widget::searchApplyEmpty(
 		SearchRequestType type,
 		not_null<SearchProcessState*> process) {
 	process->full = true;
+	process->oldest.reset();
+	process->oldestMessageIds.clear();
 	searchReceived(
 		type,
 		MTP_messages_messages(
@@ -4722,7 +4834,9 @@ bool Widget::applySearchState(SearchState state) {
 		_subsectionTopBar->searchEnableJumpToDate(
 			_openedForum || _searchState.inChat);
 	}
-	if (!_searchState.inChat && _searchState.query.isEmpty()) {
+	if (!_searchState.inChat
+		&& _searchState.query.isEmpty()
+		&& _searchState.extraFilters.isDefault()) {
 		if (!_widthAnimationCache.isNull()) {
 			stopWidthAnimation();
 		}
@@ -4760,6 +4874,10 @@ void Widget::clearSearchCache(bool clearPosts) {
 	_searchQueryFrom = nullptr;
 	_searchQueryTags.clear();
 	_searchQueryExtraFilters.reset();
+	_searchProcess.oldest.reset();
+	_searchProcess.oldestMessageIds.clear();
+	_migratedProcess.oldest.reset();
+	_migratedProcess.oldestMessageIds.clear();
 	if (clearPosts) {
 		_postsProcess.cache.clear();
 		const auto queries = base::take(_postsProcess.queries);
@@ -5019,7 +5137,10 @@ void Widget::updateSearchFiltersVisibility(bool fast) {
 	if (_showAnimation) {
 		return;
 	}
+	const auto suggestionsOwnTab = _suggestions
+		&& _suggestions->takesSearchQuery();
 	const auto visible = (_searchState.tab != ChatSearchTab::PublicPosts)
+		&& !suggestionsOwnTab
 		&& (searchInPeer() != nullptr
 			|| _searchHasFocus
 			|| !_searchState.query.isEmpty()
@@ -5118,8 +5239,8 @@ void Widget::updateControlsGeometry() {
 
 	auto right = filterLeft + filterWidth;
 	_cancelSearch->moveToLeft(right - _cancelSearch->width(), _search->y());
-	right -= _jumpToDate->width();
-	_jumpToDate->moveToLeft(right, _search->y());
+	_jumpToDate->moveToLeft(right - _jumpToDate->width(), _search->y());
+	right -= std::max(_jumpToDate->width(), _cancelSearch->width());
 	if (_chooseFromUser->toggled()) {
 		right -= _chooseFromUser->width();
 		_chooseFromUser->moveToLeft(right, _search->y());
@@ -5552,7 +5673,8 @@ bool Widget::cancelSearch(CancelSearchOptions options) {
 	_searchEngaged = false;
 	const auto clearingSuggestionsQuery = _suggestions
 		&& (_suggestions->consumeSearchQuery(QString())
-			|| _suggestions->tabsOnly());
+			|| (_suggestions->tabsOnly()
+				&& !currentSearchQuery().isEmpty()));
 	if (clearingSuggestionsQuery) {
 		setSearchQuery(QString());
 		if (!options.forceFullCancel && !options.leaveSearch) {
@@ -5626,8 +5748,12 @@ bool Widget::cancelSearch(CancelSearchOptions options) {
 	}
 	_searchProcess.lastPeer = nullptr;
 	_searchProcess.lastId = 0;
+	_searchProcess.oldest.reset();
+	_searchProcess.oldestMessageIds.clear();
 	_migratedProcess.lastPeer = nullptr;
 	_migratedProcess.lastId = 0;
+	_migratedProcess.oldest.reset();
+	_migratedProcess.oldestMessageIds.clear();
 	_postsProcess.lastPeer = nullptr;
 	_postsProcess.lastId = 0;
 	_inner->clearFilter();
@@ -5635,7 +5761,11 @@ bool Widget::cancelSearch(CancelSearchOptions options) {
 	if (_suggestions && clearSearchFocus) {
 		const auto clearLockedFocus = !_searchHasFocus;
 		setInnerFocus(true);
-		if (clearLockedFocus) {
+		if (_searchHasFocus) {
+			_search->clearFocus();
+			_searchHasFocus = false;
+			processSearchFocusChange();
+		} else if (clearLockedFocus) {
 			processSearchFocusChange();
 		}
 	}
@@ -5653,7 +5783,10 @@ bool Widget::cancelSearch(CancelSearchOptions options) {
 			}
 		}
 	}
-	return clearingQuery || clearingInChat || clearSearchFocus;
+	return clearingQuery
+		|| clearingExtraFilters
+		|| clearingInChat
+		|| clearSearchFocus;
 }
 
 Widget::~Widget() {

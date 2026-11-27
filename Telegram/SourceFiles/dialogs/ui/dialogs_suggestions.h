@@ -85,6 +85,8 @@ public:
 
 	bool consumeSearchQuery(const QString &query);
 	[[nodiscard]] bool ownsSearchQuery(const QString &query) const;
+	[[nodiscard]] bool takesSearchQuery() const;
+	[[nodiscard]] rpl::producer<> tabChanged() const;
 	[[nodiscard]] rpl::producer<> clearSearchQueryRequests() const;
 	[[nodiscard]] rpl::producer<> reapplySearchQueryRequests() const;
 

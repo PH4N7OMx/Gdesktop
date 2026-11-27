@@ -95,6 +95,15 @@ void MessagesSearch::searchMessages(Request request) {
 	_loadedCount = 0;
 	_emptyClientPages = 0;
 	_exhausted = false;
+	_oldest.reset();
+	_oldestMessageIds.clear();
+	if (_request.extraFilters.isOldestFirst()) {
+		const auto bounds = Jel::ResolveSearchDateBounds(_request.extraFilters);
+		const auto hasTextOrFrom = !_request.query.isEmpty()
+			|| (_request.from != nullptr)
+			|| !_request.tags.empty();
+		_oldest.start(!bounds.empty(), hasTextOrFrom, kSearchPerPage);
+	}
 	searchRequest();
 }
 
@@ -102,7 +111,53 @@ void MessagesSearch::searchMore() {
 	if (_searchInHistoryRequest || _requestId || _exhausted) {
 		return;
 	}
+	if (_request.extraFilters.isOldestFirst() && _oldest.hasBufferedPage()) {
+		emitOldestResult(_oldest.takeBufferedPage(), RequestToToken(_request));
+		return;
+	}
 	searchRequest();
+}
+
+void MessagesSearch::emitOldestResult(
+		const Jel::OldestSearchResult &stepResult,
+		const QString &nextToken) {
+	auto items = MessageIdsList();
+	items.reserve(stepResult.emitIds.size());
+	for (const auto rawId : stepResult.emitIds) {
+		const auto it = _oldestMessageIds.find(MsgId(rawId));
+		if (it != _oldestMessageIds.end()) {
+			items.push_back(it->second);
+		}
+	}
+	_exhausted = stepResult.exhausted;
+	_loadedCount += int(items.size());
+	auto total = stepResult.totalCount;
+	if (_request.extraFilters.hasClientSideSenderFilter()) {
+		total = _exhausted
+			? _loadedCount
+			: std::max(_loadedCount + 1, total);
+	} else if (_exhausted && total > _loadedCount) {
+		total = _loadedCount;
+	}
+	const auto bounds = Jel::ResolveSearchDateBounds(_request.extraFilters);
+	const auto applyClientFilter = _request.extraFilters.hasClientSideSenderFilter()
+		|| !bounds.empty();
+	if (applyClientFilter
+		&& items.empty()
+		&& !_exhausted
+		&& _emptyClientPages < 6) {
+		++_emptyClientPages;
+		if (_oldest.hasBufferedPage()) {
+			emitOldestResult(_oldest.takeBufferedPage(), nextToken);
+		} else {
+			searchRequest();
+		}
+		return;
+	}
+	if (!items.empty()) {
+		_emptyClientPages = 0;
+	}
+	_messagesFounds.fire({ total, std::move(items), nextToken });
 }
 
 void MessagesSearch::searchRequest() {
@@ -124,10 +179,18 @@ void MessagesSearch::searchRequest() {
 		const auto mtpMinDate = (bounds.minDate > 0)
 			? (bounds.minDate - 1)
 			: 0;
-		const auto pagination = Jel::ComputeSearchPagination(
-			_request.extraFilters.sortOrder,
+		auto offsetId = std::int32_t(std::clamp(
 			_offsetId.bare,
-			kSearchPerPage);
+			std::int64_t(0),
+			std::int64_t(0x3FFFFFFF)));
+		auto addOffset = std::int32_t(0);
+		auto limit = std::int32_t(kSearchPerPage);
+		if (_request.extraFilters.isOldestFirst() && _oldest.active()) {
+			const auto step = _oldest.nextRequest();
+			offsetId = step.offsetId;
+			addOffset = step.addOffset;
+			limit = step.limit;
+		}
 		_requestId = _history->session().api().request(MTPmessages_Search(
 			MTP_flags((fromPeer ? Flag::f_from_id : Flag())
 				| (savedPeer ? Flag::f_saved_peer_id : Flag())
@@ -144,9 +207,9 @@ void MessagesSearch::searchRequest() {
 			PrepareFilter(_request),
 			MTP_int(mtpMinDate), // min_date
 			MTP_int(bounds.maxDate), // max_date
-			MTP_int(pagination.offsetId), // offset_id
-			MTP_int(pagination.addOffset), // add_offset
-			MTP_int(kSearchPerPage),
+			MTP_int(offsetId), // offset_id
+			MTP_int(addOffset), // add_offset
+			MTP_int(limit),
 			MTP_int(0), // max_id
 			MTP_int(0), // min_id
 			MTP_long(0) // hash
@@ -162,6 +225,8 @@ void MessagesSearch::searchRequest() {
 			}
 			if (error.type() == u"SEARCH_QUERY_EMPTY"_q) {
 				_exhausted = true;
+				_oldest.reset();
+				_oldestMessageIds.clear();
 				_messagesFounds.fire({ 0, MessageIdsList(), nextToken });
 			}
 
@@ -187,20 +252,89 @@ void MessagesSearch::searchReceived(
 	const auto bounds = Jel::ResolveSearchDateBounds(_request.extraFilters);
 	const auto applyClientFilter = _request.extraFilters.hasClientSideSenderFilter()
 		|| !bounds.empty();
-	const auto prevOffsetId = _offsetId;
+	if (oldestFirst && _oldest.active()) {
+		auto rawIds = std::vector<std::int64_t>();
+		auto filteredIds = std::vector<std::int64_t>();
+		auto serverTotal = 0;
+		auto serverExhausted = false;
+		const auto collectItems = [&](const QVector<MTPMessage> &messages) {
+			rawIds.reserve(messages.size());
+			for (const auto &message : messages) {
+				rawIds.push_back(IdFromMessage(message).bare);
+			}
+			const auto items = HistoryItemsFromTL(&owner, messages);
+			filteredIds.reserve(items.size());
+			for (const auto &id : items) {
+				_oldestMessageIds.emplace(id.msg, id);
+				if (!applyClientFilter) {
+					filteredIds.push_back(id.msg.bare);
+				} else if (const auto item = owner.message(id)) {
+					if (Jel::MatchesClientSideFilters(
+							_request.extraFilters,
+							bounds,
+							item->out(),
+							item->date())) {
+						filteredIds.push_back(id.msg.bare);
+					}
+				}
+			}
+		};
+		result.match([&](const MTPDmessages_messages &data) {
+			if (_requestId != 0) {
+				owner.processUsers(data.vusers());
+				owner.processChats(data.vchats());
+				_history->peer->processTopics(data.vtopics());
+			}
+			serverExhausted = true;
+			collectItems(data.vmessages().v);
+			serverTotal = int(data.vmessages().v.size());
+		}, [&](const MTPDmessages_messagesSlice &data) {
+			if (_requestId != 0) {
+				owner.processUsers(data.vusers());
+				owner.processChats(data.vchats());
+				_history->peer->processTopics(data.vtopics());
+			}
+			collectItems(data.vmessages().v);
+			serverTotal = int(data.vcount().v);
+		}, [&](const MTPDmessages_channelMessages &data) {
+			if (_requestId != 0) {
+				owner.processUsers(data.vusers());
+				owner.processChats(data.vchats());
+				if (const auto channel = _history->peer->asChannel()) {
+					channel->ptsReceived(data.vpts().v);
+				} else {
+					LOG(("API Error: "
+						"received messages.channelMessages when no channel "
+						"was passed!"));
+				}
+				_history->peer->processTopics(data.vtopics());
+			}
+			collectItems(data.vmessages().v);
+			serverTotal = int(data.vcount().v);
+		}, [&](const MTPDmessages_messagesNotModified &) {
+			serverExhausted = true;
+		});
+		_requestId = 0;
+		const auto stepResult = _oldest.onPageReceived(
+			rawIds,
+			filteredIds,
+			serverTotal,
+			serverExhausted);
+		if (stepResult.action == Jel::OldestSearchAction::FetchMore) {
+			searchRequest();
+			return;
+		}
+		emitOldestResult(stepResult, nextToken);
+		return;
+	}
 	auto rawCount = 0;
-	auto maxRawMsgId = MsgId(0);
 	auto minRawMsgId = MsgId(0);
 	auto serverExhausted = false;
 
 	const auto processItems = [&](const QVector<MTPMessage> &messages) {
 		rawCount = int(messages.size());
 		for (const auto &message : messages) {
-			const auto msgId = IdFromMessage(message);
-			if (msgId > maxRawMsgId) {
-				maxRawMsgId = msgId;
-			}
-			minRawMsgId = msgId;
+			minRawMsgId = IdFromMessage(message);
 		}
 		auto items = HistoryItemsFromTL(&owner, messages);
 		if (applyClientFilter) {
@@ -218,9 +352,6 @@ void MessagesSearch::searchReceived(
 				}
 			}
 			items = std::move(filtered);
-		}
-		if (oldestFirst) {
-			std::reverse(items.begin(), items.end());
 		}
 		return items;
 	};
@@ -272,18 +403,10 @@ void MessagesSearch::searchReceived(
 		_cacheOfStartByToken.emplace(nextToken, result);
 	}
 	_requestId = 0;
-	if (rawCount == 0
-		|| serverExhausted
-		|| (oldestFirst && prevOffsetId > 0 && maxRawMsgId <= prevOffsetId)) {
+	if (rawCount == 0 || serverExhausted) {
 		_exhausted = true;
 	}
-	if (oldestFirst) {
-		if (maxRawMsgId > 0) {
-			_offsetId = maxRawMsgId;
-		}
-	} else {
-		_offsetId = minRawMsgId;
-	}
+	_offsetId = minRawMsgId;
 	_loadedCount += int(found.messages.size());
 	if (_request.extraFilters.hasClientSideSenderFilter()) {
 		found.total = _exhausted

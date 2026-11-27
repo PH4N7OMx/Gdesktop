@@ -5214,7 +5214,9 @@ void InnerWidget::searchReceived(
 	const auto uniquePeers = uniqueSearchResults();
 	const auto withPreview = _searchWithPostsPreview;
 	const auto toPreview = withPreview && type.posts;
-	if (type.start && !type.migrated && (!withPreview || !type.posts)) {
+	if (type.start
+		&& (!type.migrated || _searchState.extraFilters.isOldestFirst())
+		&& (!withPreview || !type.posts)) {
 		clearSearchResults(false);
 	}
 	if (!withPreview || toPreview) {

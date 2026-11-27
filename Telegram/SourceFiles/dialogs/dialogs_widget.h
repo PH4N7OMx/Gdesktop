@@ -185,6 +185,8 @@ private:
 		bool full = false;
 		int filteredLoadedCount = 0;
 		int emptyClientPages = 0;
+		Jel::OldestSearchState oldest;
+		base::flat_map<MsgId, FullMsgId> oldestMessageIds;
 	};
 
 	void chosenRow(const ChosenRow &row);
@@ -204,6 +206,11 @@ private:
 	bool search(bool inCache = false, SearchRequestDelay after = {});
 	void searchTopics();
 	void searchMore();
+	void emitOldestSearchResult(
+		SearchRequestType type,
+		not_null<SearchProcessState*> process,
+		const Jel::OldestSearchResult &stepResult,
+		bool wasEmittedAny);
 
 	void slideFinished();
 	void searchReceived(

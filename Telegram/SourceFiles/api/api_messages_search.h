@@ -65,6 +65,9 @@ private:
 		const TLMessages &result,
 		mtpRequestId requestId,
 		const QString &nextToken);
+	void emitOldestResult(
+		const Jel::OldestSearchResult &stepResult,
+		const QString &nextToken);
 
 	const not_null<History*> _history;
 
@@ -75,6 +78,8 @@ private:
 	int _loadedCount = 0;
 	int _emptyClientPages = 0;
 	bool _exhausted = false;
+	Jel::OldestSearchState _oldest;
+	base::flat_map<MsgId, FullMsgId> _oldestMessageIds;
 
 	int _searchInHistoryRequest = 0; // Not real mtpRequestId.
 	mtpRequestId _requestId = 0;

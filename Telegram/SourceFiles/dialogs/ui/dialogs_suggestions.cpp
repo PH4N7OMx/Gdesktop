@@ -2334,6 +2334,14 @@ bool Suggestions::ownsSearchQuery(const QString &query) const {
 		&& TakesSearchQuery(_key.current());
 }
 
+bool Suggestions::takesSearchQuery() const {
+	return TakesSearchQuery(_key.current());
+}
+
+rpl::producer<> Suggestions::tabChanged() const {
+	return _key.changes() | rpl::to_empty;
+}
+
 bool Suggestions::setTabSearchQuery(const QString &query) {
 	const auto key = _key.current();
 	if (!TakesSearchQuery(key)) {

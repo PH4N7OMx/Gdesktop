@@ -23,7 +23,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "intro/intro_phone.h"
 #include "intro/intro_qr.h"
 #include "intro/intro_signup.h"
-#include "intro/intro_start.h"
 #include "lang/lang_cloud_manager.h"
 #include "lang/lang_instance.h"
 #include "lang/lang_keys.h"

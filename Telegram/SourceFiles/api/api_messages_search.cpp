@@ -180,9 +180,9 @@ void MessagesSearch::searchRequest() {
 			? (bounds.minDate - 1)
 			: 0;
 		auto offsetId = std::int32_t(std::clamp(
-			_offsetId.bare,
-			std::int64_t(0),
-			std::int64_t(0x3FFFFFFF)));
+			int64(_offsetId.bare),
+			int64(0),
+			int64(0x3FFFFFFF)));
 		auto addOffset = std::int32_t(0);
 		auto limit = std::int32_t(kSearchPerPage);
 		if (_request.extraFilters.isOldestFirst() && _oldest.active()) {

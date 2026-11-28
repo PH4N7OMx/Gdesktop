@@ -3626,9 +3626,9 @@ void Widget::searchMore() {
 		const auto type = Data::Histories::RequestType::History;
 		const auto history = _searchInMigrated;
 		auto offsetId = std::int32_t(std::clamp(
-			_migratedProcess.lastId.bare,
-			std::int64_t(0),
-			std::int64_t(0x3FFFFFFF)));
+			int64(_migratedProcess.lastId.bare),
+			int64(0),
+			int64(0x3FFFFFFF)));
 		auto addOffset = std::int32_t(0);
 		auto limit = std::int32_t(kSearchPerPage);
 		if (oldestFirst) {
@@ -3714,9 +3714,9 @@ void Widget::searchMore() {
 				? sublist->sublistPeer().get()
 				: nullptr;
 			auto offsetId = std::int32_t(std::clamp(
-				process->lastId.bare,
-				std::int64_t(0),
-				std::int64_t(0x3FFFFFFF)));
+				int64(process->lastId.bare),
+				int64(0),
+				int64(0x3FFFFFFF)));
 			auto addOffset = std::int32_t(0);
 			auto limit = std::int32_t(kSearchPerPage);
 			if (oldestFirst) {
